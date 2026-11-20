@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { clubTemplate, makeBlock, PAGE_TEMPLATES, type Block } from '../src/model';
-import { findFree, overlap, resizeEdge, setSize, split, swap, valid } from '../src/layout';
+import { findFree, overlap, removeAndFill, resizeEdge, setSize, split, swap, valid } from '../src/layout';
 
 const b = (id: string, x: number, y: number, w: number, h: number): Block => ({ ...makeBlock('text'), id, x, y, w, h });
 const noOverlaps = (bl: Block[]) => bl.every((a) => bl.every((c) => a === c || !overlap(a, c)));
@@ -81,5 +81,27 @@ describe('обмен местами, разделение, свободное м
   });
   it('valid ловит наложение', () => {
     expect(valid([b('a', 12, 30, 50, 50), b('c', 40, 40, 50, 50)], new Set(['a']))).toBe(false);
+  });
+});
+
+describe('удаление блока', () => {
+  it('сосед справа занимает место удалённого', () => {
+    const r = removeAndFill([b('a', 12, 30, 93, 40), b('c', 107, 30, 91, 40)], 'a');
+    expect(r).toHaveLength(1);
+    expect(r[0]).toMatchObject({ x: 12, w: 186 });
+  });
+  it('два соседа снизу вместе растут вверх', () => {
+    const r = removeAndFill([b('top', 12, 30, 186, 40), b('l', 12, 72, 92, 30), b('r', 106, 72, 92, 30)], 'top');
+    expect(r.map((x) => [x.y, x.h])).toEqual([[30, 72], [30, 72]]);
+  });
+  it('на всех страницах шаблона удаление любого блока не даёт наложений', () => {
+    for (const p of clubTemplate().pages) for (const blk of p.blocks) expect(noOverlaps(removeAndFill(p.blocks, blk.id)), `${p.title}: ${blk.label}`).toBe(true);
+  });
+  it('на биографии место «Цели» занимает сосед', () => {
+    const page = clubTemplate().pages[0]!;
+    const goals = page.blocks.find((x) => x.label === 'Цели')!;
+    const r = removeAndFill(page.blocks, goals.id);
+    const area = (bl: Block[]) => bl.reduce((a, x) => a + x.w * x.h, 0);
+    expect(area(r)).toBeGreaterThan(area(page.blocks) - goals.w * goals.h + 100);
   });
 });

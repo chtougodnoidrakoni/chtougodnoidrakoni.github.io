@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Undo2, Redo2, Settings2, Printer, Download, Plus, PencilRuler, PenLine, Trash2, Copy, ChevronUp, ChevronDown, Upload, FilePlus2, MoreHorizontal, LayoutTemplate } from 'lucide-react';
+import { ArrowLeft, Undo2, Redo2, Settings2, Printer, Download, Plus, Pencil, Check, Trash2, Copy, ChevronUp, ChevronDown, Upload, FilePlus2, MoreHorizontal, LayoutTemplate } from 'lucide-react';
 import { useStore } from './store';
 import { makeBlock, PAGE_TEMPLATES, uid, type BlockType, type Sheet } from './model';
 import { LayoutPage, SpellbookPages } from './Page';
 import { findFree } from './layout';
+import { FillModal } from './Fill';
 import { AddBlockPanel, Btn, Inspector, Sheet as Panel, SettingsPanel, SpellPicker, TextIn } from './Panels';
 
 const cx = (...c: (string | false | undefined)[]) => c.filter(Boolean).join(' ');
@@ -16,10 +17,19 @@ async function saveFile(name: string, blob: Blob) {
   document.body.appendChild(a); a.click(); a.remove();
 }
 
+/**
+ * Масштаб листа под ширину экрана.
+ * Берём clientWidth, а не innerWidth: в Safari innerWidth меняется при увеличении пальцами,
+ * и лист пересчитывался прямо во время зума — всё уезжало.
+ */
 function useScale() {
-  const calc = () => Math.min(window.innerWidth - 20, 820) / 210;
+  const calc = () => Math.min(document.documentElement.clientWidth - 20, 820) / 210;
   const [s, setS] = useState(calc);
-  useEffect(() => { const f = () => setS(calc()); window.addEventListener('resize', f); return () => window.removeEventListener('resize', f); }, []);
+  useEffect(() => {
+    const f = () => { const n = calc(); setS((o) => (Math.abs(o - n) > 0.01 ? n : o)); };
+    window.addEventListener('orientationchange', f); window.addEventListener('resize', f);
+    return () => { window.removeEventListener('orientationchange', f); window.removeEventListener('resize', f); };
+  }, []);
   return s;
 }
 
@@ -81,7 +91,7 @@ function Home() {
 
 function Editor() {
   const st = useStore();
-  const { sheet, mode, setMode, undo, redo, past, future, close, commit, selected, pageIdx, setPage, create, open, say } = st;
+  const { sheet, editPage, setEditPage, undo, redo, past, future, close, commit, selected, pageIdx, setPage, create, open, say } = st;
   const scale = useScale();
   const [menu, setMenu] = useState(false);
   const [settings, setSettings] = useState(false);
@@ -93,13 +103,14 @@ function Editor() {
 
   const insertBlock = (t: BlockType) => {
     const b = makeBlock(t);
-    const target = sheet.pages[pageIdx]?.kind === 'layout' ? pageIdx : sheet.pages.findIndex((p) => p.kind === 'layout');
+    const ei = sheet.pages.findIndex((p) => p.id === editPage);
+    const target = ei >= 0 ? ei : sheet.pages[pageIdx]?.kind === 'layout' ? pageIdx : sheet.pages.findIndex((p) => p.kind === 'layout');
     if (target < 0) return say('Сначала добавьте обычную страницу');
     const free = findFree(sheet.pages[target]!.blocks, b.w, b.h);
     if (!free) return say('На странице нет свободного места. Выделите блок и нажмите «Разделить», или добавьте новую страницу');
     Object.assign(b, free);
     commit((s) => ({ ...s, pages: s.pages.map((p, i) => (i === target ? { ...p, blocks: [...p.blocks, b] } : p)) }));
-    setMode('layout'); useStore.getState().select(b.id);
+    setEditPage(sheet.pages[target]!.id); useStore.getState().select(b.id);
     setPage(target);
     document.getElementById(`page-${sheet.pages[target]!.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
@@ -115,20 +126,17 @@ function Editor() {
           <button className="w-10 h-10 grid place-items-center disabled:opacity-30" disabled={!future.length} onClick={redo} aria-label="Повторить"><Redo2 size={20} /></button>
           <button className="w-11 h-11 grid place-items-center text-sand-light" onClick={() => setMenu(true)} aria-label="Меню"><MoreHorizontal /></button>
         </div>
-        <div className="max-w-3xl mx-auto px-3 pb-2 grid grid-cols-2 gap-1 p-1 rounded-xl">
-          <button onClick={() => setMode('fill')} className={cx('h-10 rounded-lg inline-flex items-center justify-center gap-2 text-sm', mode === 'fill' ? 'bg-sand text-moss-deep font-semibold' : 'bg-moss/60 text-cream/80')}><PenLine size={17} />Заполнение</button>
-          <button onClick={() => setMode('layout')} className={cx('h-10 rounded-lg inline-flex items-center justify-center gap-2 text-sm', mode === 'layout' ? 'bg-sand text-moss-deep font-semibold' : 'bg-moss/60 text-cream/80')}><PencilRuler size={17} />Макет</button>
-        </div>
       </header>
-
-      {mode === 'layout' && !selected && <div className="no-print text-center text-xs text-cream/60 px-6 pt-3">Нажмите на блок, чтобы выделить. Долгое нажатие и перетаскивание на другой блок — поменять местами. Оранжевые ручки двигают границу с соседом. Двумя пальцами — масштаб, блоки не сдвинутся.</div>}
 
       <main className="pt-3">
         {sheet.pages.map((p, i) => {
           const header = (
             <div className="no-print max-w-[820px] mx-auto px-3 flex items-center gap-2 text-sm text-cream/70 mb-1.5">
-              <span className="font-display-sc text-base text-sand-light">{p.title}</span>
+              <span className="font-display-sc text-base text-sand-light truncate">{p.title}</span>
               <span className="flex-1" />
+              {p.kind === 'layout' && (editPage === p.id
+                ? <button className="h-9 px-4 rounded-full bg-gradient-to-b from-sand-light to-sand text-moss-deep font-semibold inline-flex items-center gap-1.5" onClick={() => setEditPage(undefined)}><Check size={16} />Готово</button>
+                : <button className="h-9 px-3 rounded-full bg-moss border border-moss-light text-cream inline-flex items-center gap-1.5" onClick={() => { setEditPage(p.id); setPage(i); }} aria-label={`Изменить страницу ${p.title}`}><Pencil size={15} />Изменить</button>)}
               <button className="w-9 h-9 grid place-items-center" onClick={() => setPageMenu(i)} aria-label="Страница"><MoreHorizontal size={18} /></button>
             </div>
           );
@@ -137,7 +145,7 @@ function Editor() {
             return <section key={p.id} id={`page-${p.id}`} className="page-wrap pt-3">{header}<SpellbookPages page={p} sheet={sheet} scale={scale} startNum={start} /></section>;
           }
           const n = num++;
-          return <section key={p.id} id={`page-${p.id}`} className="page-wrap py-3" onPointerDown={() => pageIdx !== i && setPage(i)}>{header}<LayoutPage page={p} pageIndex={i} sheet={sheet} scale={scale} num={n} /></section>;
+          return <section key={p.id} id={`page-${p.id}`} className="page-wrap py-3" onPointerDown={() => pageIdx !== i && setPage(i)}>{header}{editPage === p.id && !selected && <div className="no-print max-w-[820px] mx-auto px-4 pb-2 text-xs text-cream/60">Нажмите на блок, чтобы выделить. Оранжевые ручки справа и снизу увеличивают блок за счёт соседа. Разделить или удалить — в панели блока.</div>}<LayoutPage page={p} pageIndex={i} sheet={sheet} scale={scale} num={n} /></section>;
         })}
       </main>
 
@@ -152,6 +160,7 @@ function Editor() {
       )}
 
       <Inspector />
+      <FillModal />
       <SpellPicker />
       <SettingsPanel open={settings} onClose={() => setSettings(false)} />
       <AddBlockPanel open={addBlock} onClose={() => setAddBlock(false)} onAdd={insertBlock} />

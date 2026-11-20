@@ -1,6 +1,6 @@
 /** Страница A4 с блоками: в режиме «Макет» блоки двигаются и меняют размер пальцем. */
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { blockAt, resizeEdge, swap } from './layout';
+import { resizeEdge } from './layout';
 import { BlockView, pt } from './blocks';
 import { PAGE_H, PAGE_W, SCHOOLS, spellOf, type Block, type Page, type Sheet, type SpellData } from './model';
 import { useStore } from './store';
@@ -24,134 +24,71 @@ export function PageShell({ scale, sheet, num, children }: { scale: number; shee
   );
 }
 
-type Gesture =
-  | { kind: 'pending'; id: string; x: number; y: number; timer?: ReturnType<typeof setTimeout>; mouse: boolean }
-  | { kind: 'swap'; id: string; x: number; y: number; cx: number; cy: number }
-  | { kind: 'right' | 'bottom'; id: string; x: number; y: number; cx: number; cy: number };
+type Drag = { edge: 'right' | 'bottom'; id: string; x: number; y: number; cx: number; cy: number };
 
 /**
- * Жесты макета. Касание выделяет блок. Только выделенный блок можно «поднять» долгим касанием (0,35 с),
- * и блок можно бросить на другой — они поменяются местами. Кружки на краях двигают общую границу.
- * Два пальца никогда не трогают блоки — это масштаб страницы.
+ * Страница из блоков.
+ * Обычный режим: касание блока открывает окно заполнения, на самой странице ничего не печатается и не прыгает.
+ * Редактор страницы (карандаш): касание выделяет блок, оранжевые ручки двигают общую границу с соседями.
+ * Перетаскивать блоки нельзя совсем.
  */
 export function LayoutPage({ page, pageIndex, sheet, scale, num }: { page: Page; pageIndex: number; sheet: Sheet; scale: number; num: number }) {
-  const { mode, selected, select, commit, setPage } = useStore();
-  const layout = mode === 'layout';
-  const g = useRef<Gesture | null>(null);
+  const { editPage, selected, select, commit, setPage, fill } = useStore();
+  const layout = editPage === page.id;
+  const drag = useRef<Drag | null>(null);
   const [, force] = useState(0);
   const rerender = () => force((n) => n + 1);
-  const host = useRef<HTMLDivElement>(null);
 
-  const toMm = (cx: number, cy: number) => {
-    const r = host.current!.querySelector('.page')!.getBoundingClientRect();
-    return { x: (cx - r.left) / scale, y: (cy - r.top) / scale };
-  };
-  const cancel = () => { const cur = g.current; if (cur?.kind === 'pending' && cur.timer) clearTimeout(cur.timer); g.current = null; rerender(); };
   const preview = (): Block[] => {
-    const cur = g.current;
-    if (!cur || (cur.kind !== 'right' && cur.kind !== 'bottom')) return page.blocks;
-    const d = cur.kind === 'right' ? (cur.cx - cur.x) / scale : (cur.cy - cur.y) / scale;
-    return resizeEdge(page.blocks, cur.id, cur.kind, Math.round(d * 2) / 2);
+    const d = drag.current;
+    if (!d) return page.blocks;
+    const mm = d.edge === 'right' ? (d.cx - d.x) / scale : (d.cy - d.y) / scale;
+    return resizeEdge(page.blocks, d.id, d.edge, Math.round(mm * 2) / 2);
   };
   const finish = () => {
-    const cur = g.current;
-    if (!cur) return;
-    if (cur.kind === 'pending') { if (cur.timer) clearTimeout(cur.timer); select(cur.id); setPage(pageIndex); }
-    else if (cur.kind === 'swap') {
-      const p = toMm(cur.cx, cur.cy);
-      const target = blockAt(page.blocks, p.x, p.y, cur.id);
-      if (target) { commit((s) => ({ ...s, pages: s.pages.map((pg) => (pg.id === page.id ? { ...pg, blocks: swap(pg.blocks, cur.id, target.id) } : pg)) })); useStore.getState().say('Блоки поменялись местами'); }
-      select(cur.id);
-    } else {
-      const next = preview();
-      if (next !== page.blocks) commit((s) => ({ ...s, pages: s.pages.map((pg) => (pg.id === page.id ? { ...pg, blocks: next } : pg)) }));
-    }
-    g.current = null; rerender();
+    if (!drag.current) return;
+    const next = preview();
+    drag.current = null;
+    if (next !== page.blocks) commit((s) => ({ ...s, pages: s.pages.map((pg) => (pg.id === page.id ? { ...pg, blocks: next } : pg)) }));
+    rerender();
   };
-
-  // касания отслеживаются на уровне документа: так второй палец сразу отменяет жест
-  useEffect(() => {
-    if (!layout) return;
-    const move = (e: TouchEvent) => {
-      const cur = g.current;
-      if (!cur) return;
-      if (e.touches.length > 1) { cancel(); return; }
-      const t = e.touches[0]!;
-      if (cur.kind === 'pending') {
-        if (Math.hypot(t.clientX - cur.x, t.clientY - cur.y) > 8) cancel(); // это прокрутка
-        return;
-      }
-      e.preventDefault();
-      cur.cx = t.clientX; cur.cy = t.clientY; rerender();
-    };
-    const end = (e: TouchEvent) => { const c = g.current; if (e.touches.length === 0 && c && !(c.kind === 'pending' && c.mouse)) finish(); };
-    const startMulti = (e: TouchEvent) => { if (e.touches.length > 1 && g.current) cancel(); };
-    document.addEventListener('touchmove', move, { passive: false });
-    document.addEventListener('touchend', end);
-    document.addEventListener('touchcancel', cancel);
-    document.addEventListener('touchstart', startMulti, { passive: true });
-    return () => { document.removeEventListener('touchmove', move); document.removeEventListener('touchend', end); document.removeEventListener('touchcancel', cancel); document.removeEventListener('touchstart', startMulti); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [layout, page, scale]);
-
-  const touchStart = (e: React.TouchEvent, b: Block, kind: 'block' | 'right' | 'bottom') => {
-    if (!layout) return;
-    e.stopPropagation();
-    if (e.touches.length > 1) { cancel(); return; }
-    const t = e.touches[0]!;
-    if (kind !== 'block') { g.current = { kind, id: b.id, x: t.clientX, y: t.clientY, cx: t.clientX, cy: t.clientY }; rerender(); return; }
-    const pend: Gesture = { kind: 'pending', id: b.id, x: t.clientX, y: t.clientY, mouse: false };
-    g.current = pend;
-    // невыделенный блок от касания не двигается: первое касание только выделяет
-    if (selected !== b.id) return;
-    pend.timer = setTimeout(() => {
-      if (g.current !== pend) return;
-      g.current = { kind: 'swap', id: b.id, x: pend.x, y: pend.y, cx: pend.x, cy: pend.y };
-      navigator.vibrate?.(15); rerender();
-    }, 350);
-    g.current = pend;
-  };
-  // мышь (компьютер): тянуть сразу, без долгого нажатия
-  const mouseDown = (e: React.PointerEvent, b: Block, kind: 'block' | 'right' | 'bottom') => {
-    if (!layout || e.pointerType !== 'mouse') return;
-    e.stopPropagation();
+  const start = (e: React.PointerEvent, b: Block, edge: 'right' | 'bottom') => {
+    e.stopPropagation(); e.preventDefault();
     (e.currentTarget as Element).setPointerCapture(e.pointerId);
-    g.current = kind === 'block' ? { kind: 'pending', id: b.id, x: e.clientX, y: e.clientY, mouse: true } : { kind, id: b.id, x: e.clientX, y: e.clientY, cx: e.clientX, cy: e.clientY };
+    drag.current = { edge, id: b.id, x: e.clientX, y: e.clientY, cx: e.clientX, cy: e.clientY };
     rerender();
   };
-  const mouseMove = (e: React.PointerEvent) => {
-    const cur = g.current;
-    if (!cur || e.pointerType !== 'mouse') return;
-    if (cur.kind === 'pending') {
-      if (selected === cur.id && Math.hypot(e.clientX - cur.x, e.clientY - cur.y) > 4) g.current = { kind: 'swap', id: cur.id, x: cur.x, y: cur.y, cx: e.clientX, cy: e.clientY };
-    } else { cur.cx = e.clientX; cur.cy = e.clientY; }
-    rerender();
-  };
-  const mouseUp = (e: React.PointerEvent) => { if (e.pointerType === 'mouse') finish(); };
+  const move = (e: React.PointerEvent) => { if (!drag.current || !e.isPrimary) return; drag.current.cx = e.clientX; drag.current.cy = e.clientY; rerender(); };
+  // второй палец во время перетаскивания границы — отменяем, это масштаб
+  useEffect(() => {
+    const multi = (e: TouchEvent) => { if (e.touches.length > 1 && drag.current) { drag.current = null; rerender(); } };
+    document.addEventListener('touchstart', multi, { passive: true });
+    return () => document.removeEventListener('touchstart', multi);
+  }, []);
 
-  const cur = g.current;
+  const tap = (b: Block) => {
+    setPage(pageIndex);
+    if (layout) { select(b.id); return; }
+    if (b.type === 'emblem' || b.type === 'ornament') return;
+    fill(b.id);
+  };
+
   const blocks = preview();
-  const swapTarget = cur?.kind === 'swap' && host.current ? (() => { const p = toMm(cur.cx, cur.cy); return blockAt(page.blocks, p.x, p.y, cur.id)?.id; })() : undefined;
-
   return (
-    <div ref={host} className={layout ? 'layout' : ''} onPointerMove={mouseMove} onPointerUp={mouseUp}>
+    <div className={layout ? 'layout' : 'filling'} onPointerMove={move} onPointerUp={finish} onPointerCancel={() => { drag.current = null; rerender(); }}>
       <PageShell scale={scale} sheet={sheet} num={num}>
         <div className="absolute inset-0" onClick={() => layout && select(undefined)} />
-        {blocks.map((b) => {
-          const lifted = cur?.kind === 'swap' && cur.id === b.id;
-          return (
-            <div key={b.id} className={`bw ${selected === b.id ? 'sel' : ''} ${lifted ? 'lifted' : ''} ${swapTarget === b.id ? 'target' : ''}`}
-              style={{ left: `calc(var(--u) * ${b.x})`, top: `calc(var(--u) * ${b.y})`, width: `calc(var(--u) * ${b.w})`, height: `calc(var(--u) * ${b.h})`,
-                ...(lifted ? { transform: `translate(${cur.cx - cur.x}px, ${cur.cy - cur.y}px)`, zIndex: 20 } : {}) }}
-              onTouchStart={(e) => touchStart(e, b, 'block')} onPointerDown={(e) => mouseDown(e, b, 'block')} onFocus={() => setPage(pageIndex)}>
-              <BlockView b={b} sheet={sheet} fill={!layout} />
-              {layout && selected === b.id && !lifted && <>
-                <div className="handle handle-r" onTouchStart={(e) => touchStart(e, b, 'right')} onPointerDown={(e) => mouseDown(e, b, 'right')} />
-                <div className="handle handle-b" onTouchStart={(e) => touchStart(e, b, 'bottom')} onPointerDown={(e) => mouseDown(e, b, 'bottom')} />
-              </>}
-            </div>
-          );
-        })}
+        {blocks.map((b) => (
+          <div key={b.id} data-label={b.label} className={`bw ${layout && selected === b.id ? 'sel' : ''}`}
+            style={{ left: `calc(var(--u) * ${b.x})`, top: `calc(var(--u) * ${b.y})`, width: `calc(var(--u) * ${b.w})`, height: `calc(var(--u) * ${b.h})` }}
+            onClick={() => tap(b)}>
+            <BlockView b={b} sheet={sheet} fill={false} />
+            {layout && selected === b.id && <>
+              <div className="handle handle-r" onPointerDown={(e) => start(e, b, 'right')} />
+              <div className="handle handle-b" onPointerDown={(e) => start(e, b, 'bottom')} />
+            </>}
+          </div>
+        ))}
       </PageShell>
     </div>
   );

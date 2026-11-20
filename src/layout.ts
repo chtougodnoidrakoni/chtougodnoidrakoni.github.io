@@ -113,4 +113,35 @@ export function blockAt(blocks: Block[], x: number, y: number, except?: string):
   return [...blocks].reverse().find((b) => b.id !== except && x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h);
 }
 
+/**
+ * Удалить блок, а освободившееся место отдать соседям.
+ * Берём соседей с одной стороны, которые целиком помещаются по длине дыры, и растягиваем их.
+ * Сторону выбираем ту, где соседи закрывают дыру полнее.
+ */
+export function removeAndFill(blocks: Block[], id: string): Block[] {
+  const H = blocks.find((b) => b.id === id);
+  if (!H) return blocks;
+  const rest = blocks.filter((b) => b.id !== id);
+  const near = (a: number, b: number) => Math.abs(a - b) <= GAP + 1.5;
+  const inV = (B: Block) => B.y >= H.y - 1.5 && B.y + B.h <= H.y + H.h + 1.5;
+  const inH = (B: Block) => B.x >= H.x - 1.5 && B.x + B.w <= H.x + H.w + 1.5;
+  const sides: { pick: (B: Block) => boolean; grow: (B: Block) => Block; cover: (B: Block) => number; len: number }[] = [
+    { pick: (B) => near(B.x + B.w + GAP, H.x) && inV(B), grow: (B) => ({ ...B, w: r1(H.x + H.w - B.x) }), cover: (B) => B.h, len: H.h },
+    { pick: (B) => near(B.x, H.x + H.w + GAP) && inV(B), grow: (B) => ({ ...B, x: H.x, w: r1(B.x + B.w - H.x) }), cover: (B) => B.h, len: H.h },
+    { pick: (B) => near(B.y + B.h + GAP, H.y) && inH(B), grow: (B) => ({ ...B, h: r1(H.y + H.h - B.y) }), cover: (B) => B.w, len: H.w },
+    { pick: (B) => near(B.y, H.y + H.h + GAP) && inH(B), grow: (B) => ({ ...B, y: H.y, h: r1(B.y + B.h - H.y) }), cover: (B) => B.w, len: H.w },
+  ];
+  let best: { blocks: Block[]; score: number } | undefined;
+  for (const side of sides) {
+    const group = rest.filter(side.pick);
+    if (!group.length) continue;
+    const ids = new Set(group.map((b) => b.id));
+    const next = rest.map((b) => (ids.has(b.id) ? side.grow(b) : b));
+    if (!valid(next, ids)) continue;
+    const score = group.reduce((a, b) => a + side.cover(b), 0) / side.len;
+    if (!best || score > best.score + 0.01) best = { blocks: next, score };
+  }
+  return best?.blocks ?? rest;
+}
+
 export const newId = uid;

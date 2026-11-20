@@ -10,8 +10,11 @@ interface State {
   index: SheetMeta[];
   sheet?: Sheet;
   pageIdx: number;
-  mode: 'fill' | 'layout';
+  /** страница, открытая в редакторе (карандаш у страницы) */
+  editPage?: string;
   selected?: string;
+  /** блок, открытый в окне заполнения */
+  filling?: string;
   past: Sheet[];
   future: Sheet[];
   spells: SpellData[];
@@ -31,7 +34,8 @@ interface State {
   updatePage(patch: Partial<Page>): void;
   undo(): void;
   redo(): void;
-  setMode(m: 'fill' | 'layout'): void;
+  setEditPage(id?: string): void;
+  fill(id?: string): void;
   select(id?: string): void;
   setPage(i: number): void;
   say(t: string): void;
@@ -50,7 +54,7 @@ function persist(s: Sheet) {
 }
 
 export const useStore = create<State>((set, get) => ({
-  ready: false, index: [], pageIdx: 0, mode: 'fill', past: [], future: [], spells: [], spellMap: new Map(),
+  ready: false, index: [], pageIdx: 0, past: [], future: [], spells: [], spellMap: new Map(),
 
   async boot() {
     const index: SheetMeta[] = (await idbGet('index').catch(() => undefined)) ?? [];
@@ -63,10 +67,10 @@ export const useStore = create<State>((set, get) => ({
   },
   async open(id) {
     const sheet: Sheet | undefined = await idbGet(`sheet:${id}`);
-    if (sheet) set({ sheet, pageIdx: 0, past: [], future: [], selected: undefined, mode: 'fill' });
+    if (sheet) set({ sheet, pageIdx: 0, past: [], future: [], selected: undefined, editPage: undefined, filling: undefined });
     location.hash = sheet ? `sheet/${id}` : '';
   },
-  close() { set({ sheet: undefined, selected: undefined }); location.hash = ''; },
+  close() { set({ sheet: undefined, selected: undefined, editPage: undefined, filling: undefined }); location.hash = ''; },
   async create(from) {
     const s: Sheet = from ? { ...structuredClone(from), id: uid(), updatedAt: Date.now() } : clubTemplate();
     await idbSet(`sheet:${s.id}`, s);
@@ -110,7 +114,8 @@ export const useStore = create<State>((set, get) => ({
     set({ sheet: next, past: [...past, sheet], future: future.slice(1) });
     persist(next);
   },
-  setMode(mode) { set({ mode, selected: undefined }); },
+  setEditPage(editPage) { set({ editPage, selected: undefined }); },
+  fill(filling) { set({ filling }); },
   select(selected) { set({ selected }); },
   setPage(pageIdx) { if (get().pageIdx !== pageIdx) set({ pageIdx }); },
   say(toast) { set({ toast }); setTimeout(() => { if (get().toast === toast) set({ toast: undefined }); }, 2600); },

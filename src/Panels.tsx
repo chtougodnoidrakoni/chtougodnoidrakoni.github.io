@@ -3,7 +3,7 @@ import { useMemo, useState, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { X, Plus, Trash2, Copy, Search, Check } from 'lucide-react';
 import { BLOCK_NAMES, FONT_SETS, SCHOOLS, makeBlock, uid, type Block, type BlockType, type Frame, type SpellData } from './model';
-import { findFree, setSize, split } from './layout';
+import { findFree, removeAndFill, setSize, split } from './layout';
 import { Columns2, Rows2 } from 'lucide-react';
 import { useStore } from './store';
 import { downscale } from './blocks';
@@ -61,7 +61,7 @@ export function Inspector() {
             if (!r) { useStore.getState().say('На странице нет места для копии — разделите блок или уменьшите соседей'); return; }
             const c = { ...structuredClone(b), id: uid(), ...r }; mutatePage((bl) => [...bl, c]); select(c.id);
           }}><Copy size={19} /></button>
-          <button title="Удалить" className="w-10 h-10 grid place-items-center text-red-300" onClick={() => { mutatePage((bl) => bl.filter((x) => x.id !== b.id)); select(undefined); }}><Trash2 size={19} /></button>
+          <button title="Удалить" aria-label="Удалить блок" className="w-10 h-10 grid place-items-center text-red-300" onClick={() => { mutatePage((bl) => removeAndFill(bl, b.id)); select(undefined); useStore.getState().say('Блок удалён, соседи заняли его место. Вернуть — стрелка «отменить»'); }}><Trash2 size={19} /></button>
           <button className="w-10 h-10 grid place-items-center" onClick={() => select(undefined)}><X size={20} /></button>
         </div>
         {b.type !== 'emblem' && b.type !== 'ornament' && <Field label="Подпись"><TextIn value={b.label} onChange={(e) => set({ label: e.target.value })} /></Field>}
@@ -83,7 +83,6 @@ export function Inspector() {
             </Btn>
           ))}
         </div>
-        <p className="text-xs text-cream/50 -mt-1">Поменять блоки местами: долго удерживайте блок и перетащите на другой. Граница с соседом — оранжевые ручки справа и снизу.</p>
         {b.type === 'text' && (
           <Field label="Колонки внутри блока">
             <div className="grid grid-cols-3 gap-2">{[1, 2, 3].map((n) => (
