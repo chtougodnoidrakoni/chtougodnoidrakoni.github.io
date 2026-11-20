@@ -98,20 +98,22 @@ export function LayoutPage({ page, pageIndex, sheet, scale, num }: { page: Page;
 
 function SpellCard({ d, scale }: { d: SpellData; scale: number }) {
   const lvl = d.lvl === 0 ? `заговор, ${SCHOOLS[d.school]?.toLowerCase() ?? d.school}` : `${d.lvl} круг, ${SCHOOLS[d.school]?.toLowerCase() ?? d.school}`;
-  const comps = [d.v && 'В', d.s && 'С', d.m && `М (${d.m})`].filter(Boolean).join(', ');
+  const comps = [d.v && 'В', d.s && 'С', d.m && `М (${d.rm ?? d.m})`].filter(Boolean).join(', ');
+  const dur = d.rd ?? d.dur;
+  const text = d.rtext ?? d.text;
   return (
     <div className="sp-card" style={{ fontSize: pt(8, scale) }}>
       <h3 style={{ fontSize: pt(13, scale) }}>{d.ru ?? d.name}</h3>
       {d.ru && <div className="sp-meta">{d.name}</div>}
       <div className="sp-meta">{lvl}{d.r ? ', ритуал' : ''}</div>
       <div className="sp-grid">
-        <b>Время</b><span>{d.time}</span>
-        <b>Дистанция</b><span>{d.range}</span>
+        <b>Время</b><span>{d.rt ?? d.time}</span>
+        <b>Дистанция</b><span>{d.rr ?? d.range}</span>
         <b>Компоненты</b><span>{comps}</span>
-        <b>Длительность</b><span>{d.c ? 'Концентрация, ' : ''}{d.dur}</span>
+        <b>Длительность</b><span>{d.c && !/^Концентрация/.test(dur) ? 'Концентрация, ' : ''}{dur}</span>
       </div>
-      <div className="sp-text">{(d.text || '—').split(/\n{2,}/).map((p, i) => <p key={i}>{p.replace(/\*\*\*?|_/g, '')}</p>)}</div>
-      <div className="sp-src">Источник: {d.src}</div>
+      <div className="sp-text">{(text || '—').split(/\n{2,}/).map((p, i) => <p key={i}>{p.replace(/\*\*\*?|_/g, '')}</p>)}</div>
+      <div className="sp-src">Источник: {d.src}{d.rtext ? ' (перевод клуба)' : ''}</div>
     </div>
   );
 }

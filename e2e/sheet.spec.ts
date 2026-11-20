@@ -58,15 +58,15 @@ test('лист: заполнение в окне, редактор страни�
   // заклинания через окно блока
   await blk('Заговоры').scrollIntoViewIfNeeded(); await blk('Заговоры').click();
   await page.getByRole('button', { name: 'Добавить заклинания' }).click();
-  await page.getByPlaceholder('Название (по-английски или по-русски)').fill('fire');
-  await page.getByText('Fire Bolt').click();
+  await page.getByPlaceholder('Название (по-английски или по-русски)').fill('огненный');
+  await page.getByText('Огненный снаряд').click();
   await page.getByRole('button', { name: 'Готово' }).last().click();
   await save();
   await blk('Заклинания').scrollIntoViewIfNeeded(); await blk('Заклинания').click();
   await page.getByRole('button', { name: 'Добавить заклинания' }).click();
-  await page.getByPlaceholder('Название (по-английски или по-русски)').fill('fireball');
-  await page.getByText('Fireball').first().click();
-  await page.getByPlaceholder('Название (по-английски или по-русски)').fill('shield');
+  await page.getByPlaceholder('Название (по-английски или по-русски)').fill('огненный шар');
+  await page.getByText('Огненный шар').first().click();
+  await page.getByPlaceholder('Название (по-английски или по-русски)').fill('щит');
   await page.getByRole('button', { name: /^Щит 1 круг/ }).click();
   await page.getByRole('button', { name: 'Своё заклинание' }).click();
   await page.locator('label:has-text("Название") input').last().fill('Удар грома клуба');
@@ -74,7 +74,7 @@ test('лист: заполнение в окне, редактор страни�
   await page.getByRole('button', { name: 'Добавить', exact: true }).click();
   await page.getByRole('button', { name: 'Готово' }).last().click();
   await save();
-  await expect(page.locator('.sp-name', { hasText: 'Fireball' })).toBeVisible();
+  await expect(page.locator('.sp-name', { hasText: 'Огненный шар' })).toBeVisible();
   await page.locator('.sb-col .sp-card').first().scrollIntoViewIfNeeded();
   await page.screenshot({ path: 'e2e/shots/04-spellbook.png' }); await noOverflow(page, 'spellbook');
   await expect(page.locator('.sb-col .sp-card')).toHaveCount(4);

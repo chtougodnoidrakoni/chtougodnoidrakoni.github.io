@@ -42,6 +42,8 @@ export interface Page { id: string; title: string; kind: 'layout' | 'spellbook';
 export interface SpellData {
   id: string; ed: '2014' | '2024'; src: string; name: string; ru?: string;
   lvl: number; school: string; time: string; range: string; v: number; s: number; m?: string; dur: string; c: number; r: number; cls: string[]; text: string;
+  /** русский перевод: время, дистанция, длительность, материалы, описание */
+  rt?: string; rr?: string; rd?: string; rm?: string; rtext?: string;
 }
 export interface SheetSpell { key: string; ref?: string; custom?: SpellData; prepared: boolean; note?: string }
 

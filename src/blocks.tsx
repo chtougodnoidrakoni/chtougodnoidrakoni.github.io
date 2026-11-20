@@ -156,11 +156,11 @@ export function BlockView({ b, sheet, fill }: { b: Block; sheet: Sheet; fill: bo
               {list.map(({ s, d }) => (
                 <tr key={s.key}>
                   <td className="w-ck"><button className={`dot ${s.prepared ? 'on' : ''}`} disabled={!fill} onClick={() => edit((sh) => ({ ...sh, spells: sh.spells.map((x) => (x.key === s.key ? { ...x, prepared: !x.prepared } : x)) }))} /></td>
-                  <td className="sp-name">{d!.ru ?? d!.name}</td><td>{d!.lvl || 'з'}</td><td>{shortTime(d!.time)}</td><td>{shortRange(d!.range)}</td>
+                  <td className="sp-name">{d!.ru ?? d!.name}</td><td>{d!.lvl || 'з'}</td><td>{shortTime(d!.rt ?? d!.time)}</td><td>{d!.rr ?? shortRange(d!.range)}</td>
                   <td>{[d!.v && 'В', d!.s && 'С', d!.m && 'М'].filter(Boolean).join(' ')}</td><td>{d!.c ? '●' : ''}</td><td>{d!.r ? '●' : ''}</td>
                 </tr>
               ))}
-              {Array.from({ length: Math.max(0, Math.floor((b.h - 9) / 5.2) - list.length) }, (_, i) => <tr key={`e${i}`} className="empty"><td className="w-ck"><span className="dot" /></td><td colSpan={7}>&nbsp;</td></tr>)}
+              {Array.from({ length: Math.max(0, Math.floor((b.h - 9) / 5.2) - list.length) }, (_, i) => <tr key={`e${i}`} className="empty"><td className="w-ck"><span className="dot" /></td>{Array.from({ length: 7 }, (_, k) => <td key={k}>&nbsp;</td>)}</tr>)}
             </tbody>
           </table>
         </div>
@@ -173,7 +173,7 @@ export function BlockView({ b, sheet, fill }: { b: Block; sheet: Sheet; fill: bo
   }
 }
 
-export const shortTime = (t: string) => t.replace(/1 action/i, 'Д').replace(/1 bonus action/i, 'БД').replace(/1 reaction/i, 'Р').replace(/(\d+) minutes?/i, '$1 мин').replace(/(\d+) hours?/i, '$1 ч').replace(/Action/i, 'Д').replace(/Bonus Action/i, 'БД').replace(/Reaction.*/i, 'Р');
+export const shortTime = (t: string) => t.replace(/^Бонусное действие.*/, 'БД').replace(/^Действие.*/, 'Д').replace(/^Реакция.*/, 'Р').replace(/1 action/i, 'Д').replace(/1 bonus action/i, 'БД').replace(/1 reaction/i, 'Р').replace(/(\d+) minutes?/i, '$1 мин').replace(/(\d+) hours?/i, '$1 ч').replace(/Action/i, 'Д').replace(/Bonus Action/i, 'БД').replace(/Reaction.*/i, 'Р');
 export const shortRange = (r: string) => ({ self: 'на себя', touch: 'касание', sight: 'видимость', unlimited: '∞', special: 'особая' } as Record<string, string>)[r] ?? r.replace(' ft', ' фт').replace(' mile', ' миля');
 
 /** Уменьшает фото до разумного размера, чтобы лист не раздувался. */

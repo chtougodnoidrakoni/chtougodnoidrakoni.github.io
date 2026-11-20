@@ -9,6 +9,7 @@ export default defineConfig({
     react(), tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
+      injectRegister: false,
       includeAssets: ['icons/*'],
       manifest: {
         name: 'Что угодно и драконы — лист персонажа', short_name: 'Лист ЧУиД', lang: 'ru',
@@ -16,7 +17,7 @@ export default defineConfig({
         theme_color: '#2b322d', background_color: '#2b322d', display: 'standalone',
         icons: [{ src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' }, { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' }, { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }],
       },
-      workbox: { globPatterns: ['**/*.{js,css,html,woff2,svg,png,json}'], maximumFileSizeToCacheInBytes: 5 * 1024 * 1024 },
+      workbox: { skipWaiting: true, clientsClaim: true, cleanupOutdatedCaches: true, globPatterns: ['**/*.{js,css,html,woff2,svg,png,json}'], maximumFileSizeToCacheInBytes: 5 * 1024 * 1024 },
     }),
   ],
 });
