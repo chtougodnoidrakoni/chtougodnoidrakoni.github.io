@@ -2,7 +2,7 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { X, Plus, Trash2, Copy, Search, Check } from 'lucide-react';
-import { BLOCK_NAMES, SCHOOLS, makeBlock, uid, type Block, type BlockType, type Frame, type SpellData } from './model';
+import { BLOCK_NAMES, FONT_SETS, SCHOOLS, makeBlock, uid, type Block, type BlockType, type Frame, type SpellData } from './model';
 import { findFree, setSize, split } from './layout';
 import { Columns2, Rows2 } from 'lucide-react';
 import { useStore } from './store';
@@ -69,7 +69,7 @@ export function Inspector() {
           <Field label="Размер шрифта, pt"><Num value={b.fontSize} step={0.5} min={4} max={40} onChange={(v) => set({ fontSize: v })} /></Field>
           <Field label="Рамка">
             <select value={b.type === 'stat' ? b.shape ?? 'box' : b.frame} onChange={(e) => (b.type === 'stat' ? set({ shape: e.target.value as Block['shape'] }) : set({ frame: e.target.value as Frame }))} className="w-full h-11 px-3 rounded-xl bg-moss-deep border border-moss-light">
-              {b.type === 'stat' ? <><option value="box">Прямоугольник</option><option value="shield">Щит</option><option value="circle">Круг</option></> : <><option value="frame">Рамка</option><option value="line">Линия снизу</option><option value="none">Без рамки</option></>}
+              {b.type === 'stat' ? <><option value="box">Прямоугольник</option><option value="shield">Щит</option><option value="circle">Круг</option><option value="medal">Медальон</option></> : <><option value="frame">Рамка</option><option value="line">Линия снизу</option><option value="none">Без рамки</option></>}
             </select>
           </Field>
         </div>
@@ -84,6 +84,21 @@ export function Inspector() {
           ))}
         </div>
         <p className="text-xs text-cream/50 -mt-1">Поменять блоки местами: долго удерживайте блок и перетащите на другой. Граница с соседом — оранжевые ручки справа и снизу.</p>
+        {b.type === 'text' && (
+          <Field label="Колонки внутри блока">
+            <div className="grid grid-cols-3 gap-2">{[1, 2, 3].map((n) => (
+              <Btn key={n} tone={(b.parts?.length || 1) === n ? 'gold' : 'base'} onClick={() => {
+                if (n === 1) set({ parts: undefined, value: [b.value, ...(b.values ?? [])].filter(Boolean).join('\n\n'), values: undefined });
+                else { const parts = Array.from({ length: n }, (_, i) => b.parts?.[i] ?? `Колонка ${i + 1}`); const values = Array.from({ length: n }, (_, i) => b.values?.[i] ?? (i === 0 && !b.parts ? b.value ?? '' : '')); set({ parts, values, value: '' }); }
+              }}>{n}</Btn>
+            ))}</div>
+          </Field>
+        )}
+        {b.type === 'text' && b.parts && b.parts.length > 1 && (
+          <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${b.parts.length}, minmax(0,1fr))` }}>
+            {b.parts.map((t, i) => <Field key={i} label={`Заголовок ${i + 1}`}><TextIn value={t} onChange={(e) => set({ parts: b.parts!.map((x, j) => (j === i ? e.target.value : x)) })} /></Field>)}
+          </div>
+        )}
         {b.type === 'text' && <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={b.lined !== false} onChange={(e) => set({ lined: e.target.checked })} className="w-5 h-5 accent-[#aa9173]" />Линейки для письма от руки</label>}
         {b.type === 'checklist' && <ListEditor items={(b.items ?? []).map((i) => [i.name, i.sub ?? ''])} cols={['Пункт', 'Пометка']} onChange={(rows) => set({ items: rows.map(([name, sub], i) => ({ ...(b.items?.[i] ?? {}), name: name ?? '', sub: sub || undefined })) })} />}
         {b.type === 'circles' && <ListEditor items={(b.rows ?? []).map((r) => [r.name, String(r.count)])} cols={['Название', 'Кружков']} onChange={(rows) => set({ rows: rows.map(([name, c], i) => ({ name: name ?? '', count: Math.min(20, Math.max(1, parseInt(c ?? '1', 10) || 1)), filled: Math.min(b.rows?.[i]?.filled ?? 0, parseInt(c ?? '1', 10) || 1) })) })} />}
@@ -212,6 +227,14 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
       <div className="grid gap-3 pb-2">
         <Field label="Название листа"><TextIn value={sheet.name} onChange={(e) => commit((s) => ({ ...s, name: e.target.value }))} /></Field>
         <Field label={`Общий размер шрифта: ${Math.round(sheet.fontScale * 100)}%`}><input type="range" min={0.7} max={1.5} step={0.05} value={sheet.fontScale} onChange={(e) => commit((s) => ({ ...s, fontScale: +e.target.value }))} className="w-full accent-[#aa9173]" /></Field>
+        <Field label="Шрифты листа">
+          <div className="grid grid-cols-2 gap-2">{FONT_SETS.map((f) => (
+            <button key={f.id} onClick={() => commit((s) => ({ ...s, fonts: f.id }))} className={`fonts-${f.id} rounded-xl border p-3 text-left ${(sheet.fonts ?? 'tale') === f.id ? 'border-sand bg-sand/15' : 'border-moss-light bg-moss-deep'}`}>
+              <div style={{ fontFamily: 'var(--f-display)', fontSize: 20, lineHeight: 1.1 }} className="text-cream">{f.name}</div>
+              <div style={{ fontFamily: 'var(--f-body)', fontSize: 13 }} className="text-cream/60 mt-1">{f.hint}</div>
+            </button>
+          ))}</div>
+        </Field>
         <Field label="Бумага">
           <div className="grid grid-cols-2 gap-2">{(['white', 'parchment'] as const).map((p) => <Btn key={p} tone={sheet.paper === p ? 'gold' : 'base'} onClick={() => commit((s) => ({ ...s, paper: p }))}>{p === 'white' ? 'Белая (для печати)' : 'Пергамент'}</Btn>)}</div>
         </Field>

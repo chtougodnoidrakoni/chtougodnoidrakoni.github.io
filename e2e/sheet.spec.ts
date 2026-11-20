@@ -31,10 +31,24 @@ test('лист: заполнение, макет, заклинания, чарн
   await portrait.scrollIntoViewIfNeeded();
   const q0 = (await portrait.boundingBox())!, l0 = (await looks.boundingBox())!;
   const ls0 = await styleOf(looks);
-  // долгое касание и перенос на «Внешность» — блоки меняются местами
+  // невыделенный блок долгим касанием не поднимается
   await touch('touchStart', [{ x: q0.x + 40, y: q0.y + 40 }]);
   await page.waitForTimeout(500);
   await touch('touchMove', [{ x: l0.x + l0.width / 2, y: l0.y + l0.height / 2 }]);
+  await touch('touchEnd', []);
+  expect(await styleOf(portrait)).toBe(s0);
+  await expect(page.getByText('Блоки поменялись местами')).toHaveCount(0);
+  // касание выделяет, после этого долгое касание и перенос на «Внешность» меняют блоки местами
+  await portrait.scrollIntoViewIfNeeded();
+  const q1 = (await portrait.boundingBox())!;
+  await touch('touchStart', [{ x: q1.x + 40, y: q1.y + 40 }]);
+  await touch('touchEnd', []);
+  await expect(portrait).toHaveClass(/sel/);
+  await portrait.scrollIntoViewIfNeeded();
+  const q2 = (await portrait.boundingBox())!, l2 = (await looks.boundingBox())!;
+  await touch('touchStart', [{ x: q2.x + 40, y: q2.y + 40 }]);
+  await page.waitForTimeout(500);
+  await touch('touchMove', [{ x: l2.x + l2.width / 2, y: l2.y + l2.height / 2 }]);
   await page.screenshot({ path: 'e2e/shots/02-swap-drag.png' });
   await touch('touchEnd', []);
   await expect(page.getByText('Блоки поменялись местами')).toBeVisible();

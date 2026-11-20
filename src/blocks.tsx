@@ -1,6 +1,6 @@
 /** Отрисовка блоков листа. Все размеры — в миллиметрах через переменную --u (1 мм на печати). */
-import type { CSSProperties, ReactNode } from 'react';
-import { abilityMod, spellOf, type Block, type Sheet } from './model';
+import { useState, type CSSProperties, type ReactNode } from 'react';
+import { abilityMod, autoItem, autoStat, calcSheet, signed, spellOf, type Block, type Sheet } from './model';
 import { useStore } from './store';
 
 export const u = (n: number) => `calc(var(--u) * ${n})`;
@@ -11,6 +11,20 @@ function Label({ b, scale, children }: { b: Block; scale: number; children?: Rea
   return <div className="blk-label" style={{ fontSize: pt(Math.max(5.5, b.fontSize * 0.72), scale) }}>{children ?? b.label}</div>;
 }
 
+/**
+ * Поле с автозначением: пока игрок ничего не вписал, показывается посчитанное.
+ * Вписал своё — остаётся его число. Стёр — снова считается само.
+ */
+function AutoInput({ value, auto, onChange, readOnly, className, style, inputMode }: { value?: string; auto: string; onChange: (v: string) => void; readOnly: boolean; className?: string; style?: CSSProperties; inputMode?: 'numeric' | 'text' }) {
+  const [focus, setFocus] = useState(false);
+  const own = !!value;
+  return (
+    <input className={`${className ?? ''} ${own ? 'own' : auto ? 'auto' : ''}`} style={style} inputMode={inputMode} readOnly={readOnly}
+      value={focus ? value ?? '' : value || auto} placeholder={focus ? auto : ''}
+      onFocus={() => setFocus(true)} onBlur={() => setFocus(false)} onChange={(e) => onChange(e.target.value)} />
+  );
+}
+
 export function BlockView({ b, sheet, fill }: { b: Block; sheet: Sheet; fill: boolean }) {
   const scale = sheet.fontScale;
   const { updateBlock, edit, spellMap } = useStore();
@@ -18,6 +32,7 @@ export function BlockView({ b, sheet, fill }: { b: Block; sheet: Sheet; fill: bo
   const set = (patch: Partial<Block>) => updateBlock(b.id, patch);
   const inputStyle: CSSProperties = { fontSize: fs };
   const frameCls = b.frame === 'frame' ? 'b-frame' : b.frame === 'line' ? 'b-line' : '';
+  const calc = b.type === 'checklist' || b.type === 'stat' ? calcSheet(sheet) : undefined;
 
   switch (b.type) {
     case 'title':
@@ -34,6 +49,23 @@ export function BlockView({ b, sheet, fill }: { b: Block; sheet: Sheet; fill: bo
         </div>
       );
     case 'text':
+      if (b.parts?.length) {
+        const lh = { fontSize: fs, lineHeight: 1.45, ['--lh' as string]: pt(b.fontSize * 1.45, scale) };
+        return (
+          <div className={`blk ${frameCls} blk-text`}>
+            <Label b={b} scale={scale} />
+            <div className="parts" style={{ gridTemplateColumns: `repeat(${b.parts.length}, minmax(0,1fr))` }}>
+              {b.parts.map((title, i) => (
+                <div key={i} className="part">
+                  <div className="part-title" style={{ fontSize: pt(Math.max(6, b.fontSize * 0.85), scale) }}>{title}</div>
+                  <textarea className={`inp area ${b.lined !== false ? 'lined' : ''}`} style={lh} value={b.values?.[i] ?? ''} readOnly={!fill}
+                    onChange={(e) => set({ values: b.parts!.map((_, j) => (j === i ? e.target.value : b.values?.[j] ?? '')) })} />
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      }
       return (
         <div className={`blk ${frameCls} blk-text`}>
           <Label b={b} scale={scale} />
@@ -59,8 +91,8 @@ export function BlockView({ b, sheet, fill }: { b: Block; sheet: Sheet; fill: bo
     }
     case 'stat':
       return (
-        <div className={`blk ${b.shape === 'shield' ? 'b-shield' : b.shape === 'circle' ? 'b-circle' : frameCls} blk-stat`}>
-          <input className="inp font-display-sc text-center" style={{ fontSize: pt(b.fontSize * 2.3, scale) }} value={b.value ?? ''} readOnly={!fill} onChange={(e) => set({ value: e.target.value })} />
+        <div className={`blk ${b.shape === 'shield' ? 'b-shield' : b.shape === 'circle' ? 'b-circle' : b.shape === 'medal' ? 'b-medal' : frameCls} blk-stat`}>
+          <AutoInput className="inp font-display-sc text-center" style={{ fontSize: pt(b.fontSize * (b.shape === 'medal' ? 3.1 : 2.3), scale) }} value={b.value} auto={autoStat(b, calc!)} readOnly={!fill} onChange={(v) => set({ value: v })} />
           <Label b={b} scale={scale} />
         </div>
       );
@@ -72,7 +104,9 @@ export function BlockView({ b, sheet, fill }: { b: Block; sheet: Sheet; fill: bo
             {(b.items ?? []).map((it, i) => (
               <div key={i} className="list-row">
                 <button className={`dot ${it.checked ? 'on' : ''}`} disabled={!fill} onClick={() => set({ items: b.items!.map((x, j) => (j === i ? { ...x, checked: !x.checked } : x)) })} />
-                <input className="inp list-val" value={it.value ?? ''} placeholder="__" readOnly={!fill} onChange={(e) => set({ items: b.items!.map((x, j) => (j === i ? { ...x, value: e.target.value } : x)) })} />
+                {(() => { const a = autoItem(it, calc!.mods, calc!.prof); return (
+                  <AutoInput className="inp list-val" value={it.value} auto={a === undefined ? '' : signed(a)} readOnly={!fill} onChange={(v) => set({ items: b.items!.map((x, j) => (j === i ? { ...x, value: v } : x)) })} />
+                ); })()}
                 <span className="list-name">{it.name}{it.sub && <span className="list-sub"> ({it.sub})</span>}</span>
               </div>
             ))}
@@ -99,14 +133,14 @@ export function BlockView({ b, sheet, fill }: { b: Block; sheet: Sheet; fill: bo
       return (
         <div className={`blk ${frameCls} blk-table`}>
           <Label b={b} scale={scale} />
-          <table style={{ fontSize: fs }}>
+          <div className="tbl-wrap"><table style={{ fontSize: fs }}>
             <thead><tr>{(b.columns ?? []).map((c, i) => <th key={i}>{c}</th>)}</tr></thead>
             <tbody>{(b.cells ?? []).map((row, r) => (
               <tr key={r}>{(b.columns ?? []).map((_, c) => (
                 <td key={c}><input className="inp" value={row[c] ?? ''} readOnly={!fill} onChange={(e) => set({ cells: b.cells!.map((rr, ri) => (ri === r ? (b.columns ?? []).map((_, ci) => (ci === c ? e.target.value : rr[ci] ?? '')) : rr)) })} /></td>
               ))}</tr>
             ))}</tbody>
-          </table>
+          </table></div>
         </div>
       );
     case 'spells': {

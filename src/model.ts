@@ -21,7 +21,7 @@ export interface Block {
   value?: string;
   /** характеристика: значение и модификатор (пусто — считается сам) */
   score?: string; mod?: string;
-  shape?: 'box' | 'shield' | 'circle';
+  shape?: 'box' | 'shield' | 'circle' | 'medal';
   items?: CheckItem[];
   rows?: CircleRow[];
   columns?: string[];
@@ -30,6 +30,11 @@ export interface Block {
   minLevel?: number; maxLevel?: number;
   src?: string;
   lined?: boolean;
+  /** смысл блока для автоподсчёта: СИЛ…ХАР, prof, init, passive, level */
+  key?: string;
+  /** текст в несколько колонок: заголовки колонок и их содержимое */
+  parts?: string[];
+  values?: string[];
 }
 
 export interface Page { id: string; title: string; kind: 'layout' | 'spellbook'; blocks: Block[] }
@@ -48,9 +53,19 @@ export interface Sheet {
   fontScale: number;
   paper: 'white' | 'parchment';
   emblem?: string;
+  /** набор шрифтов листа */
+  fonts?: FontSet;
   pages: Page[];
   spells: SheetSpell[];
 }
+
+export type FontSet = 'tale' | 'chronicle' | 'rune' | 'strict';
+export const FONT_SETS: { id: FontSet; name: string; hint: string }[] = [
+  { id: 'tale', name: 'Сказание', hint: 'книжный, как в старых томах' },
+  { id: 'rune', name: 'Руны', hint: 'резкие высокие буквы' },
+  { id: 'chronicle', name: 'Летопись', hint: 'изящный, тонкий' },
+  { id: 'strict', name: 'Строгий', hint: 'простой и чёткий' },
+];
 
 export const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
 
@@ -89,17 +104,18 @@ function bioPage(): Page {
   const t = (label: string, x: number, y: number, w: number, h: number) => B('text', { label, x, y, w, h });
   return {
     id: uid(), title: 'Биография', kind: 'layout', blocks: [
-      B('title', { label: 'Имя персонажа', x: 12, y: 13, w: 150, h: 16, fontSize: 22 }),
+      B('title', { label: 'Имя персонажа', x: 12, y: 13, w: 130, h: 16, fontSize: 22 }),
+      B('stat', { label: 'Уровень', key: 'level', shape: 'medal', x: 145, y: 10, w: 21, h: 21, fontSize: 7 }),
       B('emblem', { x: 170, y: 12, w: 28, h: 28 }),
       B('image', { label: 'Портрет', x: 12, y: 32, w: 62, h: 79 }),
-      f('Класс и уровень', 78, 32, 60), f('Вид', 140, 32, 30),
+      f('Класс', 78, 32, 60), f('Вид', 140, 32, 30),
       f('Предыстория', 78, 45, 60), f('Мировоззрение', 140, 45, 58),
       f('Возраст', 78, 58, 28), f('Рост', 108, 58, 28), f('Вес', 140, 58, 28), f('Глаза', 170, 58, 28),
       f('Кожа', 78, 71, 38), f('Волосы', 118, 71, 38), f('Игрок', 158, 71, 40),
       f('Вера, божество', 78, 84, 60), f('Родина', 140, 84, 58),
       f('Кампания', 78, 97, 120, 13),
-      t('Внешность', 12, 115, 93, 48), t('Черты характера и манеры', 107, 115, 91, 48),
-      t('Предыстория персонажа', 12, 166, 186, 55),
+      t('Внешность', 12, 115, 93, 32), t('Черты характера и манеры', 107, 115, 91, 32),
+      t('Предыстория персонажа', 12, 150, 186, 71),
       t('Цели', 12, 224, 93, 30), t('Задачи', 107, 224, 91, 30),
       t('Союзники и организации', 12, 257, 93, 28), t('Триггеры, страхи и слабости', 107, 257, 91, 28),
     ],
@@ -109,12 +125,13 @@ function bioPage(): Page {
 function statsPage(): Page {
   const row = ['Класс доспеха', 'Инициатива', 'Скорость', 'Бонус мастерства', 'Вдохновение', 'Пасс. внимательность'];
   const bw = (186 - 5 * 2) / 6;
+  const ROW_KEYS = ['ac', 'init', 'speed', 'prof', 'insp', 'passive'];
   return {
     id: uid(), title: 'Характеристики', kind: 'layout', blocks: [
       B('title', { label: 'Характеристики', x: 12, y: 12, w: 150, h: 13, fontSize: 18 }),
       B('emblem', { x: 182, y: 11, w: 16, h: 16 }),
-      ...row.map((label, i) => B('stat', { label, x: 12 + i * (bw + 2), y: 28, w: bw, h: 26, shape: i === 0 ? 'shield' : 'box', fontSize: 7.5 })),
-      ...ABILITIES.map(([label], i) => B('ability', { label, x: 12, y: 58 + i * 30, w: 30, h: 28 })),
+      ...row.map((label, i) => B('stat', { label, key: ROW_KEYS[i], x: 12 + i * (bw + 2), y: 28, w: bw, h: 26, shape: i === 0 ? 'shield' : 'box', fontSize: 7.5 })),
+      ...ABILITIES.map(([label, key], i) => B('ability', { label, key, x: 12, y: 58 + i * 30, w: 30, h: 28 })),
       B('checklist', { label: 'Спасброски', x: 44, y: 58, w: 60, h: 52, items: ABILITIES.map(([n, s]) => ({ name: n, sub: s })) }),
       B('checklist', { label: 'Навыки', x: 44, y: 112, w: 60, h: 124, items: SKILLS.map(([n, s]) => ({ name: n, sub: s })) }),
       B('stat', { label: 'Максимум хитов', x: 106, y: 58, w: 30, h: 22, fontSize: 7.5 }),
@@ -122,23 +139,24 @@ function statsPage(): Page {
       B('field', { label: 'Временные хиты', x: 106, y: 82, w: 45, h: 18, frame: 'frame' }),
       B('field', { label: 'Кости хитов', x: 153, y: 82, w: 45, h: 18, frame: 'frame' }),
       B('circles', { label: 'Спасброски от смерти', x: 106, y: 102, w: 92, h: 18, rows: [{ name: 'Успехи', count: 3, filled: 0 }, { name: 'Провалы', count: 3, filled: 0 }] }),
-      B('table', { label: 'Атаки и заклинания', x: 106, y: 122, w: 92, h: 50, columns: ['Название', 'Бонус', 'Урон и вид'], cells: Array.from({ length: 5 }, () => ['', '', '']) }),
+      B('table', { label: 'Оружие', x: 106, y: 122, w: 92, h: 50, fontSize: 8, columns: ['Оружие', 'Попадание', 'Бонус к урону', 'Урон', 'Вид урона'], cells: Array.from({ length: 5 }, () => ['', '', '', '', '']) }),
       B('text', { label: 'Владения и языки', x: 106, y: 174, w: 92, h: 62 }),
       B('text', { label: 'Снаряжение', x: 12, y: 239, w: 124, h: 46 }),
-      B('table', { label: 'Монеты', x: 138, y: 239, w: 60, h: 46, columns: ['Монета', 'Сколько'], cells: [['ПМ', ''], ['ЗМ', ''], ['ЭМ', ''], ['СМ', ''], ['ММ', '']] }),
+      B('table', { label: 'Монеты', x: 138, y: 239, w: 60, h: 17, fontSize: 8, columns: ['ПМ', 'ЗМ', 'ЭМ', 'СМ', 'ММ'], cells: [['', '', '', '', '']] }),
+      B('text', { label: 'Сокровища', x: 138, y: 258, w: 60, h: 27 }),
     ],
   };
 }
 
 function featuresPage(): Page {
-  const t = (label: string, x: number, y: number, w: number, h: number) => B('text', { label, x, y, w, h });
+  const two = (label: string, parts: string[], y: number, h: number) => B('text', { label, x: 12, y, w: 186, h, parts, values: parts.map(() => '') });
   return {
     id: uid(), title: 'Способности', kind: 'layout', blocks: [
       B('title', { label: 'Способности', x: 12, y: 12, w: 150, h: 13, fontSize: 18 }),
       B('emblem', { x: 182, y: 11, w: 16, h: 16 }),
-      t('Способности класса', 12, 28, 93, 84), t('Способности подкласса', 107, 28, 91, 84),
-      t('Способности вида', 12, 115, 93, 56), t('Способности предыстории', 107, 115, 91, 56),
-      t('Черты', 12, 174, 93, 56), t('Дополнительные способности', 107, 174, 91, 56),
+      two('Способности класса и подкласса', ['Класс', 'Подкласс'], 28, 84),
+      two('Способности вида и предыстории', ['Вид', 'Предыстория'], 115, 56),
+      two('Черты и дополнительные способности', ['Черты', 'Дополнительно'], 174, 56),
       B('circles', { label: 'Ресурсы', x: 12, y: 233, w: 186, h: 52, rows: [{ name: 'Ресурс', count: 4, filled: 0 }, { name: 'Ресурс', count: 3, filled: 0 }, { name: 'Ресурс', count: 2, filled: 0 }] }),
     ],
   };
@@ -180,12 +198,53 @@ export const PAGE_TEMPLATES: { name: string; make: () => Page }[] = [
   { name: 'Книга заклинаний', make: () => ({ id: uid(), title: 'Книга заклинаний', kind: 'spellbook', blocks: [] }) },
 ];
 
+export const signed = (m: number) => (m >= 0 ? `+${m}` : `−${Math.abs(m)}`);
 export const abilityMod = (score: string) => {
   const n = parseInt(score, 10);
   if (Number.isNaN(n)) return '';
-  const m = Math.floor((n - 10) / 2);
-  return m >= 0 ? `+${m}` : `−${Math.abs(m)}`;
+  return signed(Math.floor((n - 10) / 2));
 };
+/** «+3», «−1», «3» → число; пусто или мусор → undefined */
+export const parseMod = (v?: string) => {
+  if (!v) return undefined;
+  const n = parseInt(v.replace('−', '-').replace(/\s/g, ''), 10);
+  return Number.isNaN(n) ? undefined : n;
+};
+
+const LABEL_KEYS: Record<string, string> = Object.fromEntries([
+  ...ABILITIES.map(([l, k]) => [l, k]), ['Бонус мастерства', 'prof'], ['Инициатива', 'init'], ['Пасс. внимательность', 'passive'], ['Пассивная внимательность', 'passive'], ['Уровень', 'level'],
+]);
+/** Смысл блока: из поля key или по подписи (для листов, созданных до автоподсчёта). */
+export const keyOf = (b: Block) => b.key ?? LABEL_KEYS[b.label];
+
+export interface Calc { mods: Record<string, number | undefined>; prof?: number; perception?: number }
+/** Что лист может посчитать сам: модификаторы характеристик и бонус мастерства. */
+export function calcSheet(sheet: Sheet): Calc {
+  const all = sheet.pages.flatMap((p) => p.blocks);
+  const mods: Calc['mods'] = {};
+  for (const b of all) if (b.type === 'ability') { const k = keyOf(b); if (k) mods[k] = parseMod(b.mod || abilityMod(b.score ?? '')); }
+  const level = parseInt(all.find((b) => keyOf(b) === 'level')?.value ?? '', 10);
+  const profBlock = all.find((b) => keyOf(b) === 'prof');
+  const prof = parseMod(profBlock?.value) ?? (level >= 1 ? 2 + Math.floor((Math.min(level, 20) - 1) / 4) : undefined);
+  const perc = all.find((b) => b.type === 'checklist' && b.items?.some((i) => i.name === 'Внимательность'))?.items?.find((i) => i.name === 'Внимательность');
+  const perception = perc ? parseMod(perc.value) ?? autoItem(perc, mods, prof) : undefined;
+  return { mods, prof, perception };
+}
+const CODE: Record<string, string> = { СИЛ: 'СИЛ', ЛВК: 'ЛВК', ТЕЛ: 'ТЕЛ', ИНТ: 'ИНТ', МДР: 'МДР', ХАР: 'ХАР' };
+/** Навык или спасбросок: модификатор характеристики + бонус мастерства, если отмечено владение. */
+export function autoItem(it: CheckItem, mods: Calc['mods'], prof?: number): number | undefined {
+  const m = it.sub ? mods[CODE[it.sub] ?? ''] : undefined;
+  if (m === undefined) return undefined;
+  return m + (it.checked && prof ? prof : 0);
+}
+/** Автозначение для числа (инициатива, пассивная внимательность, бонус мастерства). */
+export function autoStat(b: Block, c: Calc): string {
+  const k = keyOf(b);
+  if (k === 'init' && c.mods['ЛВК'] !== undefined) return signed(c.mods['ЛВК']!);
+  if (k === 'passive' && c.perception !== undefined) return String(10 + c.perception);
+  if (k === 'prof' && c.prof !== undefined) return signed(c.prof);
+  return '';
+}
 
 export const SCHOOLS: Record<string, string> = { abjuration: 'Ограждение', conjuration: 'Вызов', divination: 'Прорицание', enchantment: 'Очарование', evocation: 'Воплощение', illusion: 'Иллюзия', necromancy: 'Некромантия', transmutation: 'Преобразование' };
 export const spellOf = (s: SheetSpell, db: Map<string, SpellData>): SpellData | undefined => s.custom ?? (s.ref ? db.get(s.ref) : undefined);

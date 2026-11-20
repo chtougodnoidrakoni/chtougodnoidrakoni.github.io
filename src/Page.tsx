@@ -15,7 +15,7 @@ function Corners() {
 
 export function PageShell({ scale, sheet, num, children }: { scale: number; sheet: Sheet; num: number; children: React.ReactNode }) {
   return (
-    <div className={`page ${sheet.paper === 'parchment' ? 'parchment' : ''}`} style={{ ['--u' as string]: `${scale}px` }}>
+    <div className={`page fonts-${sheet.fonts ?? 'tale'} ${sheet.paper === 'parchment' ? 'parchment' : ''}`} style={{ ['--u' as string]: `${scale}px` }}>
       <div className="page-inner" />
       <div className="page-frame" /><Corners />
       {children}
@@ -30,7 +30,7 @@ type Gesture =
   | { kind: 'right' | 'bottom'; id: string; x: number; y: number; cx: number; cy: number };
 
 /**
- * Жесты макета. Один палец: короткое касание выделяет блок, долгое (0,35 с) «поднимает» его,
+ * Жесты макета. Касание выделяет блок. Только выделенный блок можно «поднять» долгим касанием (0,35 с),
  * и блок можно бросить на другой — они поменяются местами. Кружки на краях двигают общую границу.
  * Два пальца никогда не трогают блоки — это масштаб страницы.
  */
@@ -101,6 +101,9 @@ export function LayoutPage({ page, pageIndex, sheet, scale, num }: { page: Page;
     const t = e.touches[0]!;
     if (kind !== 'block') { g.current = { kind, id: b.id, x: t.clientX, y: t.clientY, cx: t.clientX, cy: t.clientY }; rerender(); return; }
     const pend: Gesture = { kind: 'pending', id: b.id, x: t.clientX, y: t.clientY, mouse: false };
+    g.current = pend;
+    // невыделенный блок от касания не двигается: первое касание только выделяет
+    if (selected !== b.id) return;
     pend.timer = setTimeout(() => {
       if (g.current !== pend) return;
       g.current = { kind: 'swap', id: b.id, x: pend.x, y: pend.y, cx: pend.x, cy: pend.y };
@@ -120,7 +123,7 @@ export function LayoutPage({ page, pageIndex, sheet, scale, num }: { page: Page;
     const cur = g.current;
     if (!cur || e.pointerType !== 'mouse') return;
     if (cur.kind === 'pending') {
-      if (Math.hypot(e.clientX - cur.x, e.clientY - cur.y) > 4) g.current = { kind: 'swap', id: cur.id, x: cur.x, y: cur.y, cx: e.clientX, cy: e.clientY };
+      if (selected === cur.id && Math.hypot(e.clientX - cur.x, e.clientY - cur.y) > 4) g.current = { kind: 'swap', id: cur.id, x: cur.x, y: cur.y, cx: e.clientX, cy: e.clientY };
     } else { cur.cx = e.clientX; cur.cy = e.clientY; }
     rerender();
   };
