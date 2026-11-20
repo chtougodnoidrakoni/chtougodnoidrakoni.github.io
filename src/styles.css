@@ -112,11 +112,17 @@ input, select, textarea { font-size: 16px; }
 .sp-src { margin-top: .4em; color: var(--color-sand-dark); font-size: .85em; }
 
 /* ---------- редактор ---------- */
-.layout .bw { touch-action: none; cursor: move; }
+.layout .bw { cursor: grab; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.bw.lifted { opacity: .88; box-shadow: 0 14px 30px -8px rgba(0,0,0,.45); cursor: grabbing; }
+.bw.lifted::after { outline: 2px solid #c08a3e !important; }
+.bw.target::after { outline: 3px solid #5b8a5e !important; background: rgba(91,138,94,.12); }
 .layout .bw .blk { pointer-events: none; }
 .layout .bw::after { content: ''; position: absolute; inset: 0; outline: 1px dashed rgba(91,106,94,.55); outline-offset: 0; }
 .bw.sel::after { outline: 2px solid #c08a3e !important; }
-.handle { position: absolute; right: -14px; bottom: -14px; width: 28px; height: 28px; border-radius: 999px; background: #c08a3e; border: 3px solid #fff; z-index: 5; touch-action: none; box-shadow: 0 2px 6px rgba(0,0,0,.35); }
+.handle { position: absolute; z-index: 6; touch-action: none; background: #c08a3e; border: 3px solid #fff; border-radius: 999px; box-shadow: 0 2px 6px rgba(0,0,0,.35); }
+.handle::before { content: ''; position: absolute; inset: -12px; }
+.handle-r { right: -9px; top: 50%; width: 16px; height: 40px; margin-top: -20px; cursor: ew-resize; }
+.handle-b { bottom: -9px; left: 50%; height: 16px; width: 40px; margin-left: -20px; cursor: ns-resize; }
 
 @media print {
   @page { size: A4; margin: 0; }

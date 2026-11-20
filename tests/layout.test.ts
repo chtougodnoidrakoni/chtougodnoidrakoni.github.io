@@ -1,0 +1,85 @@
+import { describe, expect, it } from 'vitest';
+import { clubTemplate, makeBlock, PAGE_TEMPLATES, type Block } from '../src/model';
+import { findFree, overlap, resizeEdge, setSize, split, swap, valid } from '../src/layout';
+
+const b = (id: string, x: number, y: number, w: number, h: number): Block => ({ ...makeBlock('text'), id, x, y, w, h });
+const noOverlaps = (bl: Block[]) => bl.every((a) => bl.every((c) => a === c || !overlap(a, c)));
+
+describe('шаблоны без наложений', () => {
+  it('все страницы шаблона клуба и шаблоны страниц', () => {
+    for (const p of [...clubTemplate().pages, ...PAGE_TEMPLATES.map((t) => t.make())]) expect(noOverlaps(p.blocks), p.title).toBe(true);
+  });
+});
+
+describe('граница между соседями', () => {
+  const two = [b('a', 12, 30, 93, 40), b('c', 107, 30, 91, 40)];
+  it('левый растёт — правый уменьшается на столько же', () => {
+    const r = resizeEdge(two, 'a', 'right', 10);
+    expect(r.find((x) => x.id === 'a')!.w).toBe(103);
+    expect(r.find((x) => x.id === 'c')).toMatchObject({ x: 117, w: 81 });
+    expect(noOverlaps(r)).toBe(true);
+  });
+  it('левый уменьшается — правый растёт', () => {
+    const r = resizeEdge(two, 'a', 'right', -20);
+    expect(r.find((x) => x.id === 'a')!.w).toBe(73);
+    expect(r.find((x) => x.id === 'c')).toMatchObject({ x: 87, w: 111 });
+  });
+  it('сосед не может стать меньше минимума — граница останавливается', () => {
+    const r = resizeEdge(two, 'a', 'right', 200);
+    expect(r.find((x) => x.id === 'c')!.w).toBeGreaterThanOrEqual(8);
+    expect(noOverlaps(r)).toBe(true);
+  });
+  it('нижняя граница: блок ниже сжимается', () => {
+    const col = [b('t', 12, 30, 100, 40), b('u', 12, 72, 100, 40)];
+    const r = resizeEdge(col, 't', 'bottom', 15);
+    expect(r.find((x) => x.id === 't')!.h).toBe(55);
+    expect(r.find((x) => x.id === 'u')).toMatchObject({ y: 87, h: 25 });
+  });
+  it('расти в пустоту можно, но не поверх чужого блока и не за поля', () => {
+    const bl = [b('a', 12, 30, 50, 20), b('far', 100, 25, 50, 50)];
+    const r = resizeEdge(bl, 'a', 'right', 200);
+    expect(noOverlaps(r)).toBe(true);
+    expect(r.find((x) => x.id === 'a')!.x + r.find((x) => x.id === 'a')!.w).toBeLessThanOrEqual(100);
+    const alone = resizeEdge([b('a', 12, 30, 50, 20)], 'a', 'right', 500);
+    expect(alone[0]!.x + alone[0]!.w).toBeLessThanOrEqual(201);
+  });
+  it('на реальной странице «Биография» любая граница не создаёт наложений', () => {
+    const page = clubTemplate().pages[0]!;
+    for (const blk of page.blocks) for (const d of [-30, -5, 5, 30]) for (const e of ['right', 'bottom'] as const) {
+      expect(noOverlaps(resizeEdge(page.blocks, blk.id, e, d)), `${blk.label} ${e} ${d}`).toBe(true);
+    }
+  });
+  it('точный размер из панели работает так же', () => {
+    const r = setSize([b('a', 12, 30, 93, 40), b('c', 107, 30, 91, 40)], 'a', 'w', 80);
+    expect(r.find((x) => x.id === 'c')).toMatchObject({ x: 94, w: 104 });
+  });
+});
+
+describe('обмен местами, разделение, свободное место', () => {
+  it('обмен меняет места и размеры, наложений нет', () => {
+    const page = clubTemplate().pages[1]!;
+    const [p, q] = [page.blocks[5]!, page.blocks[20]!];
+    const r = swap(page.blocks, p.id, q.id);
+    expect(r.find((x) => x.id === p.id)).toMatchObject({ x: q.x, y: q.y, w: q.w, h: q.h });
+    expect(noOverlaps(r)).toBe(true);
+  });
+  it('разделение пополам по ширине и высоте', () => {
+    const s1 = split([b('a', 12, 30, 100, 40)], 'a', 'h', (r) => b('n', r.x, r.y, r.w, r.h));
+    expect(s1.blocks.map((x) => x.w)).toEqual([49, 49]);
+    expect(noOverlaps(s1.blocks)).toBe(true);
+    const s2 = split([b('a', 12, 30, 100, 40)], 'a', 'v', (r) => b('n', r.x, r.y, r.w, r.h));
+    expect(s2.blocks.map((x) => x.h)).toEqual([19, 19]);
+    expect(split([b('a', 12, 30, 10, 10)], 'a', 'h', (r) => b('n', r.x, r.y, r.w, r.h)).created).toBeUndefined();
+  });
+  it('свободное место находится и не пересекается с блоками', () => {
+    const page = clubTemplate().pages[2]!;
+    const bl = page.blocks.filter((x) => x.label !== 'Ресурсы');
+    const r = findFree(bl, 60, 30)!;
+    expect(r).toBeDefined();
+    expect(bl.some((x) => overlap(x, r))).toBe(false);
+    expect(findFree(clubTemplate().pages[0]!.blocks, 150, 100)).toBeUndefined();
+  });
+  it('valid ловит наложение', () => {
+    expect(valid([b('a', 12, 30, 50, 50), b('c', 40, 40, 50, 50)], new Set(['a']))).toBe(false);
+  });
+});

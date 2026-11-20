@@ -1,8 +1,10 @@
 /** Панели: свойства блока, выбор заклинаний, своё заклинание, настройки листа, шаблоны страниц. */
 import { useMemo, useState, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { X, Plus, Trash2, Copy, ArrowUp, ArrowDown, Search, Check } from 'lucide-react';
-import { BLOCK_NAMES, SCHOOLS, uid, type Block, type BlockType, type Frame, type SpellData } from './model';
+import { X, Plus, Trash2, Copy, Search, Check } from 'lucide-react';
+import { BLOCK_NAMES, SCHOOLS, makeBlock, uid, type Block, type BlockType, type Frame, type SpellData } from './model';
+import { findFree, setSize, split } from './layout';
+import { Columns2, Rows2 } from 'lucide-react';
 import { useStore } from './store';
 import { downscale } from './blocks';
 
@@ -54,9 +56,11 @@ export function Inspector() {
       <div className="max-w-xl mx-auto px-4 pt-3 grid gap-3">
         <div className="flex items-center gap-2">
           <div className="flex-1 font-display-sc text-xl text-sand-light">{BLOCK_NAMES[b.type]}</div>
-          <button title="Копия" className="w-10 h-10 grid place-items-center" onClick={() => { const c = { ...structuredClone(b), id: uid(), x: Math.min(b.x + 4, 200 - b.w), y: Math.min(b.y + 4, 290 - b.h) }; mutatePage((bl) => [...bl, c]); select(c.id); }}><Copy size={19} /></button>
-          <button title="Выше" className="w-10 h-10 grid place-items-center" onClick={() => mutatePage((bl) => [...bl.filter((x) => x.id !== b.id), b])}><ArrowUp size={19} /></button>
-          <button title="Ниже" className="w-10 h-10 grid place-items-center" onClick={() => mutatePage((bl) => [b, ...bl.filter((x) => x.id !== b.id)])}><ArrowDown size={19} /></button>
+          <button title="Копия" className="w-10 h-10 grid place-items-center" onClick={() => {
+            const r = findFree(page.blocks, b.w, b.h);
+            if (!r) { useStore.getState().say('На странице нет места для копии — разделите блок или уменьшите соседей'); return; }
+            const c = { ...structuredClone(b), id: uid(), ...r }; mutatePage((bl) => [...bl, c]); select(c.id);
+          }}><Copy size={19} /></button>
           <button title="Удалить" className="w-10 h-10 grid place-items-center text-red-300" onClick={() => { mutatePage((bl) => bl.filter((x) => x.id !== b.id)); select(undefined); }}><Trash2 size={19} /></button>
           <button className="w-10 h-10 grid place-items-center" onClick={() => select(undefined)}><X size={20} /></button>
         </div>
@@ -69,9 +73,17 @@ export function Inspector() {
             </select>
           </Field>
         </div>
-        <div className="grid grid-cols-4 gap-2">
-          {(['x', 'y', 'w', 'h'] as const).map((k) => <Field key={k} label={{ x: 'Слева, мм', y: 'Сверху, мм', w: 'Ширина', h: 'Высота' }[k]}><Num value={b[k]} step={1} min={k === 'w' || k === 'h' ? 4 : 0} max={k === 'x' || k === 'w' ? 210 : 297} onChange={(v) => set({ [k]: v })} /></Field>)}
+        <div className="grid grid-cols-2 gap-2">
+          {(['w', 'h'] as const).map((k) => <Field key={k} label={k === 'w' ? 'Ширина, мм (сосед справа подстроится)' : 'Высота, мм (сосед снизу подстроится)'}><Num value={b[k]} step={1} min={4} max={k === 'w' ? 186 : 273} onChange={(v) => { const next = setSize(page.blocks, b.id, k, v); if (next === page.blocks) useStore.getState().say('Дальше некуда: мешает другой блок или край листа'); else mutatePage(() => next); }} /></Field>)}
         </div>
+        <div className="grid grid-cols-2 gap-2">
+          {(['h', 'v'] as const).map((dir) => (
+            <Btn key={dir} onClick={() => { const r = split(page.blocks, b.id, dir, (rect) => makeBlock(b.type === 'emblem' || b.type === 'ornament' ? 'text' : b.type, { ...rect, label: 'Новый блок', fontSize: b.fontSize, frame: b.frame })); if (!r.created) useStore.getState().say('Блок слишком маленький, чтобы делить'); else { mutatePage(() => r.blocks); select(r.created.id); } }}>
+              {dir === 'h' ? <Columns2 size={18} /> : <Rows2 size={18} />}{dir === 'h' ? 'Разделить по ширине' : 'Разделить по высоте'}
+            </Btn>
+          ))}
+        </div>
+        <p className="text-xs text-cream/50 -mt-1">Поменять блоки местами: долго удерживайте блок и перетащите на другой. Граница с соседом — оранжевые ручки справа и снизу.</p>
         {b.type === 'text' && <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={b.lined !== false} onChange={(e) => set({ lined: e.target.checked })} className="w-5 h-5 accent-[#aa9173]" />Линейки для письма от руки</label>}
         {b.type === 'checklist' && <ListEditor items={(b.items ?? []).map((i) => [i.name, i.sub ?? ''])} cols={['Пункт', 'Пометка']} onChange={(rows) => set({ items: rows.map(([name, sub], i) => ({ ...(b.items?.[i] ?? {}), name: name ?? '', sub: sub || undefined })) })} />}
         {b.type === 'circles' && <ListEditor items={(b.rows ?? []).map((r) => [r.name, String(r.count)])} cols={['Название', 'Кружков']} onChange={(rows) => set({ rows: rows.map(([name, c], i) => ({ name: name ?? '', count: Math.min(20, Math.max(1, parseInt(c ?? '1', 10) || 1)), filled: Math.min(b.rows?.[i]?.filled ?? 0, parseInt(c ?? '1', 10) || 1) })) })} />}

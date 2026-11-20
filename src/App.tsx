@@ -3,6 +3,7 @@ import { ArrowLeft, Undo2, Redo2, Settings2, Printer, Download, Plus, PencilRule
 import { useStore } from './store';
 import { makeBlock, PAGE_TEMPLATES, uid, type BlockType, type Sheet } from './model';
 import { LayoutPage, SpellbookPages } from './Page';
+import { findFree } from './layout';
 import { AddBlockPanel, Btn, Inspector, Sheet as Panel, SettingsPanel, SpellPicker, TextIn } from './Panels';
 
 const cx = (...c: (string | false | undefined)[]) => c.filter(Boolean).join(' ');
@@ -94,7 +95,9 @@ function Editor() {
     const b = makeBlock(t);
     const target = sheet.pages[pageIdx]?.kind === 'layout' ? pageIdx : sheet.pages.findIndex((p) => p.kind === 'layout');
     if (target < 0) return say('Сначала добавьте обычную страницу');
-    b.x = Math.max(12, Math.min(198 - b.w, 105 - b.w / 2)); b.y = 120;
+    const free = findFree(sheet.pages[target]!.blocks, b.w, b.h);
+    if (!free) return say('На странице нет свободного места. Выделите блок и нажмите «Разделить», или добавьте новую страницу');
+    Object.assign(b, free);
     commit((s) => ({ ...s, pages: s.pages.map((p, i) => (i === target ? { ...p, blocks: [...p.blocks, b] } : p)) }));
     setMode('layout'); useStore.getState().select(b.id);
     setPage(target);
@@ -118,7 +121,7 @@ function Editor() {
         </div>
       </header>
 
-      {mode === 'layout' && !selected && <div className="no-print text-center text-xs text-cream/60 px-6 pt-3">Перетаскивайте блоки пальцем, размер — за оранжевый кружок в углу выделенного блока. Нажмите на блок, чтобы изменить подпись, шрифт и содержимое.</div>}
+      {mode === 'layout' && !selected && <div className="no-print text-center text-xs text-cream/60 px-6 pt-3">Нажмите на блок, чтобы выделить. Долгое нажатие и перетаскивание на другой блок — поменять местами. Оранжевые ручки двигают границу с соседом. Двумя пальцами — масштаб, блоки не сдвинутся.</div>}
 
       <main className="pt-3">
         {sheet.pages.map((p, i) => {
