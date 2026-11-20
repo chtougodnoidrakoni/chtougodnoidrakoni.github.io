@@ -1,0 +1,117 @@
+/** Состояние: список листов, открытый лист, режим, выделение, история отмен, база заклинаний. */
+import { create } from 'zustand';
+import { get as idbGet, set as idbSet, del as idbDel } from 'idb-keyval';
+import { clubTemplate, uid, type Block, type Page, type Sheet, type SpellData } from './model';
+
+export interface SheetMeta { id: string; name: string; updatedAt: number }
+
+interface State {
+  ready: boolean;
+  index: SheetMeta[];
+  sheet?: Sheet;
+  pageIdx: number;
+  mode: 'fill' | 'layout';
+  selected?: string;
+  past: Sheet[];
+  future: Sheet[];
+  spells: SpellData[];
+  spellMap: Map<string, SpellData>;
+  toast?: string;
+  picker?: { min: number; max: number };
+  boot(): Promise<void>;
+  open(id: string): Promise<void>;
+  close(): void;
+  create(from?: Sheet): Promise<string>;
+  remove(id: string): Promise<void>;
+  /** изменение с записью в историю (макет) */
+  commit(fn: (s: Sheet) => Sheet): void;
+  /** изменение содержимого без записи в историю (заполнение) */
+  edit(fn: (s: Sheet) => Sheet): void;
+  updateBlock(id: string, patch: Partial<Block>, history?: boolean): void;
+  updatePage(patch: Partial<Page>): void;
+  undo(): void;
+  redo(): void;
+  setMode(m: 'fill' | 'layout'): void;
+  select(id?: string): void;
+  setPage(i: number): void;
+  say(t: string): void;
+}
+
+let saveTimer: ReturnType<typeof setTimeout> | undefined;
+function persist(s: Sheet) {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async () => {
+    await idbSet(`sheet:${s.id}`, s);
+    const index: SheetMeta[] = (await idbGet('index')) ?? [];
+    const next = [{ id: s.id, name: s.name, updatedAt: s.updatedAt }, ...index.filter((x) => x.id !== s.id)];
+    await idbSet('index', next);
+    useStore.setState({ index: next });
+  }, 400);
+}
+
+export const useStore = create<State>((set, get) => ({
+  ready: false, index: [], pageIdx: 0, mode: 'fill', past: [], future: [], spells: [], spellMap: new Map(),
+
+  async boot() {
+    const index: SheetMeta[] = (await idbGet('index').catch(() => undefined)) ?? [];
+    set({ index, ready: true });
+    try {
+      const res = await fetch(`${import.meta.env.BASE_URL}spells.json`);
+      const spells: SpellData[] = await res.json();
+      set({ spells, spellMap: new Map(spells.map((s) => [s.id, s])) });
+    } catch { /* без сети и кэша — работаем без базы */ }
+  },
+  async open(id) {
+    const sheet: Sheet | undefined = await idbGet(`sheet:${id}`);
+    if (sheet) set({ sheet, pageIdx: 0, past: [], future: [], selected: undefined, mode: 'fill' });
+    location.hash = sheet ? `sheet/${id}` : '';
+  },
+  close() { set({ sheet: undefined, selected: undefined }); location.hash = ''; },
+  async create(from) {
+    const s: Sheet = from ? { ...structuredClone(from), id: uid(), updatedAt: Date.now() } : clubTemplate();
+    await idbSet(`sheet:${s.id}`, s);
+    const index = [{ id: s.id, name: s.name, updatedAt: s.updatedAt }, ...get().index];
+    await idbSet('index', index);
+    set({ index });
+    return s.id;
+  },
+  async remove(id) {
+    await idbDel(`sheet:${id}`);
+    const index = get().index.filter((x) => x.id !== id);
+    await idbSet('index', index);
+    set({ index });
+  },
+  commit(fn) {
+    const cur = get().sheet; if (!cur) return;
+    const next = { ...fn(structuredClone(cur)), updatedAt: Date.now() };
+    set({ sheet: next, past: [...get().past.slice(-60), cur], future: [] });
+    persist(next);
+  },
+  edit(fn) {
+    const cur = get().sheet; if (!cur) return;
+    const next = { ...fn(cur), updatedAt: Date.now() };
+    set({ sheet: next });
+    persist(next);
+  },
+  updateBlock(id, patch, history = false) {
+    const fn = (s: Sheet) => ({ ...s, pages: s.pages.map((p) => (p.blocks.some((b) => b.id === id) ? { ...p, blocks: p.blocks.map((b) => (b.id === id ? { ...b, ...patch } : b)) } : p)) });
+    if (history) get().commit(fn); else get().edit(fn);
+  },
+  updatePage(patch) { get().commit((s) => ({ ...s, pages: s.pages.map((p, i) => (i === get().pageIdx ? { ...p, ...patch } : p)) })); },
+  undo() {
+    const { past, sheet, future } = get(); if (!past.length || !sheet) return;
+    const prev = past[past.length - 1]!;
+    set({ sheet: prev, past: past.slice(0, -1), future: [sheet, ...future], pageIdx: Math.min(get().pageIdx, prev.pages.length - 1) });
+    persist(prev);
+  },
+  redo() {
+    const { past, sheet, future } = get(); if (!future.length || !sheet) return;
+    const next = future[0]!;
+    set({ sheet: next, past: [...past, sheet], future: future.slice(1) });
+    persist(next);
+  },
+  setMode(mode) { set({ mode, selected: undefined }); },
+  select(selected) { set({ selected }); },
+  setPage(pageIdx) { if (get().pageIdx !== pageIdx) set({ pageIdx }); },
+  say(toast) { set({ toast }); setTimeout(() => { if (get().toast === toast) set({ toast: undefined }); }, 2600); },
+}));
