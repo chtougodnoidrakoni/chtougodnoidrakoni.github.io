@@ -212,3 +212,5 @@ input, select, textarea { font-size: 16px; }
 .tbl-wrap thead tr { height: 1px; }
 .blk-spells td.w-ck, .blk-spells th.w-ck { padding: 0; text-align: center; overflow: visible; }
 .blk-spells td.w-ck .dot { width: .8em; height: .8em; display: inline-block; vertical-align: middle; }
+.blk-table th { font-size: .7em; letter-spacing: .01em; text-align: center; hyphens: auto; overflow-wrap: anywhere; }
+.blk-table th:first-child { text-align: left; }

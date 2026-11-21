@@ -134,6 +134,7 @@ export function BlockView({ b, sheet, fill }: { b: Block; sheet: Sheet; fill: bo
         <div className={`blk ${frameCls} blk-table`}>
           <Label b={b} scale={scale} />
           <div className="tbl-wrap"><table style={{ fontSize: fs }}>
+            {b.widths?.length === b.columns?.length && <colgroup>{b.widths!.map((w, i) => <col key={i} style={{ width: `${w}%` }} />)}</colgroup>}
             <thead><tr>{(b.columns ?? []).map((c, i) => <th key={i}>{c}</th>)}</tr></thead>
             <tbody>{(b.cells ?? []).map((row, r) => (
               <tr key={r}>{(b.columns ?? []).map((_, c) => (

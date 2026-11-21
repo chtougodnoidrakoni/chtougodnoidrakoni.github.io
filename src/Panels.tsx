@@ -104,6 +104,7 @@ export function Inspector() {
         {b.type === 'table' && (
           <>
             <Field label="Столбцы через запятую"><TextIn value={(b.columns ?? []).join(', ')} onChange={(e) => set({ columns: e.target.value.split(',').map((x) => x.trim()) })} /></Field>
+            <Field label="Ширина столбцов в %, через запятую (пусто — поровну)"><TextIn inputMode="numeric" defaultValue={(b.widths ?? []).join(', ')} key={b.id + (b.columns?.length ?? 0)} onBlur={(e) => { const w = e.target.value.split(',').map((x) => parseFloat(x)).filter((x) => x > 0); set({ widths: w.length === (b.columns?.length ?? 0) ? w : undefined }); }} /></Field>
             <Field label="Строк"><Num value={b.cells?.length ?? 0} min={1} max={40} onChange={(v) => set({ cells: Array.from({ length: v }, (_, i) => b.cells?.[i] ?? (b.columns ?? []).map(() => '')) })} /></Field>
           </>
         )}

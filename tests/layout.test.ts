@@ -105,3 +105,17 @@ describe('удаление блока', () => {
     expect(area(r)).toBeGreaterThan(area(page.blocks) - goals.w * goals.h + 100);
   });
 });
+
+describe('таблица оружия', () => {
+  it('старый порядок колонок переставляется вместе с текстом', async () => {
+    const { migrateSheet, WEAPON_COLS } = await import('../src/model');
+    const s = clubTemplate();
+    const t = s.pages[1]!.blocks.find((x) => x.label === 'Оружие')!;
+    t.columns = ['Оружие', 'Попадание', 'Бонус к урону', 'Урон', 'Вид урона']; t.widths = undefined;
+    t.cells = [['Меч', '+5', '+3', '1d8', 'рубящий']];
+    const m = migrateSheet(s).pages[1]!.blocks.find((x) => x.label === 'Оружие')!;
+    expect(m.columns).toEqual(WEAPON_COLS);
+    expect(m.cells![0]).toEqual(['Меч', '1d8', '+5', '+3', 'рубящий']);
+    expect(m.widths).toEqual([30, 15, 15, 15, 25]);
+  });
+});

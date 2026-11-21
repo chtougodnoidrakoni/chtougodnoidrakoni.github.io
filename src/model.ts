@@ -35,6 +35,8 @@ export interface Block {
   /** текст в несколько колонок: заголовки колонок и их содержимое */
   parts?: string[];
   values?: string[];
+  /** ширина столбцов таблицы в процентах */
+  widths?: number[];
 }
 
 export interface Page { id: string; title: string; kind: 'layout' | 'spellbook'; blocks: Block[] }
@@ -59,6 +61,18 @@ export interface Sheet {
   fonts?: FontSet;
   pages: Page[];
   spells: SheetSpell[];
+}
+
+export const WEAPON_COLS = ['Оружие', 'Урон', 'Бонус к попаданию', 'Бонус к урону', 'Вид урона'];
+export const WEAPON_W = [30, 15, 15, 15, 25];
+const OLD_WEAPON = ['Оружие', 'Попадание', 'Бонус к урону', 'Урон', 'Вид урона'];
+/** Старые листы: таблица оружия в прежнем порядке → новый порядок, текст переезжает вместе с колонками. */
+export function migrateSheet(s: Sheet): Sheet {
+  const order = WEAPON_COLS.map((c) => OLD_WEAPON.indexOf(c === 'Бонус к попаданию' ? 'Попадание' : c));
+  return { ...s, pages: s.pages.map((p) => ({ ...p, blocks: p.blocks.map((b) => {
+    if (b.type !== 'table' || b.columns?.join('|') !== OLD_WEAPON.join('|')) return b;
+    return { ...b, columns: [...WEAPON_COLS], widths: [...WEAPON_W], cells: (b.cells ?? []).map((row) => order.map((i) => row[i] ?? '')) };
+  }) })) };
 }
 
 export type FontSet = 'tale' | 'chronicle' | 'rune' | 'strict';
@@ -144,7 +158,7 @@ function statsPage(): Page {
       B('field', { label: 'Временные хиты', x: 106, y: 82, w: 45, h: 18, frame: 'frame' }),
       B('field', { label: 'Кости хитов', x: 153, y: 82, w: 45, h: 18, frame: 'frame' }),
       B('circles', { label: 'Спасброски от смерти', x: 106, y: 102, w: 92, h: 18, rows: [{ name: 'Успехи', count: 3, filled: 0 }, { name: 'Провалы', count: 3, filled: 0 }] }),
-      B('table', { label: 'Оружие', x: 106, y: 122, w: 92, h: 50, fontSize: 8, columns: ['Оружие', 'Попадание', 'Бонус к урону', 'Урон', 'Вид урона'], cells: Array.from({ length: 5 }, () => ['', '', '', '', '']) }),
+      B('table', { label: 'Оружие', x: 106, y: 122, w: 92, h: 50, fontSize: 8, columns: WEAPON_COLS, widths: WEAPON_W, cells: Array.from({ length: 5 }, () => ['', '', '', '', '']) }),
       B('text', { label: 'Владения и языки', x: 106, y: 174, w: 92, h: 62 }),
       B('text', { label: 'Снаряжение', x: 12, y: 239, w: 124, h: 46 }),
       B('table', { label: 'Монеты', x: 138, y: 239, w: 60, h: 17, fontSize: 8, columns: ['ПМ', 'ЗМ', 'ЭМ', 'СМ', 'ММ'], cells: [['', '', '', '', '']] }),
