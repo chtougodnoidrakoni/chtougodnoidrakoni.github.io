@@ -166,11 +166,11 @@ describe('закреплённые блоки и обновление стары
     const s = clubTemplate();
     const old: typeof s = { ...s, ver: undefined, pages: s.pages.map((p) => ({ ...p, blocks: p.blocks.map((x): Block => ({ ...x, fixed: undefined })) })) };
     old.pages[2]!.blocks.push({ ...makeBlock('circles'), label: 'Ресурсы', x: 12, y: 233, w: 186, h: 52 });
-    old.pages[2]!.blocks = old.pages[2]!.blocks.map((x) => (x.label === 'Черты и дополнительные способности' ? { ...x, h: 56 } : x));
+    old.pages[2]!.blocks = old.pages[2]!.blocks.map((x) => (x.label === 'Черты и дополнительные способности' ? { ...x, h: 61 - 52 - 2 } : x));
     const m = migrateLayout(old);
     expect(m.ver).toBe(2);
     expect(m.pages[2]!.blocks.some((x) => x.label === 'Ресурсы')).toBe(false);
-    expect(m.pages[2]!.blocks.find((x) => x.label === 'Черты и дополнительные способности')!.h).toBe(111);
+    expect(m.pages[2]!.blocks.find((x) => x.label === 'Черты и дополнительные способности')!.y + m.pages[2]!.blocks.find((x) => x.label === 'Черты и дополнительные способности')!.h).toBe(285);
     expect(m.pages[0]!.blocks.find((x) => x.label === 'Портрет')!.fixed).toBe(true);
     expect(migrateLayout(m)).toBe(m);
   });
