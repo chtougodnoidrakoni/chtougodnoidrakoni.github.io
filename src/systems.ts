@@ -3,7 +3,7 @@
  * Листы нарисованы с нуля в стиле клуба: здесь только названия полей и параметров,
  * без официальных бланков и текстов правил.
  */
-import { blankPage, makeBlock as B, notesPage, uid, type GameSystem, type Page, type Sheet } from './model';
+import { blankPage, makeBlock as B, notesPage, uid, SYSTEM_THEME, THEMES, type GameSystem, type Page, type Sheet } from './model';
 
 const title = (label: string, size = 22) => B('title', { label, x: 12, y: 13, w: 150, h: 16, fontSize: size });
 const emblem = () => B('emblem', { x: 170, y: 12, w: 28, h: 28 });
@@ -74,7 +74,7 @@ function bitdMain(): Page {
     B('circles', { label: 'Травмы', x: 106, y: 75, w: 92, h: 26, perRow: 2, rows: BITD_TRAUMA.map((name) => ({ name, count: 1, filled: 0 })) }),
     B('table', { label: 'Вред', x: 12, y: 89, w: 92, h: 42, fontSize: 8, columns: ['Ур.', 'Вред', 'Последствие'], widths: [10, 60, 30], cells: [['3', '', 'Нужна помощь'], ['2', '', '−1 кубик'], ['2', '', '−1 кубик'], ['1', '', 'Слабее эффект'], ['1', '', 'Слабее эффект']] }),
     B('circles', { label: 'Лечение', x: 106, y: 103, w: 92, h: 12, rows: [{ name: 'Часы лечения', count: 4, filled: 0 }] }),
-    B('circles', { label: 'Броня', x: 106, y: 117, w: 92, h: 14, rows: [{ name: 'Броня', count: 1, filled: 0 }, { name: 'Тяжёлая', count: 1, filled: 0 }, { name: 'Особая', count: 1, filled: 0 }] }),
+    B('circles', { label: 'Броня', x: 106, y: 117, w: 92, h: 14, perRow: 3, rows: [{ name: 'Броня', count: 1, filled: 0 }, { name: 'Тяжёлая', count: 1, filled: 0 }, { name: 'Особая', count: 1, filled: 0 }] }),
     ...BITD_ATTRS.map(([label, acts], i) => B('circles', { label, x: 12 + i * 63, y: 134, w: 60, h: 40, rows: [{ name: 'Опыт', count: 6, filled: 0 }, ...acts.map((name) => ({ name, count: 4, filled: 0 }))] })),
     t('Особые способности', 12, 177, 120, 56),
     B('circles', { label: 'Опыт типажа', x: 135, y: 177, w: 63, h: 12, rows: [{ name: 'Опыт', count: 8, filled: 0 }] }),
@@ -152,7 +152,7 @@ export const SYSTEMS: { id: GameSystem; name: string; hint: string }[] = [
 /** Новый лист выбранной игры (для D&D — прежний шаблон клуба). */
 export function systemTemplate(system: Exclude<GameSystem, 'dnd'>): Sheet {
   const pages = system === 'coc' ? [cocMain(), cocSkills()] : system === 'bitd' ? [bitdMain(), bitdCrew()] : [cprMain(), cprSkills()];
-  return { id: uid(), name: 'Новый персонаж', updatedAt: Date.now(), fontScale: 1, paper: 'white', ver: 2, system, pages: [...pages, notesPage()], spells: [] };
+  return { id: uid(), name: 'Новый персонаж', updatedAt: Date.now(), fontScale: 1, paper: 'white', ver: 2, system, theme: SYSTEM_THEME[system], fonts: THEMES.find((t) => t.id === SYSTEM_THEME[system])!.fonts, pages: [...pages, notesPage()], spells: [] };
 }
 
 export { blankPage };

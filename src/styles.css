@@ -34,6 +34,30 @@
 @import '@fontsource/amatic-sc/cyrillic-700.css';
 @import '@fontsource/amatic-sc/latin-700.css';
 @import '@fontsource/kurale/latin-400.css';
+@import '@fontsource/russo-one/cyrillic-400.css';
+@import '@fontsource/russo-one/latin-400.css';
+@import '@fontsource/oswald/cyrillic-500.css';
+@import '@fontsource/oswald/latin-500.css';
+@import '@fontsource/oswald/cyrillic-600.css';
+@import '@fontsource/oswald/latin-600.css';
+@import '@fontsource/exo-2/cyrillic-400.css';
+@import '@fontsource/exo-2/latin-400.css';
+@import '@fontsource/exo-2/cyrillic-500.css';
+@import '@fontsource/exo-2/latin-500.css';
+@import '@fontsource/exo-2/cyrillic-700.css';
+@import '@fontsource/exo-2/latin-700.css';
+@import '@fontsource/playfair-display-sc/cyrillic-400.css';
+@import '@fontsource/playfair-display-sc/latin-400.css';
+@import '@fontsource/playfair-display-sc/cyrillic-700.css';
+@import '@fontsource/playfair-display-sc/latin-700.css';
+@import '@fontsource/old-standard-tt/cyrillic-400.css';
+@import '@fontsource/old-standard-tt/latin-400.css';
+@import '@fontsource/old-standard-tt/cyrillic-700.css';
+@import '@fontsource/old-standard-tt/latin-700.css';
+@import '@fontsource/forum/cyrillic-400.css';
+@import '@fontsource/forum/latin-400.css';
+@import '@fontsource/pt-mono/cyrillic-400.css';
+@import '@fontsource/pt-mono/latin-400.css';
 
 @theme {
   --color-moss: #444e46;
@@ -60,6 +84,14 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 .fonts-chronicle { --f-display: 'Cormorant SC', serif; --f-label: 'Cormorant SC', serif; --f-body: 'Cormorant Garamond', Georgia, serif; }
 .fonts-strict { --f-display: 'Alegreya Sans SC', sans-serif; --f-label: 'Alegreya Sans SC', sans-serif; --f-body: 'Onest', system-ui, sans-serif; }
 .fonts-chronicle .inp, .fonts-chronicle .list-name { font-weight: 600; }
+.fonts-typewriter { --f-display: 'Forum', 'Cormorant SC', serif; --f-label: 'Forum', serif; --f-body: 'Forum', Georgia, serif; }
+.fonts-typewriter .inp, .fonts-typewriter .area, .fonts-typewriter td { font-family: 'PT Mono', 'Courier New', monospace; }
+.fonts-typewriter .blk-title .inp { font-family: var(--f-display); }
+.fonts-gaslight { --f-display: 'Playfair Display SC', Georgia, serif; --f-label: 'Oswald', sans-serif; --f-body: 'Old Standard TT', Georgia, serif; }
+.fonts-neon { --f-display: 'Russo One', sans-serif; --f-label: 'Oswald', sans-serif; --f-body: 'Exo 2', system-ui, sans-serif; }
+.fonts-typewriter .blk-title .inp, .fonts-typewriter .blk-stat .inp, .fonts-typewriter .pct-main { font-weight: 400; }
+.fonts-gaslight .blk-label, .fonts-neon .blk-label, .fonts-gaslight .blk th, .fonts-neon .blk th, .fonts-gaslight .pl-head, .fonts-neon .pl-head { font-weight: 500; letter-spacing: .09em; }
+.fonts-neon .blk-title .inp, .fonts-neon .blk-stat .inp, .fonts-neon .pct-main { font-weight: 400; }
 .fonts-rune .blk-title .inp { font-weight: 400; letter-spacing: .03em; }
 body { margin: 0;  background: var(--color-moss-deep); color: var(--color-cream); font-family: var(--font-sans); -webkit-tap-highlight-color: transparent; }
 .font-display-sc { font-family: var(--font-display); }
@@ -299,3 +331,68 @@ input, select, textarea { font-size: 16px; }
 .pl-val { text-align: center; font-weight: 700; color: var(--color-moss); border-bottom: max(1px, calc(var(--u) * .2)) solid color-mix(in srgb, var(--color-moss) 50%, transparent); min-height: 1.1em; }
 .pl-sub { text-align: center; font-size: .82em; color: var(--color-sand-dark); border-bottom: max(1px, calc(var(--u) * .15)) solid color-mix(in srgb, var(--color-sand) 50%, transparent); min-height: 1.1em; }
 .pl-base { border: max(1px, calc(var(--u) * .25)) solid var(--color-sand); border-radius: calc(var(--u) * .7); }
+
+
+/* ================= стили других игр ================= */
+/* «Досье» (Зов Ктулху): сепия и болотная зелень, прямые рамки с двойной линией, веера ар-деко */
+.page.theme-eldritch { --color-moss: #2f2b24; --color-sand: #7d8a63; --color-sand-dark: #35574f; --color-ink: #2a2620; }
+.theme-eldritch .page-frame { border-radius: 0; border-width: calc(var(--u) * .3); inset: calc(var(--u) * 7); }
+.theme-eldritch .page-frame::after { border-radius: 0; inset: calc(var(--u) * 1.1); border-width: calc(var(--u) * .15); border-color: var(--color-sand); }
+.theme-eldritch .b-frame { border-radius: 0; border-width: calc(var(--u) * .25); box-shadow: inset 0 0 0 calc(var(--u) * .55) #fff, inset 0 0 0 calc(var(--u) * .7) var(--color-sand); }
+.theme-eldritch .b-frame > .blk-label { border-bottom: max(1px, calc(var(--u) * .15)) solid color-mix(in srgb, var(--color-sand) 70%, transparent); padding-bottom: .2em; margin-bottom: .2em; }
+.theme-eldritch .blk-label, .theme-eldritch .blk th, .theme-eldritch .pl-head { letter-spacing: .14em; }
+.theme-eldritch .pct-parts span, .theme-eldritch .blk-ph { border-radius: 0; }
+.theme-eldritch .circ.on, .theme-eldritch .dot.on { background: var(--color-sand-dark); }
+.sky.deco { fill: none; stroke: var(--color-sand); stroke-width: .25; stroke-linecap: round; }
+.sky.deco .fill { fill: var(--color-sand-dark); stroke: none; }
+.theme-eldritch .blk-emblem img { filter: sepia(.5) saturate(.8); }
+
+/* «Газовый свет» (Клинки во тьме): почти чёрная сталь, латунь, бордовые подписи, толстые рамки на заклёпках */
+.page.theme-noir { --color-moss: #1e2326; --color-sand: #9a7b4f; --color-sand-dark: #7b2121; --color-ink: #1a1d1f; }
+.theme-noir .page-frame { border-radius: 0; border-width: calc(var(--u) * .7); inset: calc(var(--u) * 7); }
+.theme-noir .page-frame::after { border-radius: 0; inset: calc(var(--u) * 1.3); border-width: calc(var(--u) * .2); border-color: var(--color-sand); }
+.theme-noir .b-frame { border-radius: 0; border-width: calc(var(--u) * .45); box-shadow: inset 0 0 0 calc(var(--u) * .45) #fff, inset 0 0 0 calc(var(--u) * .6) var(--color-sand);
+  background:
+    radial-gradient(circle, var(--color-moss) 0 calc(var(--u) * .45), transparent calc(var(--u) * .5)) left calc(var(--u) * .2) top calc(var(--u) * .2) / calc(var(--u) * 1.6) calc(var(--u) * 1.6) no-repeat,
+    radial-gradient(circle, var(--color-moss) 0 calc(var(--u) * .45), transparent calc(var(--u) * .5)) right calc(var(--u) * .2) top calc(var(--u) * .2) / calc(var(--u) * 1.6) calc(var(--u) * 1.6) no-repeat,
+    radial-gradient(circle, var(--color-moss) 0 calc(var(--u) * .45), transparent calc(var(--u) * .5)) left calc(var(--u) * .2) bottom calc(var(--u) * .2) / calc(var(--u) * 1.6) calc(var(--u) * 1.6) no-repeat,
+    radial-gradient(circle, var(--color-moss) 0 calc(var(--u) * .45), transparent calc(var(--u) * .5)) right calc(var(--u) * .2) bottom calc(var(--u) * .2) / calc(var(--u) * 1.6) calc(var(--u) * 1.6) no-repeat; }
+.theme-noir .b-frame > .blk-label { background: var(--color-moss); color: #fff; margin: calc(var(--u) * -1.2) calc(var(--u) * -1.8) calc(var(--u) * .3); padding: calc(var(--u) * .3) calc(var(--u) * 1.8); }
+.theme-noir .blk-abx > .blk-label { border-bottom: 0; }
+.theme-noir .pct-parts span, .theme-noir .blk-ph { border-radius: 0; }
+.theme-noir .circ.on { background: var(--color-sand-dark); }
+.theme-noir .dot.on { background: var(--color-moss); }
+.theme-noir .blk-title .inp { letter-spacing: .02em; }
+.sky.noir .rv { fill: var(--color-moss); }
+.sky.noir .rv-h { fill: #fff; opacity: .55; }
+.sky.noir .nb { fill: none; stroke: var(--color-sand-dark); stroke-width: .5; stroke-linecap: round; }
+.theme-noir .blk-emblem img { filter: grayscale(.7) contrast(1.1); }
+
+/* «Неон» (Киберпанк RED): графит, красный и бирюза, срезанные углы, квадратные отметки */
+.page.theme-cyber { --color-moss: #17171f; --color-sand: #13a3b5; --color-sand-dark: #d01f3c; --color-ink: #15151c; }
+.theme-cyber .page-frame { display: none; }
+.sky.cyber { fill: none; stroke-linejoin: miter; }
+.sky.cyber .cy-frame { stroke: var(--color-moss); stroke-width: .5; }
+.sky.cyber .cy-thin { stroke: var(--color-sand); stroke-width: .2; }
+.sky.cyber .cy-red { stroke: var(--color-sand-dark); stroke-width: 1.3; }
+.sky.cyber .cy-cyan { stroke: var(--color-sand); stroke-width: 1.3; }
+.sky.cyber .cy-fill { fill: var(--color-moss); }
+.sky.cyber .cy-red-fill { fill: var(--color-sand-dark); }
+.sky.cyber .cy-cyan-fill { fill: var(--color-sand); }
+.theme-cyber .b-frame { --cut: calc(var(--u) * 2.6); border-radius: 0; border-width: calc(var(--u) * .28); box-shadow: none;
+  clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, var(--cut) 100%, 0 calc(100% - var(--cut)));
+  background:
+    linear-gradient(225deg, transparent calc(var(--cut) * .7 - var(--u) * .2), var(--color-moss) calc(var(--cut) * .7 - var(--u) * .2), var(--color-moss) calc(var(--cut) * .7 + var(--u) * .1), transparent calc(var(--cut) * .7 + var(--u) * .1)) right top / calc(var(--cut) * 1.2) calc(var(--cut) * 1.2) no-repeat,
+    linear-gradient(45deg, transparent calc(var(--cut) * .7 - var(--u) * .2), var(--color-moss) calc(var(--cut) * .7 - var(--u) * .2), var(--color-moss) calc(var(--cut) * .7 + var(--u) * .1), transparent calc(var(--cut) * .7 + var(--u) * .1)) left bottom / calc(var(--cut) * 1.2) calc(var(--cut) * 1.2) no-repeat,
+    linear-gradient(var(--color-sand-dark), var(--color-sand-dark)) left top / calc(var(--u) * 9) calc(var(--u) * .8) no-repeat; }
+.theme-cyber .b-shield, .theme-cyber .b-circle { border-radius: 0; }
+.theme-cyber .pl-base, .theme-cyber .pct-parts span, .theme-cyber .blk-ph, .theme-cyber .abil-score { border-radius: 0 !important; }
+.theme-cyber .dot, .theme-cyber .circ { border-radius: 0; transform: rotate(45deg) scale(.82); }
+.theme-cyber .dot.on, .theme-cyber .circ.on { background: var(--color-sand-dark); box-shadow: inset 0 0 0 calc(var(--u) * .3) #fff; }
+.theme-cyber .blk th { background: color-mix(in srgb, var(--color-sand) 12%, transparent); }
+.theme-cyber .blk-title .inp { text-transform: uppercase; letter-spacing: .04em; }
+.theme-cyber .blk-title { border-bottom-color: var(--color-sand-dark); }
+.theme-cyber .b-line { border-bottom-width: calc(var(--u) * .35); }
+.theme-cyber .list-val { border-bottom-color: var(--color-sand); }
+.theme-cyber .blk-emblem img { filter: grayscale(1) contrast(1.2); }
+.theme-eldritch .pl-base, .theme-noir .pl-base { border-radius: 0; }

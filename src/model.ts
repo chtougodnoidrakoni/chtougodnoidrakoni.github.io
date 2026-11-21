@@ -128,19 +128,30 @@ export function relayoutFromTemplate(page: Page, findFree: (bl: Block[], w: numb
 
 export type GameSystem = 'dnd' | 'coc' | 'bitd' | 'cpr';
 
-export type SheetTheme = 'club' | 'chronicle' | 'strict';
+export type SheetTheme = 'club' | 'chronicle' | 'strict' | 'eldritch' | 'noir' | 'cyber';
 export const THEMES: { id: SheetTheme; name: string; hint: string; fonts: FontSet; ink: string; accent: string; label: string }[] = [
   { id: 'club', name: 'Клубный', hint: 'зелёный и песочный, звёзды и месяц', fonts: 'tale', ink: '#444e46', accent: '#aa9173', label: '#8a7357' },
   { id: 'chronicle', name: 'Летопись', hint: 'старинная рукопись, завитки по углам', fonts: 'chronicle', ink: '#4a3426', accent: '#b08a5a', label: '#7d2f28' },
   { id: 'strict', name: 'Строгий', hint: 'чёрно-белый, экономит краску', fonts: 'strict', ink: '#222222', accent: '#9a9a9a', label: '#4a4a4a' },
+  { id: 'eldritch', name: 'Досье', hint: 'папка сыщика 20-х, ар-деко, машинка', fonts: 'typewriter', ink: '#2f2b24', accent: '#7d8a63', label: '#35574f' },
+  { id: 'noir', name: 'Газовый свет', hint: 'тёмный город, латунь, заклёпки', fonts: 'gaslight', ink: '#1e2326', accent: '#9a7b4f', label: '#7b2121' },
+  { id: 'cyber', name: 'Неон', hint: 'срезанные углы, красный и бирюза', fonts: 'neon', ink: '#17171f', accent: '#13a3b5', label: '#d01f3c' },
 ];
 
-export type FontSet = 'tale' | 'chronicle' | 'rune' | 'strict';
+/** стиль листа по умолчанию для каждой игры */
+export const SYSTEM_THEME: Record<GameSystem, SheetTheme> = { dnd: 'club', coc: 'eldritch', bitd: 'noir', cpr: 'cyber' };
+export const sheetTheme = (s: { theme?: SheetTheme; system?: GameSystem }): SheetTheme => s.theme ?? SYSTEM_THEME[s.system ?? 'dnd'];
+export const sheetFonts = (s: { theme?: SheetTheme; system?: GameSystem; fonts?: FontSet }): FontSet => s.fonts ?? THEMES.find((t) => t.id === sheetTheme(s))!.fonts;
+
+export type FontSet = 'tale' | 'chronicle' | 'rune' | 'strict' | 'typewriter' | 'gaslight' | 'neon';
 export const FONT_SETS: { id: FontSet; name: string; hint: string }[] = [
   { id: 'tale', name: 'Сказание', hint: 'книжный, как в старых томах' },
   { id: 'rune', name: 'Руны', hint: 'резкие высокие буквы' },
   { id: 'chronicle', name: 'Летопись', hint: 'изящный, тонкий' },
   { id: 'strict', name: 'Строгий', hint: 'простой и чёткий' },
+  { id: 'typewriter', name: 'Машинка', hint: 'ар-деко и печатная машинка' },
+  { id: 'gaslight', name: 'Газовый свет', hint: 'викторианский, с засечками' },
+  { id: 'neon', name: 'Неон', hint: 'рубленый, технический' },
 ];
 
 export const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);

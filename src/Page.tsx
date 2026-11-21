@@ -2,7 +2,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { locked, resizeEdge } from './layout';
 import { BlockView, pt } from './blocks';
-import { PAGE_H, PAGE_W, SCHOOLS, spellOf, type Block, type Page, type Sheet, type SpellData } from './model';
+import { PAGE_H, PAGE_W, SCHOOLS, sheetFonts, sheetTheme, spellOf, type Block, type Page, type Sheet, type SpellData } from './model';
 import { useStore } from './store';
 
 
@@ -19,6 +19,9 @@ const star = (cx: number, cy: number, r: number, k = 0.45) => Array.from({ lengt
 function Sky({ theme }: { theme: string }) {
   if (theme === 'strict') return null;
   if (theme === 'chronicle') return <Flourishes />;
+  if (theme === 'cyber') return <CyberFrame />;
+  if (theme === 'noir') return <Rivets />;
+  if (theme === 'eldritch') return <DecoCorners />;
   return (
     <svg className="sky" viewBox="0 0 210 297" preserveAspectRatio="none">
       <path d="M10.6 7.3 a2.8 2.8 0 1 0 1 5.1 a2.3 2.3 0 1 1 -1 -5.1 z" />
@@ -42,11 +45,58 @@ function Flourishes() {
   );
 }
 
+/** Киберпанк: рамка со срезанными углами, красные метки, штрихкод и «служебные» насечки. */
+function CyberFrame() {
+  const c = 5;
+  const L = 7, T = 7, R = 203, B = 290;
+  const frame = `M${L + c} ${T} H${R - c * 2.4} l${c * 0.9} ${c * 0.9} H${R - c} L${R} ${T + c} V${B - c} L${R - c} ${B} H${L + c * 3} l-${c * 0.9} -${c * 0.9} H${L + c} L${L} ${B - c} V${T + c} Z`;
+  const inner = `M${L + 1.4 + c} ${T + 1.4} H${R - 1.4 - c * 2.4} M${R - 1.4} ${T + 1.4 + c + 6} V${B - 1.4 - c - 40} M${L + 1.4} ${T + 1.4 + c + 40} V${B - 1.4 - c - 6}`;
+  return (
+    <svg className="sky cyber" viewBox="0 0 210 297" preserveAspectRatio="none">
+      <path className="cy-frame" d={frame} />
+      <path className="cy-thin" d={inner} />
+      <path className="cy-red" d={`M${L + c} ${T} H${L + c + 22}`} />
+      <path className="cy-red" d={`M${R} ${B - c - 22} V${B - c}`} />
+      <path className="cy-cyan" d={`M${R - c * 2.4} ${T} l${c * 0.9} ${c * 0.9} H${R - c}`} />
+      {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((i) => <rect key={i} className="cy-fill" x={150 + i * 1.3 + (i % 3) * 0.4} y={9.2} width={i % 4 === 0 ? 0.8 : 0.4} height={2.2} />)}
+      {[0, 1, 2, 3, 4].map((i) => <rect key={i} className="cy-red-fill" x={L + 3 + i * 2.2} y={B - 3.4} width={1.4} height={0.8} />)}
+      {[0, 1, 2].map((i) => <rect key={i} className="cy-cyan-fill" x={R - 24 - i * 2.2} y={B - 3.4} width={1.4} height={0.8} />)}
+    </svg>
+  );
+}
+
+/** «Клинки во тьме»: стальная рамка на заклёпках и скрещённые клинки у подписи. */
+function Rivets() {
+  const pts: [number, number][] = [];
+  for (const x of [9.2, 105, 200.8]) for (const y of [9.2, 287.8]) pts.push([x, y]);
+  for (const y of [100, 197]) for (const x of [9.2, 200.8]) pts.push([x, y]);
+  const blade = 'M-3.2 -3.2 L2.2 2.2 M1.4 3 L3 1.4 M2.4 2.4 L3.4 3.4';
+  return (
+    <svg className="sky noir" viewBox="0 0 210 297" preserveAspectRatio="none">
+      {pts.map(([x, y], i) => <g key={i}><circle className="rv" cx={x} cy={y} r={1.05} /><circle className="rv-h" cx={x - 0.3} cy={y - 0.3} r={0.3} /></g>)}
+      {[55, 155].map((x) => <g key={x} className="nb" transform={`translate(${x} 287.6) scale(.62)`}><path d={blade} /><path d={blade} transform="scale(-1 1)" /></g>)}
+    </svg>
+  );
+}
+
+/** «Зов Ктулху»: веерные уголки ар-деко и глаз у подписи. */
+function DecoCorners() {
+  const fan = 'M0 0 V9 M0 0 H9 M0 0 L6 6 M0 0 L3 7.2 M0 0 L7.2 3 M0 4.2 A4.2 4.2 0 0 0 4.2 0 M0 6.4 A6.4 6.4 0 0 0 6.4 0';
+  const corners: [number, number, number, number][] = [[8.2, 8.2, 1, 1], [201.8, 8.2, -1, 1], [8.2, 288.8, 1, -1], [201.8, 288.8, -1, -1]];
+  const eye = 'M-2.6 0 Q0 -1.8 2.6 0 Q0 1.8 -2.6 0 Z';
+  return (
+    <svg className="sky deco" viewBox="0 0 210 297" preserveAspectRatio="none">
+      {corners.map(([x, y, sx, sy], i) => <path key={i} d={fan} transform={`translate(${x} ${y}) scale(${sx * 0.9} ${sy * 0.9})`} />)}
+      {[56, 154].map((x) => <g key={x} transform={`translate(${x} 287.7)`}><path d={eye} /><circle className="fill" r={0.65} /><path d="M-4.6 0 H-3.3 M3.3 0 H4.6" /></g>)}
+    </svg>
+  );
+}
+
 export function PageShell({ scale, sheet, num, children }: { scale: number; sheet: Sheet; num: number; children: React.ReactNode }) {
   return (
-    <div className={`page fonts-${sheet.fonts ?? 'tale'} theme-${sheet.theme ?? 'club'} ${sheet.paper === 'parchment' ? 'parchment' : ''}`} style={{ ['--u' as string]: `${scale}px` }}>
+    <div className={`page fonts-${sheetFonts(sheet)} theme-${sheetTheme(sheet)} ${sheet.paper === 'parchment' ? 'parchment' : ''}`} style={{ ['--u' as string]: `${scale}px` }}>
       <div className="page-inner" />
-      <div className="page-frame" /><Sky theme={sheet.theme ?? 'club'} />
+      <div className="page-frame" /><Sky theme={sheetTheme(sheet)} />
       {children}
       <div className="page-foot">Что Угодно и Драконы • г. Астрахань</div>
       <div className="page-num">{num}</div>
