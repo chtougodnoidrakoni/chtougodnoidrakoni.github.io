@@ -50,7 +50,8 @@ export function BlockView({ b, sheet, fill }: { b: Block; sheet: Sheet; fill: bo
       );
     case 'text':
       if (b.parts?.length) {
-        const lh = { fontSize: fs, lineHeight: 1.45, ['--lh' as string]: pt(b.fontSize * 1.45, scale) };
+        const ts = b.textSize ?? b.fontSize;
+        const lh = { fontSize: pt(ts, scale), lineHeight: 1.45, ['--lh' as string]: pt(ts * 1.45, scale) };
         return (
           <div className={`blk ${frameCls} blk-text`}>
             <Label b={b} scale={scale} />
@@ -69,7 +70,7 @@ export function BlockView({ b, sheet, fill }: { b: Block; sheet: Sheet; fill: bo
       return (
         <div className={`blk ${frameCls} blk-text`}>
           <Label b={b} scale={scale} />
-          <textarea className={`inp area ${b.lined !== false ? 'lined' : ''}`} style={{ fontSize: fs, lineHeight: 1.45, ['--lh' as string]: pt(b.fontSize * 1.45, scale) }} value={b.value ?? ''} readOnly={!fill} onChange={(e) => set({ value: e.target.value })} />
+          <textarea className={`inp area ${b.lined !== false ? 'lined' : ''}`} style={{ fontSize: pt(b.textSize ?? b.fontSize, scale), lineHeight: 1.45, ['--lh' as string]: pt((b.textSize ?? b.fontSize) * 1.45, scale) }} value={b.value ?? ''} readOnly={!fill} onChange={(e) => set({ value: e.target.value })} />
         </div>
       );
     case 'image':

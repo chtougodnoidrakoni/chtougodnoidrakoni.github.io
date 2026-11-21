@@ -26,7 +26,10 @@ test('лист: заполнение в окне, редактор страни�
   await page.getByRole('button', { name: 'Больше шрифт: Внешность' }).click();
   await expect(page.getByRole('button', { name: 'Сохранить' })).toHaveCount(0);
   expect(await area.evaluate((e) => parseFloat(getComputedStyle(e).fontSize))).toBeGreaterThan(fs0);
+  const lbl = blk('Внешность').locator('.blk-label');
+  const l0 = await lbl.evaluate((e) => parseFloat(getComputedStyle(e).fontSize));
   await page.getByRole('button', { name: 'Меньше шрифт: Внешность' }).click();
+  expect(await lbl.evaluate((e) => parseFloat(getComputedStyle(e).fontSize))).toBe(l0);
   await page.screenshot({ path: 'e2e/shots/05-font-buttons.png' });
   // характеристика и автонавык
   await blk('Сила').scrollIntoViewIfNeeded(); await blk('Сила').click();

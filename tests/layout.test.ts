@@ -204,3 +204,13 @@ describe('карточки характеристик', () => {
     expect(r.page.blocks.some((x) => x.type === 'checklist' || x.type === 'ability')).toBe(false);
   });
 });
+
+describe('хиты одним видом', () => {
+  it('старые поля текущих/временных хитов и костей становятся как «Максимум хитов», число сохраняется', async () => {
+    const { migrateSheet } = await import('../src/model');
+    const s = clubTemplate();
+    s.pages[1]!.blocks = s.pages[1]!.blocks.map((x) => (x.label === 'Текущие хиты' ? { ...x, type: 'field' as const, value: '57' } : x));
+    const b = migrateSheet(s).pages[1]!.blocks.find((x) => x.label === 'Текущие хиты')!;
+    expect(b).toMatchObject({ type: 'stat', value: '57', fontSize: 6.5 });
+  });
+});

@@ -39,6 +39,8 @@ export interface Block {
   widths?: number[];
   /** закреплён: нельзя двигать и менять размер */
   fixed?: boolean;
+  /** размер текста внутри блока (кнопки ± на странице); подпись блока остаётся по fontSize */
+  textSize?: number;
   /** спасбросок в карточке характеристики */
   save?: CheckItem;
 }
@@ -73,11 +75,14 @@ export interface Sheet {
 
 export const WEAPON_COLS = ['Оружие', 'Урон', 'Бонус к попаданию', 'Бонус к урону', 'Вид урона'];
 export const WEAPON_W = [30, 15, 15, 15, 25];
+const HP_FIELDS = ['Текущие хиты', 'Временные хиты', 'Кости хитов'];
 const OLD_WEAPON = ['Оружие', 'Попадание', 'Бонус к урону', 'Урон', 'Вид урона'];
 /** Старые листы: таблица оружия в прежнем порядке → новый порядок, текст переезжает вместе с колонками. */
 export function migrateSheet(s: Sheet): Sheet {
   const order = WEAPON_COLS.map((c) => OLD_WEAPON.indexOf(c === 'Бонус к попаданию' ? 'Попадание' : c));
   return { ...s, pages: s.pages.map((p) => ({ ...p, blocks: p.blocks.map((b) => {
+    // хиты в одном виде с «Максимумом хитов»: крупная цифра по центру
+    if (b.type === 'field' && HP_FIELDS.includes(b.label)) return { ...b, type: 'stat' as const, fontSize: 6.5 };
     if (b.type !== 'table' || b.columns?.join('|') !== OLD_WEAPON.join('|')) return b;
     return { ...b, columns: [...WEAPON_COLS], widths: [...WEAPON_W], cells: (b.cells ?? []).map((row) => order.map((i) => row[i] ?? '')) };
   }) })) };
@@ -211,9 +216,9 @@ function statsPage(): Page {
         return B('abilityx', { label, key, x, y, w: 36, h, fontSize: 7.5, save: { name: 'Спасбросок', sub: key }, items: SKILLS.filter(([, sk]) => sk === key).map(([n, sk]) => ({ name: n, sub: sk })) });
       }),
       B('stat', { label: 'Максимум хитов', x: 88, y: 47, w: 26, h: 16, fontSize: 6.5 }),
-      B('field', { label: 'Текущие хиты', fontSize: 7.5, x: 116, y: 47, w: 25, h: 16, frame: 'frame' }),
-      B('field', { label: 'Временные хиты', fontSize: 7.5, x: 143, y: 47, w: 25, h: 16, frame: 'frame' }),
-      B('field', { label: 'Кости хитов', fontSize: 7.5, x: 170, y: 47, w: 28, h: 16, frame: 'frame' }),
+      B('stat', { label: 'Текущие хиты', x: 116, y: 47, w: 25, h: 16, fontSize: 6.5 }),
+      B('stat', { label: 'Временные хиты', x: 143, y: 47, w: 25, h: 16, fontSize: 6.5 }),
+      B('stat', { label: 'Кости хитов', x: 170, y: 47, w: 28, h: 16, fontSize: 6.5 }),
       B('circles', { label: 'Спасброски от смерти', x: 88, y: 65, w: 110, h: 11, rows: [{ name: 'Успехи', count: 3, filled: 0 }, { name: 'Провалы', count: 3, filled: 0 }] }),
       B('text', { label: 'Снаряжение', x: 88, y: 78, w: 54, h: 135 }),
       B('text', { label: 'Владения', x: 144, y: 78, w: 54, h: 135 }),
