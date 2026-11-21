@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ArrowLeft, Undo2, Redo2, Settings2, Printer, Download, Plus, Pencil, Check, Trash2, Copy, ChevronUp, ChevronDown, Upload, FilePlus2, MoreHorizontal, LayoutTemplate } from 'lucide-react';
 import { useStore } from './store';
-import { makeBlock, PAGE_TEMPLATES, relayoutFromTemplate, uid, type BlockType, type Sheet } from './model';
+import { makeBlock, PAGE_TEMPLATES, relayoutFromTemplate, sheetName, uid, type BlockType, type Sheet } from './model';
 import { LayoutPage, SpellbookPages } from './Page';
 import { findFree } from './layout';
 import { SYSTEMS, systemTemplate } from './systems';
@@ -149,7 +149,7 @@ function Editor() {
       <header className="sticky top-0 z-30 safe-top bg-moss-deep/95 backdrop-blur border-b border-moss-light/60 no-print">
         <div className="max-w-3xl mx-auto px-2 h-14 flex items-center gap-1">
           <button className="w-11 h-11 grid place-items-center text-sand-light" onClick={close} aria-label="Назад"><ArrowLeft /></button>
-          <div className="flex-1 min-w-0 font-display-sc text-xl truncate">{sheet.name}</div>
+          <div className="flex-1 min-w-0 font-display-sc text-xl truncate">{sheetName(sheet)}</div>
           <button className="w-10 h-10 grid place-items-center disabled:opacity-30" disabled={!past.length} onClick={undo} aria-label="Отменить"><Undo2 size={20} /></button>
           <button className="w-10 h-10 grid place-items-center disabled:opacity-30" disabled={!future.length} onClick={redo} aria-label="Повторить"><Redo2 size={20} /></button>
           <button className="w-11 h-11 grid place-items-center text-sand-light" onClick={() => setMenu(true)} aria-label="Меню"><MoreHorizontal /></button>
@@ -201,7 +201,7 @@ function Editor() {
             </> : <>
               <div className="font-display-sc text-xl text-sand-light">PDF готов</div>
               <div className="text-sm text-cream/70 mt-2">Сохраните в Файлы, отправьте в Telegram или сразу напечатайте</div>
-              <Btn tone="gold" className="w-full mt-4" onClick={() => void sharePdf(pdf.bytes!, sheet.name)}><Download size={18} />Сохранить или отправить</Btn>
+              <Btn tone="gold" className="w-full mt-4" onClick={() => void sharePdf(pdf.bytes!, sheetName(sheet))}><Download size={18} />Сохранить или отправить</Btn>
               <button className="mt-3 h-10 text-cream/70" onClick={() => setPdf(null)}>Закрыть</button>
             </>}
           </div>
@@ -241,8 +241,8 @@ function Editor() {
           <Btn onClick={() => { setMenu(false); setSettings(true); }}><Settings2 size={18} />Стиль, название, шрифт, эмблема</Btn>
           <Btn onClick={() => { setMenu(false); setTimeout(makePdf, 300); }}><Printer size={18} />Скачать PDF</Btn>
           <Btn onClick={() => { setMenu(false); setTimeout(() => window.print(), 300); }}><Printer size={18} />Системная печать Safari</Btn>
-          <Btn onClick={() => saveFile(`${sheet.name.replace(/[^\p{L}\p{N}]+/gu, '_') || 'list'}.json`, new Blob([JSON.stringify(sheet)], { type: 'application/json' }))}><Download size={18} />Сохранить файлом (.json)</Btn>
-          <Btn onClick={async () => { const id = await create({ ...sheet, name: `${sheet.name} (копия)` }); setMenu(false); await open(id); say('Создана копия листа'); }}><Copy size={18} />Копия листа</Btn>
+          <Btn onClick={() => saveFile(`${sheetName(sheet).replace(/[^\p{L}\p{N}]+/gu, '_') || 'list'}.json`, new Blob([JSON.stringify(sheet)], { type: 'application/json' }))}><Download size={18} />Сохранить файлом (.json)</Btn>
+          <Btn onClick={async () => { const id = await create({ ...sheet, name: `${sheetName(sheet)} (копия)` }); setMenu(false); await open(id); say('Создана копия листа'); }}><Copy size={18} />Копия листа</Btn>
           <p className="text-xs text-cream/40 px-1 pt-1">Версия от {new Date(Number(__BUILD__)).toLocaleString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}</p>
           <p className="text-xs text-cream/50 px-1 pt-2 leading-relaxed">«Скачать PDF» собирает файл прямо здесь: потом его можно сохранить в Файлы, отправить в Telegram или напечатать. Белые поля оставлены специально: принтер не печатает края листа.</p>
         </div>

@@ -154,6 +154,13 @@ export const FONT_SETS: { id: FontSet; name: string; hint: string }[] = [
   { id: 'neon', name: 'Неон', hint: 'рубленый, технический' },
 ];
 
+/** Имя для списка и шапки: своё название листа, а если оно не задано — имя героя с первой страницы. */
+export function sheetName(s: Sheet): string {
+  if (s.name && s.name !== 'Новый персонаж') return s.name;
+  const hero = s.pages[0]?.blocks.find((b) => b.type === 'title' && b.value?.trim())?.value?.trim();
+  return hero || s.name || 'Новый персонаж';
+}
+
 export const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
 
 export const BLOCK_NAMES: Record<BlockType, string> = {

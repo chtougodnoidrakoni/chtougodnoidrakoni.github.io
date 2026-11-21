@@ -2,10 +2,10 @@
 import { create } from 'zustand';
 import { get as idbGet, set as idbSet, del as idbDel } from 'idb-keyval';
 import { migrateLayout } from './layout';
-import { clubTemplate, migrateSheet, uid, type Block, type GameSystem, type Page, type Sheet, type SpellData } from './model';
+import { clubTemplate, migrateSheet, sheetName, uid, type Block, type GameSystem, type Page, type Sheet, type SpellData } from './model';
 
 export interface SheetMeta { id: string; name: string; updatedAt: number; system?: GameSystem }
-const meta = (s: Sheet): SheetMeta => ({ id: s.id, name: s.name, updatedAt: s.updatedAt, system: s.system ?? 'dnd' });
+const meta = (s: Sheet): SheetMeta => ({ id: s.id, name: sheetName(s), updatedAt: s.updatedAt, system: s.system ?? 'dnd' });
 
 interface State {
   ready: boolean;
@@ -61,11 +61,12 @@ export const useStore = create<State>((set, get) => ({
   async boot() {
     let index: SheetMeta[] = (await idbGet('index').catch(() => undefined)) ?? [];
     // старые записи без игры: узнаём её из самого листа
-    if (index.some((m) => !m.system)) {
+    const stale = (m: SheetMeta) => !m.system || m.name === 'Новый персонаж';
+    if (index.some(stale)) {
       index = await Promise.all(index.map(async (m) => {
-        if (m.system) return m;
+        if (!stale(m)) return m;
         const sh: Sheet | undefined = await idbGet(`sheet:${m.id}`).catch(() => undefined);
-        return { ...m, system: sh?.system ?? 'dnd' };
+        return sh ? { ...m, name: sheetName(sh), system: sh.system ?? 'dnd' } : { ...m, system: m.system ?? 'dnd' };
       }));
       await idbSet('index', index).catch(() => {});
     }

@@ -2,7 +2,7 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { X, Plus, Trash2, Copy, Search, Check } from 'lucide-react';
-import { BLOCK_NAMES, FONT_SETS, THEMES, sheetFonts, sheetTheme, SCHOOLS, makeBlock, uid, type Block, type BlockType, type Frame, type SpellData } from './model';
+import { BLOCK_NAMES, FONT_SETS, THEMES, sheetFonts, sheetName, sheetTheme, SCHOOLS, makeBlock, uid, type Block, type BlockType, type Frame, type SpellData } from './model';
 import { findFree, removeAndFill, setSize, split } from './layout';
 import { Columns2, Rows2 } from 'lucide-react';
 import { useStore } from './store';
@@ -225,7 +225,7 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
   return (
     <Sheet open={open} onClose={onClose} title="Настройки листа">
       <div className="grid gap-3 pb-2">
-        <Field label="Название листа"><TextIn value={sheet.name} onChange={(e) => commit((s) => ({ ...s, name: e.target.value }))} /></Field>
+        <Field label="Название листа (если пусто — имя героя)"><TextIn value={sheet.name === 'Новый персонаж' ? '' : sheet.name} placeholder={sheetName(sheet)} onChange={(e) => commit((s) => ({ ...s, name: e.target.value }))} /></Field>
         <Field label={`Общий размер шрифта: ${Math.round(sheet.fontScale * 100)}%`}><input type="range" min={0.7} max={1.5} step={0.05} value={sheet.fontScale} onChange={(e) => commit((s) => ({ ...s, fontScale: +e.target.value }))} className="w-full accent-[#aa9173]" /></Field>
         <Field label="Стиль листа">
           <div className="grid grid-cols-3 gap-2">{THEMES.map((t) => {
