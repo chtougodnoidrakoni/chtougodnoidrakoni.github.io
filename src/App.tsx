@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ArrowLeft, Undo2, Redo2, Settings2, Printer, Download, Plus, Pencil, Check, Trash2, Copy, ChevronUp, ChevronDown, Upload, FilePlus2, MoreHorizontal, LayoutTemplate } from 'lucide-react';
 import { useStore } from './store';
-import { makeBlock, PAGE_TEMPLATES, uid, type BlockType, type Sheet } from './model';
+import { makeBlock, PAGE_TEMPLATES, relayoutFromTemplate, uid, type BlockType, type Sheet } from './model';
 import { LayoutPage, SpellbookPages } from './Page';
 import { findFree } from './layout';
 import { FillModal } from './Fill';
@@ -180,6 +180,13 @@ function Editor() {
               <Btn disabled={pageMenu === 0} onClick={() => { movePage(pageMenu, -1); setPageMenu(pageMenu - 1); }}><ChevronUp size={18} />Выше</Btn>
               <Btn disabled={pageMenu === sheet.pages.length - 1} onClick={() => { movePage(pageMenu, 1); setPageMenu(pageMenu + 1); }}><ChevronDown size={18} />Ниже</Btn>
             </div>
+            {sheet.pages[pageMenu]!.kind === 'layout' && <Btn onClick={() => {
+              const r = relayoutFromTemplate(sheet.pages[pageMenu]!, findFree);
+              if (!r) { say('Для этой страницы нет шаблона'); return; }
+              commit((s) => ({ ...s, pages: s.pages.map((p, i) => (i === pageMenu ? r.page : p)) }));
+              setPageMenu(null);
+              say(r.dropped ? `Разметка обновлена. ${r.dropped} своих блоков не поместились — вернуть: «отменить»` : 'Разметка как в шаблоне, всё вписанное на месте');
+            }}><LayoutTemplate size={18} />Разметка как в шаблоне</Btn>}
             <Btn onClick={() => { const src = sheet.pages[pageMenu]!; const copy = { ...structuredClone(src), id: uid(), title: `${src.title} (копия)`, blocks: src.blocks.map((b) => ({ ...b, id: uid() })) }; commit((s) => { const p = [...s.pages]; p.splice(pageMenu + 1, 0, copy); return { ...s, pages: p }; }); setPageMenu(null); }}><Copy size={18} />Копия страницы</Btn>
             <Btn tone="danger" disabled={sheet.pages.length <= 1} onClick={() => { commit((s) => ({ ...s, pages: s.pages.filter((_, i) => i !== pageMenu) })); setPageMenu(null); setPage(0); say('Страница удалена. Вернуть — стрелка «отменить» вверху'); }}><Trash2 size={18} />Удалить страницу</Btn>
           </div>

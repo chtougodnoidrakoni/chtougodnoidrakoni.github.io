@@ -75,6 +75,29 @@ export function migrateSheet(s: Sheet): Sheet {
   }) })) };
 }
 
+/**
+ * Разметка страницы как в свежем шаблоне, без потери вписанного:
+ * блоки с той же подписью и типом встают на место из шаблона, остальные остаются, если им есть место.
+ */
+export function relayoutFromTemplate(page: Page, findFree: (bl: Block[], w: number, h: number) => { x: number; y: number; w: number; h: number } | undefined): { page: Page; dropped: number } | undefined {
+  const tpl = clubTemplate().pages.find((p) => p.title === page.title) ?? PAGE_TEMPLATES.map((t) => t.make()).find((p) => p.title === page.title);
+  if (!tpl) return undefined;
+  const used = new Set<string>();
+  const out: Block[] = tpl.blocks.map((t) => {
+    const old = page.blocks.find((b) => !used.has(b.id) && b.type === t.type && b.label === t.label && (t.type !== 'qr' || b.src === t.src));
+    if (!old) return t;
+    used.add(old.id);
+    return { ...old, x: t.x, y: t.y, w: t.w, h: t.h, ...(t.type === 'table' && old.columns?.join() === t.columns?.join() ? { widths: t.widths } : {}) };
+  });
+  let dropped = 0;
+  for (const b of page.blocks) {
+    if (used.has(b.id)) continue;
+    const r = findFree(out, b.w, b.h);
+    if (r) out.push({ ...b, ...r }); else dropped++;
+  }
+  return { page: { ...page, blocks: out }, dropped };
+}
+
 export type FontSet = 'tale' | 'chronicle' | 'rune' | 'strict';
 export const FONT_SETS: { id: FontSet; name: string; hint: string }[] = [
   { id: 'tale', name: 'Сказание', hint: 'книжный, как в старых томах' },
@@ -149,20 +172,20 @@ function statsPage(): Page {
     id: uid(), title: 'Характеристики', kind: 'layout', blocks: [
       B('title', { label: 'Характеристики', x: 12, y: 12, w: 150, h: 13, fontSize: 18 }),
       B('emblem', { x: 182, y: 11, w: 16, h: 16 }),
-      ...row.map((label, i) => B('stat', { label, key: ROW_KEYS[i], x: 12 + i * (bw + 2), y: 28, w: bw, h: 26, shape: i === 0 ? 'shield' : 'box', fontSize: 7.5 })),
-      ...ABILITIES.map(([label, key], i) => B('ability', { label, key, x: 12, y: 58 + i * 30, w: 30, h: 28 })),
-      B('checklist', { label: 'Спасброски', x: 44, y: 58, w: 60, h: 52, items: ABILITIES.map(([n, s]) => ({ name: n, sub: s })) }),
-      B('checklist', { label: 'Навыки', x: 44, y: 112, w: 60, h: 124, items: SKILLS.map(([n, s]) => ({ name: n, sub: s })) }),
-      B('stat', { label: 'Максимум хитов', x: 106, y: 58, w: 30, h: 22, fontSize: 7.5 }),
-      B('field', { label: 'Текущие хиты', x: 138, y: 58, w: 60, h: 22, frame: 'frame', fontSize: 12 }),
-      B('field', { label: 'Временные хиты', x: 106, y: 82, w: 45, h: 18, frame: 'frame' }),
-      B('field', { label: 'Кости хитов', x: 153, y: 82, w: 45, h: 18, frame: 'frame' }),
-      B('circles', { label: 'Спасброски от смерти', x: 106, y: 102, w: 92, h: 18, rows: [{ name: 'Успехи', count: 3, filled: 0 }, { name: 'Провалы', count: 3, filled: 0 }] }),
-      B('table', { label: 'Оружие', x: 106, y: 122, w: 92, h: 50, fontSize: 8, columns: WEAPON_COLS, widths: WEAPON_W, cells: Array.from({ length: 5 }, () => ['', '', '', '', '']) }),
-      B('text', { label: 'Владения и языки', x: 106, y: 174, w: 92, h: 62 }),
-      B('text', { label: 'Снаряжение', x: 12, y: 239, w: 124, h: 46 }),
-      B('table', { label: 'Монеты', x: 138, y: 239, w: 60, h: 17, fontSize: 8, columns: ['ПМ', 'ЗМ', 'ЭМ', 'СМ', 'ММ'], cells: [['', '', '', '', '']] }),
-      B('text', { label: 'Сокровища', x: 138, y: 258, w: 60, h: 27 }),
+      ...row.map((label, i) => B('stat', { label, key: ROW_KEYS[i], x: 12 + i * (bw + 2), y: 28, w: bw, h: 17, shape: i === 0 ? 'shield' : 'box', fontSize: 7 })),
+      ...ABILITIES.map(([label, key], i) => B('ability', { label, key, x: 12, y: 47 + i * 28, w: 30, h: 26 })),
+      B('checklist', { label: 'Спасброски', x: 44, y: 47, w: 60, h: 50, items: ABILITIES.map(([n, s]) => ({ name: n, sub: s })) }),
+      B('checklist', { label: 'Навыки', x: 44, y: 99, w: 60, h: 114, items: SKILLS.map(([n, s]) => ({ name: n, sub: s })) }),
+      B('stat', { label: 'Максимум хитов', x: 106, y: 47, w: 30, h: 16, fontSize: 6.5 }),
+      B('field', { label: 'Текущие хиты', x: 138, y: 47, w: 60, h: 16, frame: 'frame', fontSize: 11 }),
+      B('field', { label: 'Временные хиты', x: 106, y: 65, w: 45, h: 13, frame: 'frame' }),
+      B('field', { label: 'Кости хитов', x: 153, y: 65, w: 45, h: 13, frame: 'frame' }),
+      B('circles', { label: 'Спасброски от смерти', x: 106, y: 80, w: 92, h: 16, rows: [{ name: 'Успехи', count: 3, filled: 0 }, { name: 'Провалы', count: 3, filled: 0 }] }),
+      B('table', { label: 'Оружие', x: 106, y: 98, w: 92, h: 50, fontSize: 8, columns: WEAPON_COLS, widths: WEAPON_W, cells: Array.from({ length: 5 }, () => ['', '', '', '', '']) }),
+      B('text', { label: 'Владения и языки', x: 106, y: 150, w: 92, h: 63 }),
+      B('text', { label: 'Снаряжение', x: 12, y: 216, w: 124, h: 69 }),
+      B('table', { label: 'Монеты', x: 138, y: 216, w: 60, h: 17, fontSize: 8, columns: ['ПМ', 'ЗМ', 'ЭМ', 'СМ', 'ММ'], cells: [['', '', '', '', '']] }),
+      B('text', { label: 'Сокровища', x: 138, y: 235, w: 60, h: 50 }),
     ],
   };
 }

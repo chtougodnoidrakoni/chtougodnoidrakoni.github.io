@@ -119,3 +119,17 @@ describe('таблица оружия', () => {
     expect(m.widths).toEqual([30, 15, 15, 15, 25]);
   });
 });
+
+describe('разметка как в шаблоне', () => {
+  it('переставляет блоки и сохраняет вписанное', async () => {
+    const { relayoutFromTemplate } = await import('../src/model');
+    const page = clubTemplate().pages[1]!;
+    const hp = page.blocks.find((x) => x.label === 'Максимум хитов')!;
+    const old = { ...page, blocks: page.blocks.map((x) => (x.id === hp.id ? { ...x, h: 30, value: '42' } : x)) };
+    const r = relayoutFromTemplate(old, findFree)!;
+    const n = r.page.blocks.find((x) => x.label === 'Максимум хитов')!;
+    expect(n).toMatchObject({ id: hp.id, value: '42', h: 16 });
+    expect(r.dropped).toBe(0);
+    expect(noOverlaps(r.page.blocks)).toBe(true);
+  });
+});
