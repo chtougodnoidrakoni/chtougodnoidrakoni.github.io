@@ -259,10 +259,10 @@ input, select, textarea { font-size: 16px; }
 .abx-cap { position: absolute; font-family: var(--f-label); font-size: calc(var(--u) * 1.55); letter-spacing: .1em; text-transform: uppercase; color: var(--color-sand-dark); line-height: 1; }
 .abx-cap-mod { left: 50%; margin-left: calc(var(--u) * -12); width: calc(var(--u) * 11.5); text-align: center; top: calc(var(--u) * 12.2); }
 .abx-cap-score { left: 50%; margin-left: calc(var(--u) * 0); width: calc(var(--u) * 10); text-align: center; top: calc(var(--u) * 9.2); }
-.abx-row { display: flex; align-items: center; gap: .45em; line-height: 1.1; height: calc(var(--u) * 4.8); white-space: nowrap; }
+.abx-row { display: flex; align-items: center; gap: .35em; line-height: 1.1; height: calc(var(--u) * 4.8); white-space: nowrap; }
 .abx-save { font-weight: 700; border-top: max(1px, calc(var(--u) * .2)) solid color-mix(in srgb, var(--color-moss) 45%, transparent); border-bottom: max(1px, calc(var(--u) * .2)) solid color-mix(in srgb, var(--color-moss) 45%, transparent); height: calc(var(--u) * 5.6); }
 .abx-save .abx-name { font-family: var(--f-label); letter-spacing: .03em; }
-.abx-val { width: 2.1em; flex: none; text-align: center; border-bottom: max(1px, calc(var(--u) * .2)) solid color-mix(in srgb, var(--color-moss) 50%, transparent); min-height: 1.1em; font-weight: 700; color: var(--color-moss); }
+.abx-val { width: 1.9em; flex: none; text-align: center; border-bottom: max(1px, calc(var(--u) * .2)) solid color-mix(in srgb, var(--color-moss) 50%, transparent); min-height: 1.1em; font-weight: 700; color: var(--color-moss); }
 .abx-name { overflow: hidden; text-overflow: ellipsis; }
 .abx-skills { padding-top: calc(var(--u) * .6); }
 .theme-chronicle .abx-mod { box-shadow: none; }

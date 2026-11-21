@@ -194,7 +194,7 @@ function bioPage(): Page {
 /** Карточки характеристик: ключ, x, y, высота (мм). Слева СИЛ/ЛВК/ТЕЛ, в центре ИНТ/МДР/ХАР. */
 const ABX_LAYOUT: [string, number, number, number][] = [
   ['СИЛ', 12, 47, 34], ['ЛВК', 12, 83, 44], ['ТЕЛ', 12, 129, 28],
-  ['ИНТ', 74, 47, 56], ['МДР', 74, 105, 56], ['ХАР', 74, 163, 50],
+  ['ИНТ', 50, 47, 56], ['МДР', 50, 105, 56], ['ХАР', 50, 163, 50],
 ];
 
 function statsPage(): Page {
@@ -208,15 +208,16 @@ function statsPage(): Page {
       ...row.map((label, i) => B('stat', { label, key: ROW_KEYS[i], x: 12 + i * (bw + 2), y: 28, w: bw, h: 17, shape: i === 0 ? 'shield' : 'box', fontSize: 7 })),
       ...ABX_LAYOUT.map(([key, x, y, h]) => {
         const label = ABILITIES.find(([, k]) => k === key)![0];
-        return B('abilityx', { label, key, x, y, w: 60, h, save: { name: 'Спасбросок', sub: key }, items: SKILLS.filter(([, sk]) => sk === key).map(([n, sk]) => ({ name: n, sub: sk })) });
+        return B('abilityx', { label, key, x, y, w: 36, h, fontSize: 7.5, save: { name: 'Спасбросок', sub: key }, items: SKILLS.filter(([, sk]) => sk === key).map(([n, sk]) => ({ name: n, sub: sk })) });
       }),
-      B('stat', { label: 'Максимум хитов', x: 136, y: 47, w: 30, h: 16, fontSize: 6.5 }),
+      B('stat', { label: 'Максимум хитов', x: 88, y: 47, w: 26, h: 16, fontSize: 6.5 }),
+      B('field', { label: 'Текущие хиты', x: 116, y: 47, w: 50, h: 16, frame: 'frame', fontSize: 11 }),
       B('field', { label: 'Кости хитов', x: 168, y: 47, w: 30, h: 16, frame: 'frame' }),
-      B('field', { label: 'Текущие хиты', x: 136, y: 65, w: 62, h: 16, frame: 'frame', fontSize: 11 }),
-      B('field', { label: 'Временные хиты', x: 136, y: 83, w: 62, h: 13, frame: 'frame' }),
-      B('circles', { label: 'Спасброски от смерти', x: 136, y: 98, w: 62, h: 18, rows: [{ name: 'Успехи', count: 3, filled: 0 }, { name: 'Провалы', count: 3, filled: 0 }] }),
-      B('text', { label: 'Снаряжение', x: 136, y: 118, w: 62, h: 95 }),
-      B('text', { label: 'Владения и языки', x: 12, y: 159, w: 60, h: 54 }),
+      B('field', { label: 'Временные хиты', x: 88, y: 65, w: 52, h: 16, frame: 'frame' }),
+      B('circles', { label: 'Спасброски от смерти', x: 142, y: 65, w: 56, h: 16, rows: [{ name: 'Успехи', count: 3, filled: 0 }, { name: 'Провалы', count: 3, filled: 0 }] }),
+      B('text', { label: 'Снаряжение', x: 88, y: 83, w: 54, h: 130 }),
+      B('text', { label: 'Владения', x: 144, y: 83, w: 54, h: 130 }),
+      B('text', { label: 'Языки', x: 12, y: 159, w: 36, h: 54 }),
       B('table', { label: 'Оружие', x: 12, y: 216, w: 124, h: 36, fontSize: 8, columns: WEAPON_COLS, widths: WEAPON_W, cells: Array.from({ length: 4 }, () => ['', '', '', '', '']) }),
       B('text', { label: 'Заметки', x: 12, y: 254, w: 124, h: 31 }),
       B('table', { label: 'Монеты', x: 138, y: 216, w: 60, h: 17, fontSize: 8, columns: ['ПМ', 'ЗМ', 'ЭМ', 'СМ', 'ММ'], cells: [['', '', '', '', '']] }),
