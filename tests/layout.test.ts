@@ -164,7 +164,7 @@ describe('закреплённые блоки и обновление стары
   it('старый лист: закрепление и удаление «Ресурсов» один раз', async () => {
     const { migrateLayout } = await import('../src/layout');
     const s = clubTemplate();
-    const old = { ...s, ver: undefined, pages: s.pages.map((p) => ({ ...p, blocks: p.blocks.map((x) => ({ ...x, fixed: undefined })) })) };
+    const old: typeof s = { ...s, ver: undefined, pages: s.pages.map((p) => ({ ...p, blocks: p.blocks.map((x): Block => ({ ...x, fixed: undefined })) })) };
     old.pages[2]!.blocks.push({ ...makeBlock('circles'), label: 'Ресурсы', x: 12, y: 233, w: 186, h: 52 });
     old.pages[2]!.blocks = old.pages[2]!.blocks.map((x) => (x.label === 'Черты и дополнительные способности' ? { ...x, h: 56 } : x));
     const m = migrateLayout(old);
