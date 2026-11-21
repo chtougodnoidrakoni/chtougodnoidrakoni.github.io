@@ -85,7 +85,10 @@ function Home() {
           <div key={m.id} className="flex items-center gap-2 p-4 rounded-2xl bg-moss/70 border border-moss-light">
             <button className="flex-1 text-left" onClick={() => open(m.id)}>
               <div className="font-display-sc text-xl text-cream">{m.name || 'Без названия'}</div>
-              <div className="text-xs text-cream/50">изменён {new Date(m.updatedAt).toLocaleString()}</div>
+              <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-cream/50">
+                <span className={`px-2 py-0.5 rounded-full border ${(m.system ?? 'dnd') === 'dnd' ? 'border-sand/60 text-sand' : 'border-cream/30 text-cream/80'}`}>{SYSTEMS.find((g) => g.id === (m.system ?? 'dnd'))?.name}</span>
+                <span>изменён {new Date(m.updatedAt).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+              </div>
             </button>
             {confirm === m.id
               ? <Btn tone="danger" onClick={async () => { await remove(m.id); setConfirm(null); }}>Удалить?</Btn>

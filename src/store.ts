@@ -2,9 +2,10 @@
 import { create } from 'zustand';
 import { get as idbGet, set as idbSet, del as idbDel } from 'idb-keyval';
 import { migrateLayout } from './layout';
-import { clubTemplate, migrateSheet, uid, type Block, type Page, type Sheet, type SpellData } from './model';
+import { clubTemplate, migrateSheet, uid, type Block, type GameSystem, type Page, type Sheet, type SpellData } from './model';
 
-export interface SheetMeta { id: string; name: string; updatedAt: number }
+export interface SheetMeta { id: string; name: string; updatedAt: number; system?: GameSystem }
+const meta = (s: Sheet): SheetMeta => ({ id: s.id, name: s.name, updatedAt: s.updatedAt, system: s.system ?? 'dnd' });
 
 interface State {
   ready: boolean;
@@ -48,7 +49,7 @@ function persist(s: Sheet) {
   saveTimer = setTimeout(async () => {
     await idbSet(`sheet:${s.id}`, s);
     const index: SheetMeta[] = (await idbGet('index')) ?? [];
-    const next = [{ id: s.id, name: s.name, updatedAt: s.updatedAt }, ...index.filter((x) => x.id !== s.id)];
+    const next = [meta(s), ...index.filter((x) => x.id !== s.id)];
     await idbSet('index', next);
     useStore.setState({ index: next });
   }, 400);
@@ -58,7 +59,16 @@ export const useStore = create<State>((set, get) => ({
   ready: false, index: [], pageIdx: 0, past: [], future: [], spells: [], spellMap: new Map(),
 
   async boot() {
-    const index: SheetMeta[] = (await idbGet('index').catch(() => undefined)) ?? [];
+    let index: SheetMeta[] = (await idbGet('index').catch(() => undefined)) ?? [];
+    // старые записи без игры: узнаём её из самого листа
+    if (index.some((m) => !m.system)) {
+      index = await Promise.all(index.map(async (m) => {
+        if (m.system) return m;
+        const sh: Sheet | undefined = await idbGet(`sheet:${m.id}`).catch(() => undefined);
+        return { ...m, system: sh?.system ?? 'dnd' };
+      }));
+      await idbSet('index', index).catch(() => {});
+    }
     set({ index, ready: true });
     try {
       const res = await fetch(`${import.meta.env.BASE_URL}spells.json`);
@@ -76,7 +86,7 @@ export const useStore = create<State>((set, get) => ({
   async create(from) {
     const s: Sheet = from ? { ...structuredClone(from), id: uid(), updatedAt: Date.now() } : clubTemplate();
     await idbSet(`sheet:${s.id}`, s);
-    const index = [{ id: s.id, name: s.name, updatedAt: s.updatedAt }, ...get().index];
+    const index = [meta(s), ...get().index];
     await idbSet('index', index);
     set({ index });
     return s.id;
