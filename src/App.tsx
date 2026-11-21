@@ -55,7 +55,7 @@ function Home() {
     <div className="max-w-xl mx-auto px-4 pb-16">
       <header className="safe-top pt-6 pb-4 flex items-center gap-4">
         <img src={`${import.meta.env.BASE_URL}icons/club-emblem.png`} alt="" className="w-16 h-16" />
-        <div><div className="font-display-sc text-3xl text-sand-light leading-none">Лист персонажа</div><div className="text-sm text-cream/60 mt-1">клуб «Что угодно и драконы»</div></div>
+        <div><div className="font-display-sc text-3xl text-sand-light leading-none">Лист персонажа</div><div className="text-sm text-cream/60 mt-1">клуб «Что угодно и драконы»</div><div className="text-xs text-cream/50 mt-1">Разработано inst: <a href="https://instagram.com/zamir.digital" target="_blank" rel="noopener" className="text-sand-light underline underline-offset-2">zamir.digital</a></div></div>
       </header>
       <div className="grid gap-2">
         <Btn tone="gold" className="h-14 text-lg" onClick={async () => open(await create())}><FilePlus2 />Новый лист по шаблону клуба</Btn>
@@ -85,8 +85,7 @@ function Home() {
         ))}
         {!index.length && <p className="text-center text-cream/50 text-sm mt-6">Здесь будут ваши листы. Всё хранится на этом телефоне.</p>}
       </div>
-      <p className="mt-10 text-center text-sm text-cream/60">Разработано inst: <a href="https://instagram.com/zamir.digital" target="_blank" rel="noopener" className="text-sand-light underline underline-offset-2">zamir.digital</a></p>
-      <p className="text-xs text-cream/40 mt-4 leading-relaxed">Описания заклинаний — из System Reference Document 5.1 и 5.2 (Wizards of the Coast, CC-BY-4.0). Неофициальный проект, не связан с Wizards of the Coast.</p>
+      <p className="text-xs text-cream/40 mt-10 leading-relaxed">Описания заклинаний — из System Reference Document 5.1 и 5.2 (Wizards of the Coast, CC-BY-4.0). Неофициальный проект, не связан с Wizards of the Coast.</p>
     </div>
   );
 }
