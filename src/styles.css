@@ -219,3 +219,28 @@ input, select, textarea { font-size: 16px; }
 .blk > .blk-label { flex: none; }
 .blk-spells table { flex: none; }
 .blk-spells { overflow: hidden; }
+
+/* ================= стили листа ================= */
+/* «Летопись»: коричневые чернила, тёмно-красные подписи, прямые двойные рамки, завитки */
+.page.theme-chronicle { --color-moss: #4a3426; --color-sand: #b08a5a; --color-sand-dark: #7d2f28; --color-ink: #2e2118; }
+.theme-chronicle .page-frame { border-radius: 0; border-width: calc(var(--u) * .35); }
+.theme-chronicle .page-frame::after { border-radius: 0; inset: calc(var(--u) * .8); border-width: calc(var(--u) * .2); border-color: var(--color-moss); }
+.theme-chronicle .b-frame { border-radius: 0; box-shadow: inset 0 0 0 calc(var(--u) * .45) #fff, inset 0 0 0 calc(var(--u) * .65) var(--color-sand); }
+.theme-chronicle .blk-ph, .theme-chronicle .abil-score { border-radius: 0; }
+.theme-chronicle .b-shield { border-radius: 0 0 50% 50% / 0 0 30% 30%; }
+.theme-chronicle .blk-title .inp { font-style: italic; }
+.theme-chronicle .b-line { border-bottom: calc(var(--u) * .8) double var(--color-moss); }
+.sky.flourish { fill: none; stroke: var(--color-sand); stroke-width: .28; stroke-linecap: round; }
+.sky.flourish .fill { fill: var(--color-sand-dark); stroke: none; }
+.theme-chronicle .page-foot { color: var(--color-sand-dark); -webkit-text-stroke-color: var(--color-sand-dark); }
+
+/* «Строгий»: чёрно-белый, тонкие линии, без украшений */
+.page.theme-strict { --color-moss: #222; --color-sand: #9a9a9a; --color-sand-dark: #4a4a4a; --color-ink: #111; }
+.theme-strict .page-frame { border-radius: 0; border-width: calc(var(--u) * .25); }
+.theme-strict .page-frame::after { display: none; }
+.theme-strict .b-frame { border-width: calc(var(--u) * .22); border-radius: calc(var(--u) * .8); box-shadow: none; }
+.theme-strict .b-medal { box-shadow: none; background: #fff; border-width: calc(var(--u) * .35); }
+.theme-strict .blk-emblem img { filter: grayscale(1) contrast(1.1); }
+.theme-strict .blk table th { background: #f2f2f2; }
+.theme-strict .page-foot { font-family: var(--f-label); font-size: calc(var(--u) * 2.6); letter-spacing: .12em; text-transform: uppercase; -webkit-text-stroke: 0; }
+.theme-strict .qr-cap { font-family: var(--f-label); font-size: calc(var(--u) * 2.1) !important; letter-spacing: .08em; text-transform: uppercase; }

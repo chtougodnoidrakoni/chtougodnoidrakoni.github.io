@@ -2,7 +2,7 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { X, Plus, Trash2, Copy, Search, Check } from 'lucide-react';
-import { BLOCK_NAMES, FONT_SETS, SCHOOLS, makeBlock, uid, type Block, type BlockType, type Frame, type SpellData } from './model';
+import { BLOCK_NAMES, FONT_SETS, THEMES, SCHOOLS, makeBlock, uid, type Block, type BlockType, type Frame, type SpellData } from './model';
 import { findFree, removeAndFill, setSize, split } from './layout';
 import { Columns2, Rows2 } from 'lucide-react';
 import { useStore } from './store';
@@ -227,6 +227,21 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
       <div className="grid gap-3 pb-2">
         <Field label="Название листа"><TextIn value={sheet.name} onChange={(e) => commit((s) => ({ ...s, name: e.target.value }))} /></Field>
         <Field label={`Общий размер шрифта: ${Math.round(sheet.fontScale * 100)}%`}><input type="range" min={0.7} max={1.5} step={0.05} value={sheet.fontScale} onChange={(e) => commit((s) => ({ ...s, fontScale: +e.target.value }))} className="w-full accent-[#aa9173]" /></Field>
+        <Field label="Стиль листа">
+          <div className="grid grid-cols-3 gap-2">{THEMES.map((t) => {
+            const on = (sheet.theme ?? 'club') === t.id;
+            return (
+              <button key={t.id} aria-label={`Стиль: ${t.name}`} onClick={() => commit((s) => ({ ...s, theme: t.id, fonts: t.fonts }))} className={`rounded-xl border p-2 text-left ${on ? 'border-sand bg-sand/15' : 'border-moss-light bg-moss-deep'}`}>
+                <div className="aspect-[210/297] w-full bg-white rounded-sm p-1.5 flex flex-col gap-1" style={{ border: `2px ${t.id === 'chronicle' ? 'double' : 'solid'} ${t.ink}`, borderRadius: t.id === 'club' ? 6 : 1 }}>
+                  <div className="h-1.5 w-3/4" style={{ background: t.ink, opacity: .8 }} />
+                  <div className="grid grid-cols-2 gap-1 flex-1">{[0, 1, 2, 3].map((k) => <div key={k} style={{ border: `1px solid ${t.ink}`, borderRadius: t.id === 'chronicle' ? 0 : 3, boxShadow: t.id === 'strict' ? 'none' : `inset 0 0 0 1.5px #fff, inset 0 0 0 2.2px ${t.accent}` }}><div className="h-0.5 w-1/2 m-1" style={{ background: t.label }} /></div>)}</div>
+                </div>
+                <div className={`fonts-${t.fonts} text-cream mt-1.5`} style={{ fontFamily: 'var(--f-display)', fontSize: 15, lineHeight: 1.1 }}>{t.name}</div>
+                <div className="text-[11px] text-cream/55 leading-tight mt-0.5">{t.hint}</div>
+              </button>
+            );
+          })}</div>
+        </Field>
         <Field label="Шрифты листа">
           <div className="grid grid-cols-2 gap-2">{FONT_SETS.map((f) => (
             <button key={f.id} onClick={() => commit((s) => ({ ...s, fonts: f.id }))} className={`fonts-${f.id} rounded-xl border p-3 text-left ${(sheet.fonts ?? 'tale') === f.id ? 'border-sand bg-sand/15' : 'border-moss-light bg-moss-deep'}`}>

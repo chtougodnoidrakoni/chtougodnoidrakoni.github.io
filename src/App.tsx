@@ -195,7 +195,7 @@ function Editor() {
 
       <Panel open={menu} onClose={() => setMenu(false)} title="Лист">
         <div className="grid gap-2 pb-2">
-          <Btn onClick={() => { setMenu(false); setSettings(true); }}><Settings2 size={18} />Название, шрифт, бумага, эмблема</Btn>
+          <Btn onClick={() => { setMenu(false); setSettings(true); }}><Settings2 size={18} />Стиль, название, шрифт, эмблема</Btn>
           <Btn onClick={() => { setMenu(false); setTimeout(() => window.print(), 300); }}><Printer size={18} />Печать или PDF</Btn>
           <Btn onClick={() => saveFile(`${sheet.name.replace(/[^\p{L}\p{N}]+/gu, '_') || 'list'}.json`, new Blob([JSON.stringify(sheet)], { type: 'application/json' }))}><Download size={18} />Сохранить файлом (.json)</Btn>
           <Btn onClick={async () => { const id = await create({ ...sheet, name: `${sheet.name} (копия)` }); setMenu(false); await open(id); say('Создана копия листа'); }}><Copy size={18} />Копия листа</Btn>

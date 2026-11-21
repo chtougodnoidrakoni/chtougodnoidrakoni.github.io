@@ -61,6 +61,8 @@ export interface Sheet {
   emblem?: string;
   /** набор шрифтов листа */
   fonts?: FontSet;
+  /** стиль оформления листа */
+  theme?: SheetTheme;
   /** версия разметки листа (для однократных обновлений старых листов) */
   ver?: number;
   pages: Page[];
@@ -101,6 +103,13 @@ export function relayoutFromTemplate(page: Page, findFree: (bl: Block[], w: numb
   }
   return { page: { ...page, blocks: out }, dropped };
 }
+
+export type SheetTheme = 'club' | 'chronicle' | 'strict';
+export const THEMES: { id: SheetTheme; name: string; hint: string; fonts: FontSet; ink: string; accent: string; label: string }[] = [
+  { id: 'club', name: 'Клубный', hint: 'зелёный и песочный, звёзды и месяц', fonts: 'tale', ink: '#444e46', accent: '#aa9173', label: '#8a7357' },
+  { id: 'chronicle', name: 'Летопись', hint: 'старинная рукопись, завитки по углам', fonts: 'chronicle', ink: '#4a3426', accent: '#b08a5a', label: '#7d2f28' },
+  { id: 'strict', name: 'Строгий', hint: 'чёрно-белый, экономит краску', fonts: 'strict', ink: '#222222', accent: '#9a9a9a', label: '#4a4a4a' },
+];
 
 export type FontSet = 'tale' | 'chronicle' | 'rune' | 'strict';
 export const FONT_SETS: { id: FontSet; name: string; hint: string }[] = [

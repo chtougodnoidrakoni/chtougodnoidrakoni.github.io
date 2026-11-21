@@ -16,7 +16,9 @@ const star = (cx: number, cy: number, r: number, k = 0.45) => Array.from({ lengt
  * Украшения в стиле эмблемы: месяц и звёзды в углах рамки.
  * Всё внутри зоны печати (не ближе 7 мм к краю листа), иначе принтер срежет.
  */
-function Sky() {
+function Sky({ theme }: { theme: string }) {
+  if (theme === 'strict') return null;
+  if (theme === 'chronicle') return <Flourishes />;
   return (
     <svg className="sky" viewBox="0 0 210 297" preserveAspectRatio="none">
       <path d="M10.6 7.3 a2.8 2.8 0 1 0 1 5.1 a2.3 2.3 0 1 1 -1 -5.1 z" />
@@ -28,11 +30,23 @@ function Sky() {
   );
 }
 
+/** Завитки по углам и ромбы внизу — для стиля «Летопись». Тоже внутри зоны печати. */
+function Flourishes() {
+  const curl = 'M0 0 C4 0 6 1.5 6.5 4.5 C6.8 6.5 5.4 7.6 4.2 7 C3.2 6.5 3.4 5 4.5 4.9 M0 0 C0 4 1.5 6 4.5 6.5 C6.5 6.8 7.6 5.4 7 4.2 C6.5 3.2 5 3.4 4.9 4.5';
+  const corners: [number, number, number, number][] = [[7.6, 7.6, 1, 1], [202.4, 7.6, -1, 1], [7.6, 289.4, 1, -1], [202.4, 289.4, -1, -1]];
+  return (
+    <svg className="sky flourish" viewBox="0 0 210 297" preserveAspectRatio="none">
+      {corners.map(([x, y, sx, sy], i) => <path key={i} d={curl} transform={`translate(${x} ${y}) scale(${sx * 0.62} ${sy * 0.62})`} />)}
+      {[60, 150].map((x) => <path key={x} className="fill" d={`M${x} 286.6 l1.1 1.2 l-1.1 1.2 l-1.1 -1.2 z`} />)}
+    </svg>
+  );
+}
+
 export function PageShell({ scale, sheet, num, children }: { scale: number; sheet: Sheet; num: number; children: React.ReactNode }) {
   return (
-    <div className={`page fonts-${sheet.fonts ?? 'tale'} ${sheet.paper === 'parchment' ? 'parchment' : ''}`} style={{ ['--u' as string]: `${scale}px` }}>
+    <div className={`page fonts-${sheet.fonts ?? 'tale'} theme-${sheet.theme ?? 'club'} ${sheet.paper === 'parchment' ? 'parchment' : ''}`} style={{ ['--u' as string]: `${scale}px` }}>
       <div className="page-inner" />
-      <div className="page-frame" /><Sky />
+      <div className="page-frame" /><Sky theme={sheet.theme ?? 'club'} />
       {children}
       <div className="page-foot">Что Угодно и Драконы • г. Астрахань</div>
       <div className="page-num">{num}</div>
