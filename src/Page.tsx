@@ -6,19 +6,35 @@ import { PAGE_H, PAGE_W, SCHOOLS, spellOf, type Block, type Page, type Sheet, ty
 import { useStore } from './store';
 
 
-function Corners() {
-  const c = (style: React.CSSProperties, rot: number) => (
-    <svg className="corner" style={style} viewBox="0 0 20 20"><g transform={`rotate(${rot} 10 10)`} fill="none" stroke="currentColor" strokeWidth="1.1"><path d="M2 12 V2 H12" /><path d="M5 9 V5 H9" /><circle cx="2" cy="2" r="1.3" fill="currentColor" /></g></svg>
+/** Восьмилучевая звезда, как на эмблеме клуба. */
+const star = (cx: number, cy: number, r: number, k = 0.45) => Array.from({ length: 16 }, (_, i) => {
+  const a = (Math.PI / 8) * i - Math.PI / 2, rr = i % 2 ? r * k : r;
+  return `${(cx + rr * Math.cos(a)).toFixed(2)},${(cy + rr * Math.sin(a)).toFixed(2)}`;
+}).join(' ');
+
+/**
+ * Украшения в стиле эмблемы: месяц и звёзды в углах рамки.
+ * Всё внутри зоны печати (не ближе 7 мм к краю листа), иначе принтер срежет.
+ */
+function Sky() {
+  return (
+    <svg className="sky" viewBox="0 0 210 297" preserveAspectRatio="none">
+      <path d="M10.6 7.3 a2.8 2.8 0 1 0 1 5.1 a2.3 2.3 0 1 1 -1 -5.1 z" />
+      <polygon points={star(200.4, 9.4, 1.8)} /><polygon points={star(196.6, 8.4, 0.7)} />
+      <polygon points={star(9.4, 287.6, 1.6)} /><polygon points={star(200.6, 287.6, 1.6)} />
+      <polygon points={star(62, 288.4, 0.8)} /><polygon points={star(148, 288.4, 0.8)} />
+      <polygon points={star(14.6, 8.6, 0.6)} />
+    </svg>
   );
-  return <>{c({ left: 'calc(var(--u)*7.5)', top: 'calc(var(--u)*7.5)' }, 0)}{c({ right: 'calc(var(--u)*7.5)', top: 'calc(var(--u)*7.5)' }, 90)}{c({ right: 'calc(var(--u)*7.5)', bottom: 'calc(var(--u)*7.5)' }, 180)}{c({ left: 'calc(var(--u)*7.5)', bottom: 'calc(var(--u)*7.5)' }, 270)}</>;
 }
 
 export function PageShell({ scale, sheet, num, children }: { scale: number; sheet: Sheet; num: number; children: React.ReactNode }) {
   return (
     <div className={`page fonts-${sheet.fonts ?? 'tale'} ${sheet.paper === 'parchment' ? 'parchment' : ''}`} style={{ ['--u' as string]: `${scale}px` }}>
       <div className="page-inner" />
-      <div className="page-frame" /><Corners />
+      <div className="page-frame" /><Sky />
       {children}
+      <div className="page-foot">Что Угодно и Драконы • г. Астрахань</div>
       <div className="page-num">{num}</div>
     </div>
   );
@@ -69,7 +85,7 @@ export function LayoutPage({ page, pageIndex, sheet, scale, num }: { page: Page;
   const tap = (b: Block) => {
     setPage(pageIndex);
     if (layout) { select(b.id); return; }
-    if (b.type === 'emblem' || b.type === 'ornament') return;
+    if (b.type === 'emblem' || b.type === 'ornament' || b.type === 'qr') return;
     fill(b.id);
   };
 
@@ -157,7 +173,7 @@ export function SpellbookPages({ page, sheet, scale, startNum }: { page: Page; s
         <div key={i} className="page-wrap py-3">
           <PageShell scale={scale} sheet={sheet} num={startNum + i}>
             <div className="absolute font-display-sc" style={{ left: 'calc(var(--u) * 12)', top: 'calc(var(--u) * 13)', fontSize: pt(18, sheet.fontScale), color: 'var(--color-moss)', fontWeight: 700 }}>{page.title}{pages.length > 1 ? ` · ${i + 1}` : ''}</div>
-            <img src={sheet.emblem ?? `${import.meta.env.BASE_URL}icons/emblem.svg`} alt="" className="absolute" style={{ right: 'calc(var(--u) * 12)', top: 'calc(var(--u) * 11)', width: 'calc(var(--u) * 16)', height: 'calc(var(--u) * 16)' }} />
+            <img src={sheet.emblem ?? `${import.meta.env.BASE_URL}icons/club-emblem.png`} alt="" className="absolute" style={{ right: 'calc(var(--u) * 12)', top: 'calc(var(--u) * 11)', width: 'calc(var(--u) * 16)', height: 'calc(var(--u) * 16)' }} />
             <div className="sb-cols">{cols.map((c, k) => <div key={k} className="sb-col">{c.map((d) => <SpellCard key={d.id} d={d} scale={sheet.fontScale} />)}</div>)}</div>
             {!list.length && <div className="absolute inset-0 grid place-items-center text-center no-print" style={{ color: 'var(--color-sand-dark)', fontSize: pt(11) }}>Добавьте заклинания на странице «Магия» —<br />здесь появятся их полные описания</div>}
           </PageShell>

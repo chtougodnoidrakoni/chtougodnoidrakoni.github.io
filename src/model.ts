@@ -5,7 +5,7 @@
 export const PAGE_W = 210, PAGE_H = 297, MARGIN = 12;
 
 export type Frame = 'frame' | 'line' | 'none';
-export type BlockType = 'title' | 'field' | 'text' | 'image' | 'ability' | 'stat' | 'checklist' | 'circles' | 'table' | 'spells' | 'emblem' | 'ornament';
+export type BlockType = 'title' | 'field' | 'text' | 'image' | 'ability' | 'stat' | 'checklist' | 'circles' | 'table' | 'spells' | 'emblem' | 'ornament' | 'qr';
 
 export interface CheckItem { name: string; sub?: string; checked?: boolean; value?: string }
 export interface CircleRow { name: string; count: number; filled: number }
@@ -73,7 +73,7 @@ export const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().to
 
 export const BLOCK_NAMES: Record<BlockType, string> = {
   title: 'Заголовок', field: 'Поле', text: 'Текст', image: 'Картинка', ability: 'Характеристика', stat: 'Число', checklist: 'Список с отметками',
-  circles: 'Кружки (ячейки, спасброски)', table: 'Таблица', spells: 'Список заклинаний', emblem: 'Эмблема клуба', ornament: 'Украшение',
+  circles: 'Кружки (ячейки, спасброски)', table: 'Таблица', spells: 'Список заклинаний', emblem: 'Эмблема клуба', ornament: 'Украшение', qr: 'QR-код',
 };
 
 export function makeBlock(type: BlockType, p: Partial<Block> = {}): Block {
@@ -90,6 +90,7 @@ export function makeBlock(type: BlockType, p: Partial<Block> = {}): Block {
     : type === 'table' ? { w: 90, h: 40, columns: ['Название', 'Значение'], cells: [['', ''], ['', ''], ['', '']] }
     : type === 'spells' ? { w: 186, h: 80, minLevel: 0, maxLevel: 9, label: 'Заклинания' }
     : type === 'emblem' ? { w: 28, h: 28, frame: 'none', label: '' }
+    : type === 'qr' ? { w: 22, h: 30, label: 'Наш канал', src: 'icons/qr-channel.png', fontSize: 7 }
     : { w: 120, h: 6, frame: 'none', label: '' };
   return { ...base, ...d, ...p };
 }
@@ -118,8 +119,10 @@ function bioPage(): Page {
       f('Кампания', 78, 97, 120, 13),
       t('Внешность', 12, 115, 93, 32), t('Черты характера и манеры', 107, 115, 91, 32),
       t('Предыстория персонажа', 12, 150, 186, 71),
-      t('Цели', 12, 224, 93, 30), t('Задачи', 107, 224, 91, 30),
-      t('Союзники и организации', 12, 257, 93, 28), t('Триггеры, страхи и слабости', 107, 257, 91, 28),
+      t('Цели', 12, 224, 93, 30), t('Задачи', 107, 224, 67, 30),
+      t('Союзники и организации', 12, 257, 93, 28), t('Триггеры, страхи и слабости', 107, 257, 67, 28),
+      B('qr', { label: 'Наш канал', src: 'icons/qr-channel.png', x: 176, y: 224, w: 22, h: 30 }),
+      B('qr', { label: 'Наш чат', src: 'icons/qr-chat.png', x: 176, y: 257, w: 22, h: 28 }),
     ],
   };
 }

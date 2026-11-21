@@ -166,8 +166,17 @@ export function BlockView({ b, sheet, fill }: { b: Block; sheet: Sheet; fill: bo
         </div>
       );
     }
+    case 'qr': {
+      const url = b.src?.startsWith('icons/') ? `${import.meta.env.BASE_URL}${b.src}` : b.src;
+      return (
+        <div className={`blk ${frameCls} blk-qr`}>
+          {url && <img src={url} alt={b.label} />}
+          <div className="qr-cap" style={{ fontSize: pt(b.fontSize * 1.5, scale) }}>{b.label}</div>
+        </div>
+      );
+    }
     case 'emblem':
-      return <div className="blk blk-emblem"><img src={sheet.emblem ?? `${import.meta.env.BASE_URL}icons/emblem.svg`} alt="" className="w-full h-full object-contain" /></div>;
+      return <div className="blk blk-emblem"><img src={sheet.emblem ?? `${import.meta.env.BASE_URL}icons/club-emblem.png`} alt="" className="w-full h-full object-contain" /></div>;
     case 'ornament':
       return <div className="blk blk-ornament"><svg viewBox="0 0 200 10" preserveAspectRatio="none" className="w-full h-full"><path d="M0 5 H86 M114 5 H200" stroke="currentColor" strokeWidth="0.8" /><path d="M92 5 L100 1 L108 5 L100 9 Z" fill="none" stroke="currentColor" strokeWidth="0.8" /><circle cx="100" cy="5" r="1.4" fill="currentColor" /></svg></div>;
   }

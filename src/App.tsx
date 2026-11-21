@@ -54,7 +54,7 @@ function Home() {
   return (
     <div className="max-w-xl mx-auto px-4 pb-16">
       <header className="safe-top pt-6 pb-4 flex items-center gap-4">
-        <img src={`${import.meta.env.BASE_URL}icons/emblem.svg`} alt="" className="w-16 h-16" />
+        <img src={`${import.meta.env.BASE_URL}icons/club-emblem.png`} alt="" className="w-16 h-16" />
         <div><div className="font-display-sc text-3xl text-sand-light leading-none">Лист персонажа</div><div className="text-sm text-cream/60 mt-1">клуб «Что угодно и драконы»</div></div>
       </header>
       <div className="grid gap-2">

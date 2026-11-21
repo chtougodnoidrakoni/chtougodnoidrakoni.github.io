@@ -31,6 +31,8 @@
 @import '@fontsource/ruslan-display/cyrillic-400.css';
 @import '@fontsource/ruslan-display/latin-400.css';
 @import '@fontsource/kurale/cyrillic-400.css';
+@import '@fontsource/amatic-sc/cyrillic-700.css';
+@import '@fontsource/amatic-sc/latin-700.css';
 @import '@fontsource/kurale/latin-400.css';
 
 @theme {
@@ -74,10 +76,16 @@ input, select, textarea { font-size: 16px; }
 }
 .page.parchment .page-inner { background: radial-gradient(120% 90% at 50% 40%, #fbf6ea 0%, #f1e6cd 100%); }
 .page-inner { position: absolute; left: calc(var(--u) * 12); top: calc(var(--u) * 12); right: calc(var(--u) * 12); bottom: calc(var(--u) * 12); }
-.page-frame { position: absolute; inset: calc(var(--u) * 9); pointer-events: none; border: calc(var(--u) * .45) solid var(--color-moss); border-radius: calc(var(--u) * 2.2); }
-.page-frame::after { content: ''; position: absolute; inset: calc(var(--u) * 1); border: calc(var(--u) * .2) solid var(--color-sand); border-radius: calc(var(--u) * 1.4); }
+.page-frame { position: absolute; inset: calc(var(--u) * 6); pointer-events: none; border: calc(var(--u) * .45) solid var(--color-moss); border-radius: calc(var(--u) * 2.2); }
+.page-frame::after { content: ''; position: absolute; inset: calc(var(--u) * .9); border: calc(var(--u) * .2) solid var(--color-sand); border-radius: calc(var(--u) * 1.4); }
 .corner { position: absolute; width: calc(var(--u) * 10); height: calc(var(--u) * 10); color: var(--color-sand); pointer-events: none; }
-.page-num { position: absolute; bottom: calc(var(--u) * 4); left: 0; right: 0; text-align: center; font-family: var(--f-display); font-size: calc(var(--u) * 3); color: var(--color-sand-dark); }
+.page-num { position: absolute; bottom: calc(var(--u) * 8.2); right: calc(var(--u) * 13); font-family: var(--f-display); font-size: calc(var(--u) * 2.6); line-height: 1; color: var(--color-sand-dark); }
+/* подпись клуба внизу каждого листа — рукописные буквы, как на эмблеме */
+.page-foot { position: absolute; left: 0; right: 0; bottom: calc(var(--u) * 7.5); text-align: center; font-family: 'Amatic SC', var(--f-display); font-weight: 700; font-size: calc(var(--u) * 4); -webkit-text-stroke: calc(var(--u) * .06) var(--color-moss); line-height: 1; letter-spacing: .06em; color: var(--color-moss); pointer-events: none; }
+.sky { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; fill: var(--color-sand); }
+.blk-qr { align-items: center; justify-content: center; gap: calc(var(--u) * .8); padding: calc(var(--u) * 1.2) !important; }
+.blk-qr img { width: 100%; flex: 1; min-height: 0; object-fit: contain; }
+.qr-cap { font-family: 'Amatic SC', var(--f-display); font-weight: 700; color: var(--color-moss); line-height: 1; letter-spacing: .05em; text-align: center; white-space: nowrap; }
 
 .bw { position: absolute; }
 .blk { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden; }

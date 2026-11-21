@@ -239,7 +239,7 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
         </Field>
         <Field label="Эмблема клуба">
           <div className="flex gap-2 items-center">
-            <img src={sheet.emblem ?? `${import.meta.env.BASE_URL}icons/emblem.svg`} alt="" className="w-14 h-14 object-contain rounded-full bg-moss-deep" />
+            <img src={sheet.emblem ?? `${import.meta.env.BASE_URL}icons/club-emblem.png`} alt="" className="w-14 h-14 object-contain rounded-full bg-moss-deep" />
             <label className="flex-1 h-11 rounded-xl bg-moss border border-moss-light grid place-items-center cursor-pointer">Загрузить свою<input type="file" accept="image/*" className="hidden" onChange={async (e) => { const f = e.target.files?.[0]; if (f) { const src = await downscale(f, 600); commit((s) => ({ ...s, emblem: src })); say('Эмблема обновлена на всех страницах'); } }} /></label>
             {sheet.emblem && <Btn tone="ghost" onClick={() => commit((s) => ({ ...s, emblem: undefined }))}>Сбросить</Btn>}
           </div>
