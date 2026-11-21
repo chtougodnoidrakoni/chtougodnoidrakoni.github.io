@@ -1,6 +1,6 @@
 /** Страница A4 с блоками: в режиме «Макет» блоки двигаются и меняют размер пальцем. */
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { resizeEdge } from './layout';
+import { locked, resizeEdge } from './layout';
 import { BlockView, pt } from './blocks';
 import { PAGE_H, PAGE_W, SCHOOLS, spellOf, type Block, type Page, type Sheet, type SpellData } from './model';
 import { useStore } from './store';
@@ -84,7 +84,7 @@ export function LayoutPage({ page, pageIndex, sheet, scale, num }: { page: Page;
 
   const tap = (b: Block) => {
     setPage(pageIndex);
-    if (layout) { select(b.id); return; }
+    if (layout) { if (locked(b)) { useStore.getState().say('QR-коды клуба не редактируются'); return; } select(b.id); return; }
     if (b.type === 'emblem' || b.type === 'ornament' || b.type === 'qr') return;
     fill(b.id);
   };
@@ -95,7 +95,7 @@ export function LayoutPage({ page, pageIndex, sheet, scale, num }: { page: Page;
       <PageShell scale={scale} sheet={sheet} num={num}>
         <div className="absolute inset-0" onClick={() => layout && select(undefined)} />
         {blocks.map((b) => (
-          <div key={b.id} data-label={b.label} className={`bw ${layout && selected === b.id ? 'sel' : ''}`}
+          <div key={b.id} data-label={b.label} className={`bw ${layout && selected === b.id ? 'sel' : ''} ${layout && locked(b) ? 'locked' : ''}`}
             style={{ left: `calc(var(--u) * ${b.x})`, top: `calc(var(--u) * ${b.y})`, width: `calc(var(--u) * ${b.w})`, height: `calc(var(--u) * ${b.h})` }}
             onClick={() => tap(b)}>
             <BlockView b={b} sheet={sheet} fill={false} />

@@ -214,3 +214,4 @@ input, select, textarea { font-size: 16px; }
 .blk-spells td.w-ck .dot { width: .8em; height: .8em; display: inline-block; vertical-align: middle; }
 .blk-table th { font-size: .7em; letter-spacing: .01em; text-align: center; hyphens: auto; overflow-wrap: anywhere; }
 .blk-table th:first-child { text-align: left; }
+.layout .bw.locked { cursor: not-allowed; }

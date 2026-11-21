@@ -14,18 +14,20 @@ export const overlap = (a: Rect, b: Rect) => a.x < b.x + b.w - EPS && b.x < a.x 
 const vSpan = (a: Rect, b: Rect) => Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y);
 const hSpan = (a: Rect, b: Rect) => Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x);
 const r1 = (v: number) => Math.round(v * 2) / 2;
+/** Неизменяемые блоки: QR-коды клуба нельзя двигать, сжимать, растягивать и удалять. */
+export const locked = (b: Pick<Block, 'type'>) => b.type === 'qr';
 
 /** Поменять местами два блока: каждый занимает место и размер другого. */
 export function swap(blocks: Block[], a: string, b: string): Block[] {
   const A = blocks.find((x) => x.id === a), B = blocks.find((x) => x.id === b);
-  if (!A || !B || a === b) return blocks;
+  if (!A || !B || a === b || locked(A) || locked(B)) return blocks;
   const ra = { x: A.x, y: A.y, w: A.w, h: A.h }, rb = { x: B.x, y: B.y, w: B.w, h: B.h };
   return blocks.map((x) => (x.id === a ? { ...x, ...rb } : x.id === b ? { ...x, ...ra } : x));
 }
 
 /** Соседи за правой (или нижней) границей блока — они делят с ним эту границу. */
 export function neighbors(blocks: Block[], A: Block, edge: 'right' | 'bottom'): Block[] {
-  return blocks.filter((B) => B.id !== A.id && (edge === 'right'
+  return blocks.filter((B) => B.id !== A.id && !locked(B) && (edge === 'right'
     ? Math.abs(B.x - (A.x + A.w)) <= GAP + 1.5 && vSpan(A, B) > 1
     : Math.abs(B.y - (A.y + A.h)) <= GAP + 1.5 && hSpan(A, B) > 1));
 }
@@ -55,7 +57,7 @@ export function valid(blocks: Block[], changed: Set<string>): boolean {
  */
 export function resizeEdge(blocks: Block[], id: string, edge: 'right' | 'bottom', d: number): Block[] {
   const A = blocks.find((b) => b.id === id);
-  if (!A || Math.abs(d) < 0.01) return blocks;
+  if (!A || locked(A) || Math.abs(d) < 0.01) return blocks;
   const nb = neighbors(blocks, A, edge);
   const changed = new Set([A.id, ...nb.map((b) => b.id)]);
   // если исходный макет уже с наложениями (старый лист), не мешаем: проверяем только, что не стало хуже
@@ -81,7 +83,7 @@ export function setSize(blocks: Block[], id: string, key: 'w' | 'h', value: numb
 /** Разделить блок на два: новый блок занимает вторую половину. */
 export function split(blocks: Block[], id: string, dir: 'h' | 'v', make: (r: Rect) => Block): { blocks: Block[]; created?: Block } {
   const A = blocks.find((b) => b.id === id);
-  if (!A) return { blocks };
+  if (!A || locked(A)) return { blocks };
   if (dir === 'h') {
     const w1 = r1((A.w - GAP) / 2), w2 = r1(A.w - GAP - w1);
     if (w1 < MIN_W || w2 < MIN_W) return { blocks };
@@ -120,7 +122,7 @@ export function blockAt(blocks: Block[], x: number, y: number, except?: string):
  */
 export function removeAndFill(blocks: Block[], id: string): Block[] {
   const H = blocks.find((b) => b.id === id);
-  if (!H) return blocks;
+  if (!H || locked(H)) return blocks;
   const rest = blocks.filter((b) => b.id !== id);
   const near = (a: number, b: number) => Math.abs(a - b) <= GAP + 1.5;
   const inV = (B: Block) => B.y >= H.y - 1.5 && B.y + B.h <= H.y + H.h + 1.5;
@@ -133,7 +135,7 @@ export function removeAndFill(blocks: Block[], id: string): Block[] {
   ];
   let best: { blocks: Block[]; score: number } | undefined;
   for (const side of sides) {
-    const group = rest.filter(side.pick);
+    const group = rest.filter((b) => !locked(b) && side.pick(b));
     if (!group.length) continue;
     const ids = new Set(group.map((b) => b.id));
     const next = rest.map((b) => (ids.has(b.id) ? side.grow(b) : b));

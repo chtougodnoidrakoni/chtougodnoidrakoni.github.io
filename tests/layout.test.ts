@@ -133,3 +133,19 @@ describe('разметка как в шаблоне', () => {
     expect(noOverlaps(r.page.blocks)).toBe(true);
   });
 });
+
+describe('QR-коды заблокированы', () => {
+  const page = () => clubTemplate().pages[0]!;
+  const qr = (bl: Block[]) => bl.filter((x) => x.type === 'qr').map((x) => [x.x, x.y, x.w, x.h]);
+  it('соседи не сжимают и не растягивают QR', () => {
+    const p = page(); const before = qr(p.blocks);
+    for (const blk of p.blocks) for (const d of [-40, 40]) for (const e of ['right', 'bottom'] as const) expect(qr(resizeEdge(p.blocks, blk.id, e, d))).toEqual(before);
+  });
+  it('удаление соседа не растягивает QR, сам QR не удаляется', () => {
+    const p = page(); const before = qr(p.blocks);
+    for (const blk of p.blocks) if (blk.type !== 'qr') expect(qr(removeAndFill(p.blocks, blk.id))).toEqual(before);
+    const q = p.blocks.find((x) => x.type === 'qr')!;
+    expect(removeAndFill(p.blocks, q.id)).toBe(p.blocks);
+    expect(resizeEdge(p.blocks, q.id, 'right', 10)).toBe(p.blocks);
+  });
+});
