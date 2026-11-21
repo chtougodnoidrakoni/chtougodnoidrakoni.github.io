@@ -19,6 +19,15 @@ test('лист: заполнение в окне, редактор страни�
   await page.screenshot({ path: 'e2e/shots/02-fill-modal.png' });
   await save();
   await expect(blk('Имя персонажа').locator('input')).toHaveValue('Гордрик Каменный');
+  // кнопки шрифта в текстовом блоке: меняют размер, окно заполнения не открывают
+  const area = blk('Внешность').locator('textarea');
+  const fs0 = await area.evaluate((e) => parseFloat(getComputedStyle(e).fontSize));
+  await page.getByRole('button', { name: 'Больше шрифт: Внешность' }).click();
+  await page.getByRole('button', { name: 'Больше шрифт: Внешность' }).click();
+  await expect(page.getByRole('button', { name: 'Сохранить' })).toHaveCount(0);
+  expect(await area.evaluate((e) => parseFloat(getComputedStyle(e).fontSize))).toBeGreaterThan(fs0);
+  await page.getByRole('button', { name: 'Меньше шрифт: Внешность' }).click();
+  await page.screenshot({ path: 'e2e/shots/05-font-buttons.png' });
   // характеристика и автонавык
   await blk('Сила').scrollIntoViewIfNeeded(); await blk('Сила').click();
   await page.getByLabel('Значение').fill('16');

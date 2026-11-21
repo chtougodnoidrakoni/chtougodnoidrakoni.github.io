@@ -113,6 +113,14 @@ export function LayoutPage({ page, pageIndex, sheet, scale, num }: { page: Page;
             style={{ left: `calc(var(--u) * ${b.x})`, top: `calc(var(--u) * ${b.y})`, width: `calc(var(--u) * ${b.w})`, height: `calc(var(--u) * ${b.h})` }}
             onClick={() => tap(b)}>
             <BlockView b={b} sheet={sheet} fill={false} />
+            {!layout && b.type === 'text' && (
+              <div className="fs-ctl no-print" onClick={(e) => e.stopPropagation()}>
+                {([-0.5, 0.5] as const).map((d) => (
+                  <button key={d} type="button" aria-label={`${d < 0 ? 'Меньше' : 'Больше'} шрифт: ${b.label}`}
+                    onClick={(e) => { e.stopPropagation(); const v = Math.min(16, Math.max(5, Math.round((b.fontSize + d) * 2) / 2)); if (v !== b.fontSize) useStore.getState().updateBlock(b.id, { fontSize: v }, true); }}>{d < 0 ? '−' : '+'}</button>
+                ))}
+              </div>
+            )}
             {layout && selected === b.id && <>
               <div className="handle handle-r" onPointerDown={(e) => start(e, b, 'right')} />
               <div className="handle handle-b" onPointerDown={(e) => start(e, b, 'bottom')} />

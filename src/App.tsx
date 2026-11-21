@@ -4,6 +4,7 @@ import { useStore } from './store';
 import { makeBlock, PAGE_TEMPLATES, relayoutFromTemplate, uid, type BlockType, type Sheet } from './model';
 import { LayoutPage, SpellbookPages } from './Page';
 import { findFree } from './layout';
+import { buildPdf, sharePdf } from './pdf';
 import { FillModal } from './Fill';
 import { AddBlockPanel, Btn, Inspector, Sheet as Panel, SettingsPanel, SpellPicker, TextIn } from './Panels';
 
@@ -96,6 +97,21 @@ function Editor() {
   const scale = useScale();
   const [menu, setMenu] = useState(false);
   const [settings, setSettings] = useState(false);
+  const [pdf, setPdf] = useState<{ done: number; total: number; bytes?: Uint8Array } | null>(null);
+  const makePdf = async () => {
+    if (pdf && !pdf.bytes) return;
+    useStore.getState().fill(undefined); useStore.getState().select(undefined);
+    setPdf({ done: 0, total: document.querySelectorAll('.page').length });
+    await new Promise((r) => setTimeout(r, 60));
+    try {
+      const bytes = await buildPdf((done, total) => setPdf({ done, total }));
+      setPdf({ done: 1, total: 1, bytes });
+    } catch (e) {
+      setPdf(null);
+      say('Не получилось собрать PDF. Попробуйте «Системная печать Safari» в меню «⋯»');
+      console.error(e);
+    }
+  };
   const [addBlock, setAddBlock] = useState(false);
   const [addPage, setAddPage] = useState(false);
   const [pageMenu, setPageMenu] = useState<number | null>(null);
@@ -155,7 +171,7 @@ function Editor() {
           <div className="max-w-xl mx-auto px-4 flex gap-2">
             <Btn className="flex-1" onClick={() => setAddPage(true)}><Plus size={18} />Страница</Btn>
             <Btn className="flex-1" onClick={() => setAddBlock(true)}><LayoutTemplate size={18} />Блок</Btn>
-            <Btn tone="gold" className="flex-1" onClick={() => window.print()}><Printer size={18} />PDF</Btn>
+            <Btn tone="gold" className="flex-1" onClick={makePdf}><Printer size={18} />PDF</Btn>
           </div>
         </div>
       )}
@@ -164,6 +180,22 @@ function Editor() {
       <FillModal />
       <SpellPicker />
       <SettingsPanel open={settings} onClose={() => setSettings(false)} />
+      {pdf && (
+        <div className="fixed inset-0 z-[60] no-print bg-black/60 grid place-items-center p-6" onClick={() => pdf.bytes && setPdf(null)}>
+          <div className="w-full max-w-sm rounded-2xl bg-moss-dark border border-moss-light p-5 text-center" onClick={(e) => e.stopPropagation()}>
+            {!pdf.bytes ? <>
+              <div className="font-display-sc text-xl text-sand-light">Собираю PDF</div>
+              <div className="text-sm text-cream/70 mt-2">Страница {Math.min(pdf.done + 1, pdf.total)} из {pdf.total}</div>
+              <div className="h-2 rounded-full bg-moss-deep mt-4 overflow-hidden"><div className="h-full bg-sand transition-all" style={{ width: `${(pdf.done / Math.max(1, pdf.total)) * 100}%` }} /></div>
+            </> : <>
+              <div className="font-display-sc text-xl text-sand-light">PDF готов</div>
+              <div className="text-sm text-cream/70 mt-2">Сохраните в Файлы, отправьте в Telegram или сразу напечатайте</div>
+              <Btn tone="gold" className="w-full mt-4" onClick={() => void sharePdf(pdf.bytes!, sheet.name)}><Download size={18} />Сохранить или отправить</Btn>
+              <button className="mt-3 h-10 text-cream/70" onClick={() => setPdf(null)}>Закрыть</button>
+            </>}
+          </div>
+        </div>
+      )}
       <AddBlockPanel open={addBlock} onClose={() => setAddBlock(false)} onAdd={insertBlock} />
 
       <Panel open={addPage} onClose={() => setAddPage(false)} title="Новая страница">
@@ -196,11 +228,12 @@ function Editor() {
       <Panel open={menu} onClose={() => setMenu(false)} title="Лист">
         <div className="grid gap-2 pb-2">
           <Btn onClick={() => { setMenu(false); setSettings(true); }}><Settings2 size={18} />Стиль, название, шрифт, эмблема</Btn>
-          <Btn onClick={() => { setMenu(false); setTimeout(() => window.print(), 300); }}><Printer size={18} />Печать или PDF</Btn>
+          <Btn onClick={() => { setMenu(false); setTimeout(makePdf, 300); }}><Printer size={18} />Скачать PDF</Btn>
+          <Btn onClick={() => { setMenu(false); setTimeout(() => window.print(), 300); }}><Printer size={18} />Системная печать Safari</Btn>
           <Btn onClick={() => saveFile(`${sheet.name.replace(/[^\p{L}\p{N}]+/gu, '_') || 'list'}.json`, new Blob([JSON.stringify(sheet)], { type: 'application/json' }))}><Download size={18} />Сохранить файлом (.json)</Btn>
           <Btn onClick={async () => { const id = await create({ ...sheet, name: `${sheet.name} (копия)` }); setMenu(false); await open(id); say('Создана копия листа'); }}><Copy size={18} />Копия листа</Btn>
           <p className="text-xs text-cream/40 px-1 pt-1">Версия от {new Date(Number(__BUILD__)).toLocaleString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}</p>
-          <p className="text-xs text-cream/50 px-1 pt-2 leading-relaxed">PDF на iPhone: «Печать или PDF» → в окне печати нажмите «Поделиться» (квадрат со стрелкой) → «Сохранить в Файлы». Белые поля 12 мм оставлены специально: принтер не печатает края листа.</p>
+          <p className="text-xs text-cream/50 px-1 pt-2 leading-relaxed">«Скачать PDF» собирает файл прямо здесь: потом его можно сохранить в Файлы, отправить в Telegram или напечатать. Белые поля оставлены специально: принтер не печатает края листа.</p>
         </div>
       </Panel>
     </div>

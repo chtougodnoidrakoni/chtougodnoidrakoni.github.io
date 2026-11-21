@@ -265,9 +265,17 @@ export const markFixed = (p: Page): Page => (FIXED[p.title] ? { ...p, blocks: p.
 export function clubTemplate(): Sheet {
   return {
     id: uid(), name: 'Новый персонаж', updatedAt: Date.now(), fontScale: 1, paper: 'white',
-    ver: 2, pages: [markFixed(bioPage()), markFixed(statsPage()), featuresPage(), magicPage(), { id: uid(), title: 'Книга заклинаний', kind: 'spellbook', blocks: [] }],
+    ver: 2, pages: [markFixed(bioPage()), markFixed(statsPage()), featuresPage(), magicPage(), { id: uid(), title: 'Книга заклинаний', kind: 'spellbook', blocks: [] }, notesPage()],
     spells: [],
   };
+}
+/** Заметки: один лист, четыре больших блока. */
+function notesPage(): Page {
+  const p = blankPage('Заметки');
+  return { ...p, blocks: [...p.blocks,
+    B('text', { label: 'Заметки', x: 12, y: 28, w: 92, h: 127 }), B('text', { label: 'Заметки', x: 106, y: 28, w: 92, h: 127 }),
+    B('text', { label: 'Заметки', x: 12, y: 158, w: 92, h: 127 }), B('text', { label: 'Заметки', x: 106, y: 158, w: 92, h: 127 }),
+  ] };
 }
 export function blankPage(title = 'Новый лист'): Page {
   return { id: uid(), title, kind: 'layout', blocks: [B('title', { label: title, x: 12, y: 12, w: 150, h: 13, fontSize: 18 }), B('emblem', { x: 182, y: 11, w: 16, h: 16 })] };
@@ -278,7 +286,7 @@ export const PAGE_TEMPLATES: { name: string; make: () => Page }[] = [
   { name: 'Характеристики', make: () => markFixed(statsPage()) },
   { name: 'Способности', make: featuresPage },
   { name: 'Магия', make: magicPage },
-  { name: 'Заметки', make: () => ({ ...blankPage('Заметки'), blocks: [...blankPage('Заметки').blocks, B('text', { label: 'Заметки', x: 12, y: 28, w: 186, h: 257 })] }) },
+  { name: 'Заметки', make: notesPage },
   { name: 'Книга заклинаний', make: () => ({ id: uid(), title: 'Книга заклинаний', kind: 'spellbook', blocks: [] }) },
 ];
 
