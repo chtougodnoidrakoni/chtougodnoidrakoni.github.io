@@ -49,7 +49,8 @@ export async function buildPdf(onProgress: (done: number, total: number) => void
 export async function sharePdf(bytes: Uint8Array, name: string) {
   const file = new File([bytes as Uint8Array<ArrayBuffer>], `${name.replace(/[\\/:*?"<>|]+/g, ' ').trim() || 'Лист персонажа'}.pdf`, { type: 'application/pdf' });
   if (navigator.canShare?.({ files: [file] })) {
-    try { await navigator.share({ files: [file], title: file.name }); return; } catch (e) { if ((e as Error).name === 'AbortError') return; }
+    // только файл: заголовок или текст iPhone сохраняет рядом отдельным .txt
+    try { await navigator.share({ files: [file] }); return; } catch (e) { if ((e as Error).name === 'AbortError') return; }
   }
   const url = URL.createObjectURL(file);
   const a = document.createElement('a');
