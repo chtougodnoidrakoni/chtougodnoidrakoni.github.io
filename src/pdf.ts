@@ -19,11 +19,25 @@ export async function buildPdf(onProgress: (done: number, total: number) => void
   const pdf = await PDFDocument.create();
   for (let i = 0; i < pages.length; i++) {
     const node = pages[i]!;
-    const pixelRatio = TARGET_PX / node.offsetWidth;
-    const opts = { pixelRatio, quality: 0.93, backgroundColor: '#ffffff', fontEmbedCSS, filter: skip, cacheBust: false };
+    // Safari рисует страницу в экранном размере и потом растягивает картинку: тонкие линии
+    // и маленькие кружки округляются до пикселей и выходят кривыми. Поэтому на время снимка
+    // увеличиваем сам лист до печатного размера (≈12 точек на мм) и снимаем его 1:1.
+    const prevU = node.style.getPropertyValue('--u');
+    node.style.setProperty('--u', `${TARGET_PX / 210}px`);
+    node.classList.add('pdf-shot');
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    const w = node.offsetWidth, h = node.offsetHeight;
+    const opts = { pixelRatio: 1, width: w, height: h, canvasWidth: w, canvasHeight: h, quality: 0.93, backgroundColor: '#ffffff', fontEmbedCSS, filter: skip, cacheBust: false,
+      style: { boxShadow: 'none', margin: '0', ['-webkit-text-size-adjust' as string]: '100%' } };
     // Safari иногда отдаёт пустую картинку с первого раза — первый проход прогревает
-    if (i === 0) await toJpeg(node, opts).catch(() => undefined);
-    const url = await toJpeg(node, opts);
+    let url: string;
+    try {
+      if (i === 0) await toJpeg(node, opts).catch(() => undefined);
+      url = await toJpeg(node, opts);
+    } finally {
+      if (prevU) node.style.setProperty('--u', prevU); else node.style.removeProperty('--u');
+      node.classList.remove('pdf-shot');
+    }
     const img = await pdf.embedJpg(await (await fetch(url)).arrayBuffer());
     pdf.addPage([A4.w, A4.h]).drawImage(img, { x: 0, y: 0, width: A4.w, height: A4.h });
     onProgress(i + 1, pages.length);

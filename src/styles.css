@@ -276,3 +276,7 @@ input, select, textarea { font-size: 16px; }
 .fs-ctl button::before { content: ''; position: absolute; inset: -6px -3px; }
 .fs-ctl button:active { background: color-mix(in srgb, var(--color-sand) 30%, #fff); }
 @media print { .fs-ctl { display: none !important; } }
+
+/* снимок страницы для PDF: Safari не должен сам увеличивать мелкий текст */
+.page, .page * { -webkit-text-size-adjust: 100% !important; text-size-adjust: 100% !important; }
+.pdf-shot .fs-ctl, .pdf-shot .handle { display: none !important; }
