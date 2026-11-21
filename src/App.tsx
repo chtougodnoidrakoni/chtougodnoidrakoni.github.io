@@ -85,7 +85,8 @@ function Home() {
         ))}
         {!index.length && <p className="text-center text-cream/50 text-sm mt-6">Здесь будут ваши листы. Всё хранится на этом телефоне.</p>}
       </div>
-      <p className="text-xs text-cream/40 mt-10 leading-relaxed">Описания заклинаний — из System Reference Document 5.1 и 5.2 (Wizards of the Coast, CC-BY-4.0). Неофициальный проект, не связан с Wizards of the Coast.</p>
+      <p className="mt-10 text-center text-sm text-cream/60">Разработано inst: <a href="https://instagram.com/zamir.digital" target="_blank" rel="noopener" className="text-sand-light underline underline-offset-2">zamir.digital</a></p>
+      <p className="text-xs text-cream/40 mt-4 leading-relaxed">Описания заклинаний — из System Reference Document 5.1 и 5.2 (Wizards of the Coast, CC-BY-4.0). Неофициальный проект, не связан с Wizards of the Coast.</p>
     </div>
   );
 }
