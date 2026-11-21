@@ -3,7 +3,7 @@
  * Можно поменять два блока местами или сдвинуть общую границу: один блок растёт, сосед уменьшается.
  * Расти в пустое место тоже можно, но не поверх других блоков и не за поля страницы.
  */
-import { MARGIN, PAGE_H, PAGE_W, uid, type Block } from './model';
+import { MARGIN, PAGE_H, PAGE_W, markFixed, uid, type Block, type Sheet } from './model';
 
 export const MIN_W = 8, MIN_H = 6, GAP = 2;
 const EPS = 0.25;
@@ -15,7 +15,23 @@ const vSpan = (a: Rect, b: Rect) => Math.min(a.y + a.h, b.y + b.h) - Math.max(a.
 const hSpan = (a: Rect, b: Rect) => Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x);
 const r1 = (v: number) => Math.round(v * 2) / 2;
 /** Неизменяемые блоки: QR-коды клуба нельзя двигать, сжимать, растягивать и удалять. */
-export const locked = (b: Pick<Block, 'type'>) => b.type === 'qr';
+export const locked = (b: Pick<Block, 'type' | 'fixed'>) => b.type === 'qr' || !!b.fixed;
+
+/**
+ * Однократное обновление старых листов до версии 2:
+ * закрепляем шапку биографии и основу характеристик, убираем «Ресурсы» со страницы способностей.
+ */
+export function migrateLayout(s: Sheet): Sheet {
+  if ((s.ver ?? 1) >= 2) return s;
+  return { ...s, ver: 2, pages: s.pages.map((p) => {
+    let page = markFixed(p);
+    if (p.title === 'Способности') {
+      const res = page.blocks.find((b) => b.type === 'circles' && b.label === 'Ресурсы');
+      if (res) page = { ...page, blocks: removeAndFill(page.blocks, res.id) };
+    }
+    return page;
+  }) };
+}
 
 /** Поменять местами два блока: каждый занимает место и размер другого. */
 export function swap(blocks: Block[], a: string, b: string): Block[] {

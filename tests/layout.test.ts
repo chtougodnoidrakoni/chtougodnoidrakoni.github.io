@@ -58,8 +58,9 @@ describe('граница между соседями', () => {
 describe('обмен местами, разделение, свободное место', () => {
   it('обмен меняет места и размеры, наложений нет', () => {
     const page = clubTemplate().pages[1]!;
-    const [p, q] = [page.blocks[5]!, page.blocks[20]!];
-    const r = swap(page.blocks, p.id, q.id);
+    const blocks = page.blocks.map((x) => ({ ...x, fixed: false }));
+    const [p, q] = [blocks[5]!, blocks[20]!];
+    const r = swap(blocks, p.id, q.id);
     expect(r.find((x) => x.id === p.id)).toMatchObject({ x: q.x, y: q.y, w: q.w, h: q.h });
     expect(noOverlaps(r)).toBe(true);
   });
@@ -73,7 +74,7 @@ describe('обмен местами, разделение, свободное м
   });
   it('свободное место находится и не пересекается с блоками', () => {
     const page = clubTemplate().pages[2]!;
-    const bl = page.blocks.filter((x) => x.label !== 'Ресурсы');
+    const bl = page.blocks.filter((x) => x.label !== 'Черты и дополнительные способности');
     const r = findFree(bl, 60, 30)!;
     expect(r).toBeDefined();
     expect(bl.some((x) => overlap(x, r))).toBe(false);
@@ -147,5 +148,30 @@ describe('QR-коды заблокированы', () => {
     const q = p.blocks.find((x) => x.type === 'qr')!;
     expect(removeAndFill(p.blocks, q.id)).toBe(p.blocks);
     expect(resizeEdge(p.blocks, q.id, 'right', 10)).toBe(p.blocks);
+  });
+});
+
+describe('закреплённые блоки и обновление старых листов', () => {
+  it('шапка биографии закреплена, текстовые блоки — нет', () => {
+    const b = clubTemplate().pages[0]!.blocks;
+    expect(b.find((x) => x.label === 'Портрет')!.fixed).toBe(true);
+    expect(b.find((x) => x.label === 'Кампания')!.fixed).toBe(true);
+    expect(b.find((x) => x.label === 'Внешность')!.fixed).toBeFalsy();
+    const s = clubTemplate().pages[1]!.blocks;
+    expect(s.find((x) => x.label === 'Оружие')!.fixed).toBe(true);
+    expect(s.find((x) => x.label === 'Снаряжение')!.fixed).toBeFalsy();
+  });
+  it('старый лист: закрепление и удаление «Ресурсов» один раз', async () => {
+    const { migrateLayout } = await import('../src/layout');
+    const s = clubTemplate();
+    const old = { ...s, ver: undefined, pages: s.pages.map((p) => ({ ...p, blocks: p.blocks.map((x) => ({ ...x, fixed: undefined })) })) };
+    old.pages[2]!.blocks.push({ ...makeBlock('circles'), label: 'Ресурсы', x: 12, y: 233, w: 186, h: 52 });
+    old.pages[2]!.blocks = old.pages[2]!.blocks.map((x) => (x.label === 'Черты и дополнительные способности' ? { ...x, h: 56 } : x));
+    const m = migrateLayout(old);
+    expect(m.ver).toBe(2);
+    expect(m.pages[2]!.blocks.some((x) => x.label === 'Ресурсы')).toBe(false);
+    expect(m.pages[2]!.blocks.find((x) => x.label === 'Черты и дополнительные способности')!.h).toBe(111);
+    expect(m.pages[0]!.blocks.find((x) => x.label === 'Портрет')!.fixed).toBe(true);
+    expect(migrateLayout(m)).toBe(m);
   });
 });

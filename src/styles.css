@@ -123,7 +123,7 @@ input, select, textarea { font-size: 16px; }
 .dot.on { background: var(--color-moss); box-shadow: inset 0 0 0 calc(var(--u) * .35) #fff; }
 .circ-grid { display: grid; gap: .25em 1.2em; flex: 1; align-content: space-around; }
 .circ-row { display: flex; align-items: center; gap: .5em; min-width: 0; }
-.circ-name { white-space: nowrap; min-width: 4.5em; }
+.circ-name { white-space: nowrap; min-width: 3.4em; }
 .circ-dots { display: flex; gap: .35em; flex-wrap: wrap; }
 .circ { width: 1em; height: 1em; border-radius: 50%; border: calc(var(--u) * .3) solid var(--color-moss); background: transparent; padding: 0; }
 .circ.on { background: var(--color-sand); box-shadow: inset 0 0 0 calc(var(--u) * .35) #fff; }
@@ -190,12 +190,13 @@ input, select, textarea { font-size: 16px; }
 .blk-table td:first-child .inp { text-align: left; }
 
 /* медальон уровня */
-.b-medal { border-radius: 50%; border: calc(var(--u) * .5) solid var(--color-moss); padding: calc(var(--u) * 1.2) calc(var(--u) * 1) calc(var(--u) * 2.2);
+.b-medal { border-radius: 50%; border: calc(var(--u) * .5) solid var(--color-moss); padding: calc(var(--u) * 1.6) calc(var(--u) * 2) calc(var(--u) * 3.4); gap: 0;
   box-shadow: inset 0 0 0 calc(var(--u) * .6) #fff, inset 0 0 0 calc(var(--u) * .9) var(--color-sand), 0 0 0 calc(var(--u) * .5) #fff, 0 0 0 calc(var(--u) * .8) var(--color-sand);
   background: radial-gradient(circle at 50% 40%, #fff 55%, color-mix(in srgb, var(--color-sand) 14%, #fff) 100%); }
 .blk.b-medal { inset: 0; margin: auto; height: calc(100% - var(--u) * 1.8); max-width: calc(100% - var(--u) * 1.8); width: auto; aspect-ratio: 1 / 1; justify-content: center; }
 .b-medal .inp { color: var(--color-moss); }
-.b-medal .blk-label { font-size: calc(var(--u) * 1.75) !important; letter-spacing: .1em; }
+.b-medal .blk-label { font-size: calc(var(--u) * 1.6) !important; letter-spacing: .06em; justify-content: center; overflow: visible; }
+.b-medal .inp { line-height: 1; }
 
 /* текст в колонки */
 .parts { flex: 1; display: grid; gap: calc(var(--u) * 3); min-height: 0; }
@@ -215,3 +216,6 @@ input, select, textarea { font-size: 16px; }
 .blk-table th { font-size: .7em; letter-spacing: .01em; text-align: center; hyphens: auto; overflow-wrap: anywhere; }
 .blk-table th:first-child { text-align: left; }
 .layout .bw.locked { cursor: not-allowed; }
+.blk > .blk-label { flex: none; }
+.blk-spells table { flex: none; }
+.blk-spells { overflow: hidden; }

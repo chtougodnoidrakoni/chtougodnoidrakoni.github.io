@@ -37,6 +37,8 @@ export interface Block {
   values?: string[];
   /** ширина столбцов таблицы в процентах */
   widths?: number[];
+  /** закреплён: нельзя двигать и менять размер */
+  fixed?: boolean;
 }
 
 export interface Page { id: string; title: string; kind: 'layout' | 'spellbook'; blocks: Block[] }
@@ -59,6 +61,8 @@ export interface Sheet {
   emblem?: string;
   /** набор шрифтов листа */
   fonts?: FontSet;
+  /** версия разметки листа (для однократных обновлений старых листов) */
+  ver?: number;
   pages: Page[];
   spells: SheetSpell[];
 }
@@ -87,7 +91,7 @@ export function relayoutFromTemplate(page: Page, findFree: (bl: Block[], w: numb
     const old = page.blocks.find((b) => !used.has(b.id) && b.type === t.type && b.label === t.label && (t.type !== 'qr' || b.src === t.src));
     if (!old) return t;
     used.add(old.id);
-    return { ...old, x: t.x, y: t.y, w: t.w, h: t.h, ...(t.type === 'table' && old.columns?.join() === t.columns?.join() ? { widths: t.widths } : {}) };
+    return { ...old, x: t.x, y: t.y, w: t.w, h: t.h, fixed: t.fixed, ...(t.type === 'table' && old.columns?.join() === t.columns?.join() ? { widths: t.widths } : {}) };
   });
   let dropped = 0;
   for (const b of page.blocks) {
@@ -198,8 +202,7 @@ function featuresPage(): Page {
       B('emblem', { x: 182, y: 11, w: 16, h: 16 }),
       two('Способности класса и подкласса', ['Класс', 'Подкласс'], 28, 84),
       two('Способности вида и предыстории', ['Вид', 'Предыстория'], 115, 56),
-      two('Черты и дополнительные способности', ['Черты', 'Дополнительно'], 174, 56),
-      B('circles', { label: 'Ресурсы', x: 12, y: 233, w: 186, h: 52, rows: [{ name: 'Ресурс', count: 4, filled: 0 }, { name: 'Ресурс', count: 3, filled: 0 }, { name: 'Ресурс', count: 2, filled: 0 }] }),
+      two('Черты и дополнительные способности', ['Черты', 'Дополнительно'], 174, 111),
     ],
   };
 }
@@ -213,17 +216,24 @@ function magicPage(): Page {
       B('field', { label: 'Характеристика', x: 74, y: 28, w: 40, h: 13 }),
       B('field', { label: 'СЛ спасброска', x: 116, y: 28, w: 40, h: 13 }),
       B('field', { label: 'Бонус атаки', x: 158, y: 28, w: 40, h: 13 }),
-      B('circles', { label: 'Ячейки заклинаний', x: 12, y: 44, w: 186, h: 40, rows: [4, 3, 3, 3, 3, 2, 2, 1, 1].map((count, i) => ({ name: `${i + 1} круг`, count, filled: 0 })) }),
-      B('spells', { label: 'Заговоры', x: 12, y: 87, w: 186, h: 50, minLevel: 0, maxLevel: 0 }),
-      B('spells', { label: 'Заклинания', x: 12, y: 140, w: 186, h: 145, minLevel: 1, maxLevel: 9 }),
+      B('circles', { label: 'Ячейки заклинаний', x: 12, y: 44, w: 186, h: 20, rows: [4, 3, 3, 3, 3, 2, 2, 1, 1].map((count, i) => ({ name: `${i + 1} круг`, count, filled: 0 })) }),
+      B('spells', { label: 'Заговоры', x: 12, y: 67, w: 186, h: 50, minLevel: 0, maxLevel: 0 }),
+      B('spells', { label: 'Заклинания', x: 12, y: 120, w: 186, h: 165, minLevel: 1, maxLevel: 9 }),
     ],
   };
 }
 
+/** Закреплённые блоки шаблона: страница → подписи (пустая подпись — эмблема). */
+export const FIXED: Record<string, (b: Block) => boolean> = {
+  'Биография': (b) => b.type === 'emblem' || b.type === 'qr' || (b.y < 112 && ['title', 'stat', 'image', 'field'].includes(b.type)),
+  'Характеристики': (b) => !['Снаряжение', 'Монеты', 'Сокровища'].includes(b.label),
+};
+export const markFixed = (p: Page): Page => (FIXED[p.title] ? { ...p, blocks: p.blocks.map((b) => (FIXED[p.title]!(b) ? { ...b, fixed: true } : b)) } : p);
+
 export function clubTemplate(): Sheet {
   return {
     id: uid(), name: 'Новый персонаж', updatedAt: Date.now(), fontScale: 1, paper: 'white',
-    pages: [bioPage(), statsPage(), featuresPage(), magicPage(), { id: uid(), title: 'Книга заклинаний', kind: 'spellbook', blocks: [] }],
+    ver: 2, pages: [markFixed(bioPage()), markFixed(statsPage()), featuresPage(), magicPage(), { id: uid(), title: 'Книга заклинаний', kind: 'spellbook', blocks: [] }],
     spells: [],
   };
 }
@@ -232,8 +242,8 @@ export function blankPage(title = 'Новый лист'): Page {
 }
 export const PAGE_TEMPLATES: { name: string; make: () => Page }[] = [
   { name: 'Пустой лист', make: () => blankPage() },
-  { name: 'Биография', make: bioPage },
-  { name: 'Характеристики', make: statsPage },
+  { name: 'Биография', make: () => markFixed(bioPage()) },
+  { name: 'Характеристики', make: () => markFixed(statsPage()) },
   { name: 'Способности', make: featuresPage },
   { name: 'Магия', make: magicPage },
   { name: 'Заметки', make: () => ({ ...blankPage('Заметки'), blocks: [...blankPage('Заметки').blocks, B('text', { label: 'Заметки', x: 12, y: 28, w: 186, h: 257 })] }) },

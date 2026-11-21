@@ -84,7 +84,7 @@ export function LayoutPage({ page, pageIndex, sheet, scale, num }: { page: Page;
 
   const tap = (b: Block) => {
     setPage(pageIndex);
-    if (layout) { if (locked(b)) { useStore.getState().say('QR-коды клуба не редактируются'); return; } select(b.id); return; }
+    if (layout) { if (locked(b)) { useStore.getState().say(b.type === 'qr' ? 'QR-коды клуба не редактируются' : 'Этот блок закреплён: его место и размер менять нельзя'); return; } select(b.id); return; }
     if (b.type === 'emblem' || b.type === 'ornament' || b.type === 'qr') return;
     fill(b.id);
   };

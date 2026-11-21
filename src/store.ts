@@ -1,6 +1,7 @@
 /** Состояние: список листов, открытый лист, режим, выделение, история отмен, база заклинаний. */
 import { create } from 'zustand';
 import { get as idbGet, set as idbSet, del as idbDel } from 'idb-keyval';
+import { migrateLayout } from './layout';
 import { clubTemplate, migrateSheet, uid, type Block, type Page, type Sheet, type SpellData } from './model';
 
 export interface SheetMeta { id: string; name: string; updatedAt: number }
@@ -67,7 +68,7 @@ export const useStore = create<State>((set, get) => ({
   },
   async open(id) {
     const raw: Sheet | undefined = await idbGet(`sheet:${id}`);
-    const sheet = raw ? migrateSheet(raw) : undefined;
+    const sheet = raw ? migrateLayout(migrateSheet(raw)) : undefined;
     if (sheet) set({ sheet, pageIdx: 0, past: [], future: [], selected: undefined, editPage: undefined, filling: undefined });
     location.hash = sheet ? `sheet/${id}` : '';
   },

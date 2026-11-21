@@ -80,8 +80,10 @@ export function FillModal() {
         );
       case 'circles':
         return (b.rows ?? []).map((r, i) => (
-          <div key={i} className="flex items-center gap-3 flex-wrap py-1">
-            <div className="w-28 flex-none">{r.name}</div>
+          <div key={i} className="flex items-center gap-2 flex-wrap py-1.5 border-b border-moss-light/30">
+            <div className="w-20 flex-none">{r.name}</div>
+            <button type="button" aria-label={`Убрать ячейку: ${r.name}`} className="w-8 h-8 flex-none rounded-lg bg-moss border border-moss-light text-sand-light" onClick={() => set({ rows: b.rows!.map((x, j) => (j === i ? { ...x, count: Math.max(0, x.count - 1), filled: Math.min(x.filled, Math.max(0, x.count - 1)) } : x)) })}>−</button>
+            <button type="button" aria-label={`Добавить ячейку: ${r.name}`} className="w-8 h-8 flex-none rounded-lg bg-moss border border-moss-light text-sand-light" onClick={() => set({ rows: b.rows!.map((x, j) => (j === i ? { ...x, count: Math.min(12, x.count + 1) } : x)) })}>+</button>
             {Array.from({ length: r.count }, (_, k) => <Ring key={k} on={k < r.filled} label={`${r.name} ${k + 1}`} onClick={() => set({ rows: b.rows!.map((x, j) => (j === i ? { ...x, filled: k < x.filled ? k : k + 1 } : x)) })} />)}
           </div>
         ));

@@ -92,7 +92,7 @@ export function BlockView({ b, sheet, fill }: { b: Block; sheet: Sheet; fill: bo
     case 'stat':
       return (
         <div className={`blk ${b.shape === 'shield' ? 'b-shield' : b.shape === 'circle' ? 'b-circle' : b.shape === 'medal' ? 'b-medal' : frameCls} blk-stat`}>
-          <AutoInput className="inp font-display-sc text-center" style={{ fontSize: pt(b.fontSize * (b.shape === 'medal' ? 3.1 : 2.3), scale) }} value={b.value} auto={autoStat(b, calc!)} readOnly={!fill} onChange={(v) => set({ value: v })} />
+          <AutoInput className="inp font-display-sc text-center" style={{ fontSize: pt(b.fontSize * (b.shape === 'medal' ? 2.6 : 2.3), scale) }} value={b.value} auto={autoStat(b, calc!)} readOnly={!fill} onChange={(v) => set({ value: v })} />
           <Label b={b} scale={scale} />
         </div>
       );
@@ -117,7 +117,7 @@ export function BlockView({ b, sheet, fill }: { b: Block; sheet: Sheet; fill: bo
       return (
         <div className={`blk ${frameCls} blk-circles`}>
           <Label b={b} scale={scale} />
-          <div className="circ-grid" style={{ fontSize: fs, gridTemplateColumns: `repeat(${Math.max(1, Math.floor(b.w / 58))}, minmax(0,1fr))` }}>
+          <div className="circ-grid" style={{ fontSize: fs, gridTemplateColumns: `repeat(${Math.max(1, Math.min(b.rows?.length ?? 1, Math.floor(b.w / 36)))}, minmax(0,1fr))` }}>
             {(b.rows ?? []).map((r, i) => (
               <div key={i} className="circ-row">
                 <span className="circ-name">{r.name}</span>
@@ -161,7 +161,7 @@ export function BlockView({ b, sheet, fill }: { b: Block; sheet: Sheet; fill: bo
                   <td>{[d!.v && 'В', d!.s && 'С', d!.m && 'М'].filter(Boolean).join(' ')}</td><td>{d!.c ? '●' : ''}</td><td>{d!.r ? '●' : ''}</td>
                 </tr>
               ))}
-              {Array.from({ length: Math.max(0, Math.floor((b.h - 9) / 5.2) - list.length) }, (_, i) => <tr key={`e${i}`} className="empty"><td className="w-ck"><span className="dot" /></td>{Array.from({ length: 7 }, (_, k) => <td key={k}>&nbsp;</td>)}</tr>)}
+              {Array.from({ length: Math.max(0, Math.floor((b.h - 14) / 5.2) - list.length) }, (_, i) => <tr key={`e${i}`} className="empty"><td className="w-ck"><span className="dot" /></td>{Array.from({ length: 7 }, (_, k) => <td key={k}>&nbsp;</td>)}</tr>)}
             </tbody>
           </table>
         </div>
