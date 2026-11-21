@@ -7,6 +7,7 @@ import { findFree } from './layout';
 import { FillModal } from './Fill';
 import { AddBlockPanel, Btn, Inspector, Sheet as Panel, SettingsPanel, SpellPicker, TextIn } from './Panels';
 
+declare const __BUILD__: string;
 const cx = (...c: (string | false | undefined)[]) => c.filter(Boolean).join(' ');
 
 async function saveFile(name: string, blob: Blob) {
@@ -191,6 +192,7 @@ function Editor() {
           <Btn onClick={() => { setMenu(false); setTimeout(() => window.print(), 300); }}><Printer size={18} />Печать или PDF</Btn>
           <Btn onClick={() => saveFile(`${sheet.name.replace(/[^\p{L}\p{N}]+/gu, '_') || 'list'}.json`, new Blob([JSON.stringify(sheet)], { type: 'application/json' }))}><Download size={18} />Сохранить файлом (.json)</Btn>
           <Btn onClick={async () => { const id = await create({ ...sheet, name: `${sheet.name} (копия)` }); setMenu(false); await open(id); say('Создана копия листа'); }}><Copy size={18} />Копия листа</Btn>
+          <p className="text-xs text-cream/40 px-1 pt-1">Версия от {new Date(Number(__BUILD__)).toLocaleString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}</p>
           <p className="text-xs text-cream/50 px-1 pt-2 leading-relaxed">PDF на iPhone: «Печать или PDF» → в окне печати нажмите «Поделиться» (квадрат со стрелкой) → «Сохранить в Файлы». Белые поля 12 мм оставлены специально: принтер не печатает края листа.</p>
         </div>
       </Panel>

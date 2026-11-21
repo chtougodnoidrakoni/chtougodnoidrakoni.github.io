@@ -11,3 +11,26 @@ const update = registerSW({ immediate: true, onRegisteredSW(_url, reg) {
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') void reg.update(); });
 } });
 void update;
+
+declare const __BUILD__: string;
+/**
+ * Страховка от застрявшей старой версии (Safari любит держать её в памяти):
+ * спрашиваем у сервера номер сборки и, если он новее, сбрасываем кэш и перезагружаемся.
+ */
+async function checkVersion() {
+  try {
+    const r = await fetch(`${import.meta.env.BASE_URL}version.json?t=${Date.now()}`, { cache: 'no-store' });
+    if (!r.ok) return;
+    const { v } = await r.json();
+    if (!v || v === __BUILD__ || sessionStorage.getItem('reloaded-for') === v) return;
+    sessionStorage.setItem('reloaded-for', v);
+    const regs = await navigator.serviceWorker?.getRegistrations?.() ?? [];
+    await Promise.all(regs.map((x) => x.unregister()));
+    if ('caches' in window) await Promise.all((await caches.keys()).map((k) => caches.delete(k)));
+    location.reload();
+  } catch { /* нет сети — живём на сохранённой версии */ }
+}
+if (import.meta.env.PROD) {
+  void checkVersion();
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') void checkVersion(); });
+}

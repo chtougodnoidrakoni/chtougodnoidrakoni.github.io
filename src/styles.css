@@ -120,8 +120,8 @@ input, select, textarea { font-size: 16px; }
 .circ { width: 1em; height: 1em; border-radius: 50%; border: calc(var(--u) * .3) solid var(--color-moss); background: transparent; padding: 0; }
 .circ.on { background: var(--color-sand); box-shadow: inset 0 0 0 calc(var(--u) * .35) #fff; }
 .blk table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-.blk th { font-family: var(--f-label); font-weight: 700; color: var(--color-sand-dark); text-align: left; font-size: .8em; letter-spacing: .04em; padding: .15em .3em; border-bottom: calc(var(--u) * .3) solid var(--color-moss); }
-.blk td { padding: .15em .3em; border-bottom: calc(var(--u) * .18) solid color-mix(in srgb, var(--color-moss) 30%, transparent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; height: 1.6em; }
+.blk th { font-family: var(--f-label); font-weight: 700; color: var(--color-sand-dark); text-align: left; font-size: .8em; letter-spacing: .04em; padding: .15em .3em; border-bottom: max(1px, calc(var(--u) * .3)) solid var(--color-moss); }
+.blk td { padding: .15em .3em; border-bottom: max(1px, calc(var(--u) * .2)) solid color-mix(in srgb, var(--color-moss) 45%, transparent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; height: 1.6em; }
 .blk-spells th:nth-child(1), .blk-spells td:nth-child(1) { width: 1.6em; }
 .blk-spells th:nth-child(2) { width: 34%; }
 .blk-spells th:nth-child(3) { width: 2.2em; }
@@ -175,8 +175,8 @@ input, select, textarea { font-size: 16px; }
 .abil-score { border-radius: 999px !important; }
 
 /* сетка в таблицах */
-.blk table { border: calc(var(--u) * .25) solid color-mix(in srgb, var(--color-moss) 55%, transparent); }
-.blk th + th, .blk td + td { border-left: calc(var(--u) * .18) solid color-mix(in srgb, var(--color-moss) 35%, transparent); }
+.blk table { border: max(1px, calc(var(--u) * .25)) solid color-mix(in srgb, var(--color-moss) 60%, transparent); }
+.blk th + th, .blk td + td { border-left: max(1px, calc(var(--u) * .2)) solid color-mix(in srgb, var(--color-moss) 45%, transparent); }
 .blk th { white-space: normal; line-height: 1.05; vertical-align: bottom; background: color-mix(in srgb, var(--color-sand) 10%, transparent); }
 .blk-table .inp { text-align: center; }
 .blk-table td:first-child .inp { text-align: left; }
@@ -202,3 +202,5 @@ input, select, textarea { font-size: 16px; }
 .tbl-wrap { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .tbl-wrap table { height: 100%; }
 .tbl-wrap thead tr { height: 1px; }
+.blk-spells td.w-ck, .blk-spells th.w-ck { padding: 0; text-align: center; overflow: visible; }
+.blk-spells td.w-ck .dot { width: .8em; height: .8em; display: inline-block; vertical-align: middle; }
