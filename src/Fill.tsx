@@ -7,7 +7,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { Plus, Trash2, ImagePlus } from 'lucide-react';
 import { useStore } from './store';
 import { abilityMod, autoItem, autoStat, calcSheet, signed, spellOf, BLOCK_NAMES, type Block } from './model';
-import { downscale } from './blocks';
+import { CPR_KEY, downscale } from './blocks';
 
 const base = 'px-3 rounded-xl bg-moss-deep border border-moss-light text-cream outline-none focus:border-sand';
 const box = `w-full ${base}`;
@@ -84,6 +84,38 @@ export function FillModal() {
               {b.save && skillRow(b.save, (p) => set({ save: { ...b.save!, ...p } }), 'Спасбросок')}
               {(b.items ?? []).map((it, i) => <div key={i}>{skillRow(it, (p) => set({ items: b.items!.map((x, j) => (j === i ? { ...x, ...p } : x)) }), it.name)}</div>)}
             </div>
+          </div>
+        );
+      }
+      case 'pctstat': {
+        const n = parseInt(b.value ?? '', 10);
+        return (
+          <div className="grid gap-2">
+            <L t="Значение, %"><In inputMode="numeric" value={b.value ?? ''} onChange={(e) => set({ value: e.target.value.replace(/[^\d]/g, '').slice(0, 3) })} className="text-2xl text-center" autoFocus /></L>
+            <div className="text-sm text-cream/60 px-1">Половина: <b className="text-cream">{Number.isNaN(n) ? '—' : Math.floor(n / 2)}</b> · пятая часть: <b className="text-cream">{Number.isNaN(n) ? '—' : Math.floor(n / 5)}</b> — считаются сами.</div>
+          </div>
+        );
+      }
+      case 'pctlist': case 'sumlist': {
+        const sum = b.type === 'sumlist';
+        return (
+          <div className="grid gap-1">
+            <div className="text-xs text-cream/60 px-1">{sum ? 'Впишите уровень навыка. База = характеристика + уровень, считается сама.' : 'Впишите процент навыка, половина и пятая часть посчитаются сами. Кружок — отметка успешного применения.'}</div>
+            {(b.items ?? []).map((it, i) => {
+              const up = (patch: Partial<typeof it>) => set({ items: b.items!.map((x, j) => (j === i ? { ...x, ...patch } : x)) });
+              const n = parseInt(it.value ?? '', 10);
+              const stat = sum ? calc!.vals[`cpr:${CPR_KEY[it.sub ?? ''] ?? ''}`] : undefined;
+              return (
+                <div key={i} className="flex items-center gap-2 py-1.5 border-b border-moss-light/30">
+                  {!sum && <Ring on={!!it.checked} onClick={() => up({ checked: !it.checked })} label={`Отметка: ${it.name}`} />}
+                  <input className={`${base} flex-1 min-w-0 h-10`} value={it.name} onChange={(e) => up({ name: e.target.value })} aria-label="Навык" />
+                  {sum && <span className="text-cream/50 text-sm w-12 text-center">{it.sub}</span>}
+                  <input inputMode="numeric" className={`${base} flex-none h-10 text-center`} style={{ width: 56 }} value={it.value ?? ''} placeholder={sum ? 'ур.' : '%'} onChange={(e) => up({ value: e.target.value.replace(/[^\d]/g, '').slice(0, 3) })} />
+                  <span className="text-xs text-cream/60 w-14 text-right">{sum ? (stat !== undefined ? `= ${stat + (Number.isNaN(n) ? 0 : n)}` : '') : Number.isNaN(n) ? '' : `${Math.floor(n / 2)} / ${Math.floor(n / 5)}`}</span>
+                </div>
+              );
+            })}
+            <button className="h-11 mt-2 rounded-xl bg-moss border border-moss-light inline-flex items-center justify-center gap-2" onClick={() => set({ items: [...(b.items ?? []), { name: 'Навык', sub: sum ? 'ИНТ' : undefined }] })}><Plus size={18} />Навык</button>
           </div>
         );
       }

@@ -5,7 +5,7 @@
 export const PAGE_W = 210, PAGE_H = 297, MARGIN = 12;
 
 export type Frame = 'frame' | 'line' | 'none';
-export type BlockType = 'title' | 'field' | 'text' | 'image' | 'ability' | 'stat' | 'checklist' | 'circles' | 'table' | 'spells' | 'emblem' | 'ornament' | 'qr' | 'abilityx';
+export type BlockType = 'title' | 'field' | 'text' | 'image' | 'ability' | 'stat' | 'checklist' | 'circles' | 'table' | 'spells' | 'emblem' | 'ornament' | 'qr' | 'abilityx' | 'pctstat' | 'pctlist' | 'sumlist';
 
 export interface CheckItem { name: string; sub?: string; checked?: boolean; value?: string }
 export interface CircleRow { name: string; count: number; filled: number }
@@ -37,6 +37,8 @@ export interface Block {
   values?: string[];
   /** ширина столбцов таблицы в процентах */
   widths?: number[];
+  /** сколько рядов кружков в строке (для блока «Кружки»); по умолчанию считается по ширине */
+  perRow?: number;
   /** закреплён: нельзя двигать и менять размер */
   fixed?: boolean;
   /** размер текста внутри блока (кнопки ± на странице); подпись блока остаётся по fontSize */
@@ -67,6 +69,8 @@ export interface Sheet {
   fonts?: FontSet;
   /** стиль оформления листа */
   theme?: SheetTheme;
+  /** игра: D&D 5e (по умолчанию), Зов Ктулху, Клинки во тьме, Киберпанк RED */
+  system?: GameSystem;
   /** версия разметки листа (для однократных обновлений старых листов) */
   ver?: number;
   pages: Page[];
@@ -122,6 +126,8 @@ export function relayoutFromTemplate(page: Page, findFree: (bl: Block[], w: numb
   return { page: { ...page, blocks: out }, dropped };
 }
 
+export type GameSystem = 'dnd' | 'coc' | 'bitd' | 'cpr';
+
 export type SheetTheme = 'club' | 'chronicle' | 'strict';
 export const THEMES: { id: SheetTheme; name: string; hint: string; fonts: FontSet; ink: string; accent: string; label: string }[] = [
   { id: 'club', name: 'Клубный', hint: 'зелёный и песочный, звёзды и месяц', fonts: 'tale', ink: '#444e46', accent: '#aa9173', label: '#8a7357' },
@@ -141,7 +147,7 @@ export const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().to
 
 export const BLOCK_NAMES: Record<BlockType, string> = {
   title: 'Заголовок', field: 'Поле', text: 'Текст', image: 'Картинка', ability: 'Характеристика', stat: 'Число', checklist: 'Список с отметками',
-  circles: 'Кружки (ячейки, спасброски)', table: 'Таблица', spells: 'Список заклинаний', emblem: 'Эмблема клуба', ornament: 'Украшение', qr: 'QR-код', abilityx: 'Характеристика с навыками',
+  circles: 'Кружки (ячейки, спасброски)', table: 'Таблица', spells: 'Список заклинаний', emblem: 'Эмблема клуба', ornament: 'Украшение', qr: 'QR-код', abilityx: 'Характеристика с навыками', pctstat: 'Характеристика в %', pctlist: 'Навыки в %', sumlist: 'Навыки: характеристика + уровень',
 };
 
 export function makeBlock(type: BlockType, p: Partial<Block> = {}): Block {
@@ -158,6 +164,9 @@ export function makeBlock(type: BlockType, p: Partial<Block> = {}): Block {
     : type === 'table' ? { w: 90, h: 40, columns: ['Название', 'Значение'], cells: [['', ''], ['', ''], ['', '']] }
     : type === 'spells' ? { w: 186, h: 80, minLevel: 0, maxLevel: 9, label: 'Заклинания' }
     : type === 'emblem' ? { w: 28, h: 28, frame: 'none', label: '' }
+    : type === 'pctstat' ? { w: 40, h: 22, label: 'Характеристика' }
+    : type === 'pctlist' ? { w: 60, h: 80, label: 'Навыки', items: [{ name: 'Навык' }] }
+    : type === 'sumlist' ? { w: 60, h: 80, label: 'Навыки', items: [{ name: 'Навык', sub: 'ИНТ' }] }
     : type === 'abilityx' ? { w: 60, h: 40, label: 'Сила', key: 'СИЛ', items: [], save: { name: 'Спасбросок', sub: 'СИЛ' } }
     : type === 'qr' ? { w: 22, h: 30, label: 'Наш канал', src: 'icons/qr-channel.png', fontSize: 7 }
     : { w: 120, h: 6, frame: 'none', label: '' };
@@ -270,12 +279,12 @@ export const markFixed = (p: Page): Page => (FIXED[p.title] ? { ...p, blocks: p.
 export function clubTemplate(): Sheet {
   return {
     id: uid(), name: 'Новый персонаж', updatedAt: Date.now(), fontScale: 1, paper: 'white',
-    ver: 2, pages: [markFixed(bioPage()), markFixed(statsPage()), featuresPage(), magicPage(), { id: uid(), title: 'Книга заклинаний', kind: 'spellbook', blocks: [] }, notesPage()],
+    ver: 2, system: 'dnd', pages: [markFixed(bioPage()), markFixed(statsPage()), featuresPage(), magicPage(), { id: uid(), title: 'Книга заклинаний', kind: 'spellbook', blocks: [] }, notesPage()],
     spells: [],
   };
 }
 /** Заметки: один лист, четыре больших блока. */
-function notesPage(): Page {
+export function notesPage(): Page {
   const p = blankPage('Заметки');
   return { ...p, blocks: [...p.blocks,
     B('text', { label: 'Заметки', x: 12, y: 28, w: 92, h: 127 }), B('text', { label: 'Заметки', x: 106, y: 28, w: 92, h: 127 }),
@@ -314,18 +323,20 @@ const LABEL_KEYS: Record<string, string> = Object.fromEntries([
 /** Смысл блока: из поля key или по подписи (для листов, созданных до автоподсчёта). */
 export const keyOf = (b: Block) => b.key ?? LABEL_KEYS[b.label];
 
-export interface Calc { mods: Record<string, number | undefined>; prof?: number; perception?: number }
+export interface Calc { mods: Record<string, number | undefined>; prof?: number; perception?: number; vals: Record<string, number | undefined> }
 /** Что лист может посчитать сам: модификаторы характеристик и бонус мастерства. */
 export function calcSheet(sheet: Sheet): Calc {
   const all = sheet.pages.flatMap((p) => p.blocks);
   const mods: Calc['mods'] = {};
+  const vals: Calc['vals'] = {};
+  for (const b of all) if ((b.type === 'stat' || b.type === 'pctstat') && b.key) { const n = parseInt(b.value ?? '', 10); vals[b.key] = Number.isNaN(n) ? undefined : n; }
   for (const b of all) if (b.type === 'ability' || b.type === 'abilityx') { const k = keyOf(b); if (k) mods[k] = parseMod(b.mod || abilityMod(b.score ?? '')); }
   const level = parseInt(all.find((b) => keyOf(b) === 'level')?.value ?? '', 10);
   const profBlock = all.find((b) => keyOf(b) === 'prof');
   const prof = parseMod(profBlock?.value) ?? (level >= 1 ? 2 + Math.floor((Math.min(level, 20) - 1) / 4) : undefined);
   const perc = all.find((b) => (b.type === 'checklist' || b.type === 'abilityx') && b.items?.some((i) => i.name === 'Внимательность'))?.items?.find((i) => i.name === 'Внимательность');
   const perception = perc ? parseMod(perc.value) ?? autoItem(perc, mods, prof) : undefined;
-  return { mods, prof, perception };
+  return { mods, prof, perception, vals };
 }
 const CODE: Record<string, string> = { СИЛ: 'СИЛ', ЛВК: 'ЛВК', ТЕЛ: 'ТЕЛ', ИНТ: 'ИНТ', МДР: 'МДР', ХАР: 'ХАР' };
 /** Навык или спасбросок: модификатор характеристики + бонус мастерства, если отмечено владение. */
@@ -340,6 +351,18 @@ export function autoStat(b: Block, c: Calc): string {
   if (k === 'init' && c.mods['ЛВК'] !== undefined) return signed(c.mods['ЛВК']!);
   if (k === 'passive' && c.perception !== undefined) return String(10 + c.perception);
   if (k === 'prof' && c.prof !== undefined) return signed(c.prof);
+  const v = (x: string) => c.vals[x];
+  const has = (...xs: string[]) => xs.every((x) => v(x) !== undefined);
+  // Зов Ктулху
+  if (k === 'coc:hp' && has('coc:CON', 'coc:SIZ')) return String(Math.floor((v('coc:CON')! + v('coc:SIZ')!) / 10));
+  if (k === 'coc:mp' && has('coc:POW')) return String(Math.floor(v('coc:POW')! / 5));
+  if (k === 'coc:san' && has('coc:POW')) return String(v('coc:POW'));
+  // Киберпанк RED
+  const cprHp = has('cpr:BODY', 'cpr:WILL') ? 10 + 5 * Math.ceil((v('cpr:BODY')! + v('cpr:WILL')!) / 2) : undefined;
+  if (k === 'cpr:hp' && cprHp !== undefined) return String(cprHp);
+  if (k === 'cpr:sw' && cprHp !== undefined) return String(Math.ceil(cprHp / 2));
+  if (k === 'cpr:ds' && has('cpr:BODY')) return String(v('cpr:BODY'));
+  if (k === 'cpr:hum' && has('cpr:EMP')) return String(v('cpr:EMP')! * 10);
   return '';
 }
 

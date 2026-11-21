@@ -25,6 +25,9 @@ function AutoInput({ value, auto, onChange, readOnly, className, style, inputMod
   );
 }
 
+/** Русское сокращение характеристики Киберпанка → ключ блока. */
+export const CPR_KEY: Record<string, string> = { ИНТ: 'INT', РЕФ: 'REF', ЛВК: 'DEX', ТЕХ: 'TECH', ХЛАД: 'COOL', ВОЛЯ: 'WILL', УДАЧА: 'LUCK', СКОР: 'MOVE', ТЕЛО: 'BODY', ЭМП: 'EMP' };
+
 export function BlockView({ b, sheet, fill }: { b: Block; sheet: Sheet; fill: boolean }) {
   const scale = sheet.fontScale;
   const { updateBlock, edit, spellMap } = useStore();
@@ -32,7 +35,7 @@ export function BlockView({ b, sheet, fill }: { b: Block; sheet: Sheet; fill: bo
   const set = (patch: Partial<Block>) => updateBlock(b.id, patch);
   const inputStyle: CSSProperties = { fontSize: fs };
   const frameCls = b.frame === 'frame' ? 'b-frame' : b.frame === 'line' ? 'b-line' : '';
-  const calc = b.type === 'checklist' || b.type === 'stat' || b.type === 'abilityx' ? calcSheet(sheet) : undefined;
+  const calc = ['checklist', 'stat', 'abilityx', 'sumlist'].includes(b.type) ? calcSheet(sheet) : undefined;
 
   switch (b.type) {
     case 'title':
@@ -90,6 +93,64 @@ export function BlockView({ b, sheet, fill }: { b: Block; sheet: Sheet; fill: bo
         </div>
       );
     }
+    case 'pctstat': {
+      const n = parseInt(b.value ?? '', 10);
+      const ok = !Number.isNaN(n);
+      return (
+        <div className={`blk ${frameCls} blk-pct`}>
+          <Label b={b} scale={scale} />
+          <div className="pct-row">
+            <div className="pct-main" style={{ fontSize: pt(b.fontSize * 2.4, scale) }}>{b.value || ''}</div>
+            <div className="pct-parts" style={{ fontSize: pt(b.fontSize * 1.05, scale) }}>
+              <div><span>{ok ? Math.floor(n / 2) : ''}</span><i>½</i></div>
+              <div><span>{ok ? Math.floor(n / 5) : ''}</span><i>⅕</i></div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    case 'pctlist':
+      return (
+        <div className={`blk ${frameCls} blk-plist`} style={{ fontSize: fs }}>
+          <Label b={b} scale={scale} />
+          <div className="pl-head"><span /><span /><span>%</span><span>½</span><span>⅕</span></div>
+          <div className="pl-rows">
+            {(b.items ?? []).map((it, i) => {
+              const n = parseInt(it.value ?? '', 10); const ok = !Number.isNaN(n);
+              return (
+                <div key={i} className="pl-row">
+                  <span className={`dot ${it.checked ? 'on' : ''}`} />
+                  <span className="pl-name">{it.name}</span>
+                  <span className="pl-val">{it.value ?? ''}</span>
+                  <span className="pl-sub">{ok ? Math.floor(n / 2) : ''}</span>
+                  <span className="pl-sub">{ok ? Math.floor(n / 5) : ''}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    case 'sumlist':
+      return (
+        <div className={`blk ${frameCls} blk-plist blk-slist`} style={{ fontSize: fs }}>
+          <Label b={b} scale={scale} />
+          <div className="pl-head"><span /><span>ур.</span><span>база</span></div>
+          <div className="pl-rows">
+            {(b.items ?? []).map((it, i) => {
+              const stat = calc!.vals[`cpr:${CPR_KEY[it.sub ?? ''] ?? ''}`];
+              const lvl = parseInt(it.value ?? '', 10);
+              const base = stat !== undefined ? stat + (Number.isNaN(lvl) ? 0 : lvl) : undefined;
+              return (
+                <div key={i} className="pl-row">
+                  <span className="pl-name">{it.name}<span className="list-sub"> {it.sub}</span></span>
+                  <span className="pl-val">{it.value ?? ''}</span>
+                  <span className="pl-val pl-base">{base ?? ''}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
     case 'abilityx': {
       const mod = b.mod || abilityMod(b.score ?? '');
       const row = (it: NonNullable<Block['save']>, bold = false) => {
@@ -144,7 +205,7 @@ export function BlockView({ b, sheet, fill }: { b: Block; sheet: Sheet; fill: bo
       return (
         <div className={`blk ${frameCls} blk-circles`}>
           <Label b={b} scale={scale} />
-          <div className="circ-grid" style={{ fontSize: fs, gridTemplateColumns: `repeat(${Math.max(1, Math.min(b.rows?.length ?? 1, Math.floor(b.w / 36)))}, minmax(0,1fr))` }}>
+          <div className="circ-grid" style={{ fontSize: fs, gridTemplateColumns: `repeat(${b.perRow ?? Math.max(1, Math.min(b.rows?.length ?? 1, Math.floor(b.w / 36)))}, minmax(0,1fr))` }}>
             {(b.rows ?? []).map((r, i) => (
               <div key={i} className="circ-row">
                 <span className="circ-name">{r.name}</span>

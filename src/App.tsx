@@ -4,6 +4,7 @@ import { useStore } from './store';
 import { makeBlock, PAGE_TEMPLATES, relayoutFromTemplate, uid, type BlockType, type Sheet } from './model';
 import { LayoutPage, SpellbookPages } from './Page';
 import { findFree } from './layout';
+import { SYSTEMS, systemTemplate } from './systems';
 import { buildPdf, sharePdf } from './pdf';
 import { FillModal } from './Fill';
 import { AddBlockPanel, Btn, Inspector, Sheet as Panel, SettingsPanel, SpellPicker, TextIn } from './Panels';
@@ -59,7 +60,14 @@ function Home() {
         <div><div className="font-display-sc text-3xl text-sand-light leading-none">Лист персонажа</div><div className="text-sm text-cream/60 mt-1">клуб «Что угодно и драконы»</div><div className="text-xs text-cream/50 mt-1">Разработано inst: <a href="https://instagram.com/zamir.digital" target="_blank" rel="noopener" className="text-sand-light underline underline-offset-2">zamir.digital</a></div></div>
       </header>
       <div className="grid gap-2">
-        <Btn tone="gold" className="h-14 text-lg" onClick={async () => open(await create())}><FilePlus2 />Новый лист по шаблону клуба</Btn>
+        <div className="text-sm text-cream/70 px-1">Новый лист — выберите игру:</div>
+        <div className="grid grid-cols-2 gap-2">{SYSTEMS.map((g) => (
+          <button key={g.id} className={`rounded-2xl p-3 text-left border ${g.id === 'dnd' ? 'bg-gradient-to-b from-sand-light to-sand text-moss-deep border-sand-light' : 'bg-moss border-moss-light text-cream'}`}
+            onClick={async () => open(await create(g.id === 'dnd' ? undefined : systemTemplate(g.id)))}>
+            <div className="flex items-center gap-2 font-display-sc text-lg leading-tight"><FilePlus2 size={18} />{g.name}</div>
+            <div className={`text-xs mt-1 ${g.id === 'dnd' ? 'text-moss-deep/70' : 'text-cream/60'}`}>{g.hint}</div>
+          </button>
+        ))}</div>
         <label className="h-11 rounded-xl bg-moss border border-moss-light inline-flex items-center justify-center gap-2 cursor-pointer"><Upload size={18} />Открыть файл листа (.json)
           <input type="file" accept=".json,application/json" className="hidden" onChange={async (e) => {
             const f = e.target.files?.[0]; if (!f) return;
@@ -86,7 +94,7 @@ function Home() {
         ))}
         {!index.length && <p className="text-center text-cream/50 text-sm mt-6">Здесь будут ваши листы. Всё хранится на этом телефоне.</p>}
       </div>
-      <p className="text-xs text-cream/40 mt-10 leading-relaxed">Описания заклинаний — из System Reference Document 5.1 и 5.2 (Wizards of the Coast, CC-BY-4.0). Неофициальный проект, не связан с Wizards of the Coast.</p>
+      <p className="text-xs text-cream/40 mt-10 leading-relaxed">Описания заклинаний — из System Reference Document 5.1 и 5.2 (Wizards of the Coast, CC-BY-4.0). Листы Зова Ктулху, Клинков во тьме и Киберпанка RED нарисованы клубом с нуля и содержат только названия полей. Неофициальный проект, не связан с правообладателями игр.</p>
     </div>
   );
 }

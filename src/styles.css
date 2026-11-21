@@ -280,3 +280,22 @@ input, select, textarea { font-size: 16px; }
 /* снимок страницы для PDF: Safari не должен сам увеличивать мелкий текст */
 .page, .page * { -webkit-text-size-adjust: 100% !important; text-size-adjust: 100% !important; }
 .pdf-shot .fs-ctl, .pdf-shot .handle { display: none !important; }
+
+/* Зов Ктулху: характеристика в процентах */
+.blk-pct > .blk-label { justify-content: center; }
+.pct-row { flex: 1; display: flex; align-items: center; justify-content: center; gap: calc(var(--u) * 2.5); }
+.pct-main { font-family: var(--f-display); font-weight: 700; color: var(--color-moss); line-height: 1; min-width: 1.6em; text-align: center; border-bottom: max(1px, calc(var(--u) * .25)) solid color-mix(in srgb, var(--color-moss) 45%, transparent); min-height: 1em; }
+.pct-parts { display: grid; gap: calc(var(--u) * .8); }
+.pct-parts div { display: flex; align-items: center; gap: .3em; }
+.pct-parts span { display: inline-block; min-width: 1.8em; height: 1.35em; line-height: 1.35em; text-align: center; border: max(1px, calc(var(--u) * .25)) solid var(--color-sand); border-radius: calc(var(--u) * .8); }
+.pct-parts i { font-style: normal; color: var(--color-sand-dark); font-size: .85em; }
+/* списки навыков в % и «характеристика + уровень» */
+.pl-head, .pl-row { display: grid; grid-template-columns: .9em minmax(0,1fr) 2em 1.6em 1.6em; align-items: center; gap: .35em; }
+.blk-slist .pl-head, .blk-slist .pl-row { grid-template-columns: minmax(0,1fr) 2em 2.2em; }
+.pl-head { font-family: var(--f-label); font-size: .72em; color: var(--color-sand-dark); text-align: center; letter-spacing: .04em; }
+.pl-rows { flex: 1; display: flex; flex-direction: column; justify-content: space-around; min-height: 0; }
+.pl-row { line-height: 1.1; }
+.pl-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pl-val { text-align: center; font-weight: 700; color: var(--color-moss); border-bottom: max(1px, calc(var(--u) * .2)) solid color-mix(in srgb, var(--color-moss) 50%, transparent); min-height: 1.1em; }
+.pl-sub { text-align: center; font-size: .82em; color: var(--color-sand-dark); border-bottom: max(1px, calc(var(--u) * .15)) solid color-mix(in srgb, var(--color-sand) 50%, transparent); min-height: 1.1em; }
+.pl-base { border: max(1px, calc(var(--u) * .25)) solid var(--color-sand); border-radius: calc(var(--u) * .7); }

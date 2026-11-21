@@ -214,3 +214,33 @@ describe('хиты одним видом', () => {
     expect(b).toMatchObject({ type: 'stat', value: '57', fontSize: 6.5 });
   });
 });
+
+describe('листы других игр', () => {
+  it('шаблоны Ктулху, Клинков и Киберпанка без наложений и в полях страницы', async () => {
+    const { systemTemplate } = await import('../src/systems');
+    for (const sys of ['coc', 'bitd', 'cpr'] as const) for (const p of systemTemplate(sys).pages) {
+      expect(noOverlaps(p.blocks), `${sys}: ${p.title}`).toBe(true);
+      for (const x of p.blocks) expect(x.x >= 10 && x.y >= 10 && x.x + x.w <= 200 && x.y + x.h <= 287, `${sys}: ${x.label}`).toBe(true);
+    }
+  });
+  it('Ктулху: хиты, магия и рассудок из характеристик', async () => {
+    const { systemTemplate } = await import('../src/systems');
+    const { calcSheet, autoStat } = await import('../src/model');
+    const s = systemTemplate('coc');
+    const set = (k: string, v: string) => { s.pages[0]!.blocks.find((x) => x.key === k)!.value = v; };
+    set('coc:CON', '60'); set('coc:SIZ', '55'); set('coc:POW', '65');
+    const c = calcSheet(s);
+    const st = (k: string) => autoStat(s.pages[0]!.blocks.find((x) => x.key === k)!, c);
+    expect([st('coc:hp'), st('coc:mp'), st('coc:san')]).toEqual(['11', '13', '65']);
+  });
+  it('Киберпанк: хиты, ранение, человечность', async () => {
+    const { systemTemplate } = await import('../src/systems');
+    const { calcSheet, autoStat } = await import('../src/model');
+    const s = systemTemplate('cpr');
+    const set = (k: string, v: string) => { s.pages[0]!.blocks.find((x) => x.key === k)!.value = v; };
+    set('cpr:BODY', '6'); set('cpr:WILL', '5'); set('cpr:EMP', '7');
+    const c = calcSheet(s);
+    const st = (k: string) => autoStat(s.pages[0]!.blocks.find((x) => x.key === k)!, c);
+    expect([st('cpr:hp'), st('cpr:sw'), st('cpr:ds'), st('cpr:hum')]).toEqual(['40', '20', '6', '70']);
+  });
+});

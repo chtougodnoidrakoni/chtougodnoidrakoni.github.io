@@ -8,7 +8,7 @@ test('лист: заполнение в окне, редактор страни�
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto('./');
-  await page.getByText('Новый лист по шаблону клуба').click();
+  await page.getByRole('button', { name: /D&D 5e/ }).click();
   await expect(page.getByRole('button', { name: 'Изменить страницу Биография' })).toBeVisible();
   await page.screenshot({ path: 'e2e/shots/01-bio.png' }); await noOverflow(page, 'bio');
   const blk = (label: string) => page.locator(`.bw[data-label="${label}"]`).first();
@@ -107,7 +107,7 @@ test('лист: заполнение в окне, редактор страни�
 
 test('два пальца масштабируют страницу и не трогают блоки', async ({ page }) => {
   await page.goto('./');
-  await page.getByText('Новый лист по шаблону клуба').click();
+  await page.getByRole('button', { name: /D&D 5e/ }).click();
   const portrait = page.locator('.bw').filter({ has: page.locator('.blk-image') }).first();
   await portrait.scrollIntoViewIfNeeded();
   const css = () => portrait.evaluate((e) => (e as HTMLElement).style.cssText);
