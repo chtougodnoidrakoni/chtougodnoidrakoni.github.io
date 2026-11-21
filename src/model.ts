@@ -5,7 +5,7 @@
 export const PAGE_W = 210, PAGE_H = 297, MARGIN = 12;
 
 export type Frame = 'frame' | 'line' | 'none';
-export type BlockType = 'title' | 'field' | 'text' | 'image' | 'ability' | 'stat' | 'checklist' | 'circles' | 'table' | 'spells' | 'emblem' | 'ornament' | 'qr';
+export type BlockType = 'title' | 'field' | 'text' | 'image' | 'ability' | 'stat' | 'checklist' | 'circles' | 'table' | 'spells' | 'emblem' | 'ornament' | 'qr' | 'abilityx';
 
 export interface CheckItem { name: string; sub?: string; checked?: boolean; value?: string }
 export interface CircleRow { name: string; count: number; filled: number }
@@ -39,6 +39,8 @@ export interface Block {
   widths?: number[];
   /** закреплён: нельзя двигать и менять размер */
   fixed?: boolean;
+  /** спасбросок в карточке характеристики */
+  save?: CheckItem;
 }
 
 export interface Page { id: string; title: string; kind: 'layout' | 'spellbook'; blocks: Block[] }
@@ -90,6 +92,15 @@ export function relayoutFromTemplate(page: Page, findFree: (bl: Block[], w: numb
   if (!tpl) return undefined;
   const used = new Set<string>();
   const out: Block[] = tpl.blocks.map((t) => {
+    if (t.type === 'abilityx') {
+      const ab = page.blocks.find((b) => !used.has(b.id) && (b.type === 'ability' || b.type === 'abilityx') && keyOf(b) === t.key);
+      if (ab) used.add(ab.id);
+      const legacyItems = page.blocks.filter((b) => b.type === 'checklist').flatMap((b) => b.items ?? []);
+      const fromOld = (it: CheckItem) => (ab?.type === 'abilityx' ? ab.items : legacyItems)?.find((o) => o.name === it.name);
+      const oldSave = ab?.type === 'abilityx' ? ab.save : legacyItems.find((o) => o.sub === t.key && ABILITIES.some(([n]) => n === o.name));
+      return { ...t, id: ab?.id ?? t.id, score: ab?.score, mod: ab?.mod, save: { ...t.save!, checked: oldSave?.checked, value: oldSave?.value },
+        items: t.items!.map((it) => { const o = fromOld(it); return { ...it, checked: o?.checked, value: o?.value }; }) };
+    }
     const old = page.blocks.find((b) => !used.has(b.id) && b.type === t.type && b.label === t.label && (t.type !== 'qr' || b.src === t.src));
     if (!old) return t;
     used.add(old.id);
@@ -98,6 +109,8 @@ export function relayoutFromTemplate(page: Page, findFree: (bl: Block[], w: numb
   let dropped = 0;
   for (const b of page.blocks) {
     if (used.has(b.id)) continue;
+    // старые характеристики и списки навыков/спасбросков уже перенесены в карточки
+    if (tpl.blocks.some((t) => t.type === 'abilityx') && (b.type === 'ability' || (b.type === 'checklist' && ['Навыки', 'Спасброски'].includes(b.label)))) continue;
     const r = findFree(out, b.w, b.h);
     if (r) out.push({ ...b, ...r }); else dropped++;
   }
@@ -123,7 +136,7 @@ export const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().to
 
 export const BLOCK_NAMES: Record<BlockType, string> = {
   title: 'Заголовок', field: 'Поле', text: 'Текст', image: 'Картинка', ability: 'Характеристика', stat: 'Число', checklist: 'Список с отметками',
-  circles: 'Кружки (ячейки, спасброски)', table: 'Таблица', spells: 'Список заклинаний', emblem: 'Эмблема клуба', ornament: 'Украшение', qr: 'QR-код',
+  circles: 'Кружки (ячейки, спасброски)', table: 'Таблица', spells: 'Список заклинаний', emblem: 'Эмблема клуба', ornament: 'Украшение', qr: 'QR-код', abilityx: 'Характеристика с навыками',
 };
 
 export function makeBlock(type: BlockType, p: Partial<Block> = {}): Block {
@@ -140,6 +153,7 @@ export function makeBlock(type: BlockType, p: Partial<Block> = {}): Block {
     : type === 'table' ? { w: 90, h: 40, columns: ['Название', 'Значение'], cells: [['', ''], ['', ''], ['', '']] }
     : type === 'spells' ? { w: 186, h: 80, minLevel: 0, maxLevel: 9, label: 'Заклинания' }
     : type === 'emblem' ? { w: 28, h: 28, frame: 'none', label: '' }
+    : type === 'abilityx' ? { w: 60, h: 40, label: 'Сила', key: 'СИЛ', items: [], save: { name: 'Спасбросок', sub: 'СИЛ' } }
     : type === 'qr' ? { w: 22, h: 30, label: 'Наш канал', src: 'icons/qr-channel.png', fontSize: 7 }
     : { w: 120, h: 6, frame: 'none', label: '' };
   return { ...base, ...d, ...p };
@@ -177,6 +191,12 @@ function bioPage(): Page {
   };
 }
 
+/** Карточки характеристик: ключ, x, y, высота (мм). Слева СИЛ/ЛВК/ТЕЛ, в центре ИНТ/МДР/ХАР. */
+const ABX_LAYOUT: [string, number, number, number][] = [
+  ['СИЛ', 12, 47, 34], ['ЛВК', 12, 83, 44], ['ТЕЛ', 12, 129, 28],
+  ['ИНТ', 74, 47, 56], ['МДР', 74, 105, 56], ['ХАР', 74, 163, 50],
+];
+
 function statsPage(): Page {
   const row = ['Класс доспеха', 'Инициатива', 'Скорость', 'Бонус мастерства', 'Вдохновение', 'Пасс. внимательность'];
   const bw = (186 - 5 * 2) / 6;
@@ -186,17 +206,19 @@ function statsPage(): Page {
       B('title', { label: 'Характеристики', x: 12, y: 12, w: 150, h: 13, fontSize: 18 }),
       B('emblem', { x: 182, y: 11, w: 16, h: 16 }),
       ...row.map((label, i) => B('stat', { label, key: ROW_KEYS[i], x: 12 + i * (bw + 2), y: 28, w: bw, h: 17, shape: i === 0 ? 'shield' : 'box', fontSize: 7 })),
-      ...ABILITIES.map(([label, key], i) => B('ability', { label, key, x: 12, y: 47 + i * 28, w: 30, h: 26 })),
-      B('checklist', { label: 'Спасброски', x: 44, y: 47, w: 60, h: 50, items: ABILITIES.map(([n, s]) => ({ name: n, sub: s })) }),
-      B('checklist', { label: 'Навыки', x: 44, y: 99, w: 60, h: 114, items: SKILLS.map(([n, s]) => ({ name: n, sub: s })) }),
-      B('stat', { label: 'Максимум хитов', x: 106, y: 47, w: 30, h: 16, fontSize: 6.5 }),
-      B('field', { label: 'Текущие хиты', x: 138, y: 47, w: 60, h: 16, frame: 'frame', fontSize: 11 }),
-      B('field', { label: 'Временные хиты', x: 106, y: 65, w: 45, h: 13, frame: 'frame' }),
-      B('field', { label: 'Кости хитов', x: 153, y: 65, w: 45, h: 13, frame: 'frame' }),
-      B('circles', { label: 'Спасброски от смерти', x: 106, y: 80, w: 92, h: 16, rows: [{ name: 'Успехи', count: 3, filled: 0 }, { name: 'Провалы', count: 3, filled: 0 }] }),
-      B('table', { label: 'Оружие', x: 106, y: 98, w: 92, h: 50, fontSize: 8, columns: WEAPON_COLS, widths: WEAPON_W, cells: Array.from({ length: 5 }, () => ['', '', '', '', '']) }),
-      B('text', { label: 'Владения и языки', x: 106, y: 150, w: 92, h: 63 }),
-      B('text', { label: 'Снаряжение', x: 12, y: 216, w: 124, h: 69 }),
+      ...ABX_LAYOUT.map(([key, x, y, h]) => {
+        const label = ABILITIES.find(([, k]) => k === key)![0];
+        return B('abilityx', { label, key, x, y, w: 60, h, save: { name: 'Спасбросок', sub: key }, items: SKILLS.filter(([, sk]) => sk === key).map(([n, sk]) => ({ name: n, sub: sk })) });
+      }),
+      B('stat', { label: 'Максимум хитов', x: 136, y: 47, w: 30, h: 16, fontSize: 6.5 }),
+      B('field', { label: 'Кости хитов', x: 168, y: 47, w: 30, h: 16, frame: 'frame' }),
+      B('field', { label: 'Текущие хиты', x: 136, y: 65, w: 62, h: 16, frame: 'frame', fontSize: 11 }),
+      B('field', { label: 'Временные хиты', x: 136, y: 83, w: 62, h: 13, frame: 'frame' }),
+      B('circles', { label: 'Спасброски от смерти', x: 136, y: 98, w: 62, h: 18, rows: [{ name: 'Успехи', count: 3, filled: 0 }, { name: 'Провалы', count: 3, filled: 0 }] }),
+      B('text', { label: 'Снаряжение', x: 136, y: 118, w: 62, h: 95 }),
+      B('text', { label: 'Владения и языки', x: 12, y: 159, w: 60, h: 54 }),
+      B('table', { label: 'Оружие', x: 12, y: 216, w: 124, h: 36, fontSize: 8, columns: WEAPON_COLS, widths: WEAPON_W, cells: Array.from({ length: 4 }, () => ['', '', '', '', '']) }),
+      B('text', { label: 'Заметки', x: 12, y: 254, w: 124, h: 31 }),
       B('table', { label: 'Монеты', x: 138, y: 216, w: 60, h: 17, fontSize: 8, columns: ['ПМ', 'ЗМ', 'ЭМ', 'СМ', 'ММ'], cells: [['', '', '', '', '']] }),
       B('text', { label: 'Сокровища', x: 138, y: 235, w: 60, h: 50 }),
     ],
@@ -235,7 +257,7 @@ function magicPage(): Page {
 /** Закреплённые блоки шаблона: страница → подписи (пустая подпись — эмблема). */
 export const FIXED: Record<string, (b: Block) => boolean> = {
   'Биография': (b) => b.type === 'emblem' || b.type === 'qr' || (b.y < 112 && ['title', 'stat', 'image', 'field'].includes(b.type)),
-  'Характеристики': (b) => !['Снаряжение', 'Монеты', 'Сокровища'].includes(b.label),
+  'Характеристики': (b) => !['Снаряжение', 'Монеты', 'Сокровища', 'Заметки'].includes(b.label),
 };
 export const markFixed = (p: Page): Page => (FIXED[p.title] ? { ...p, blocks: p.blocks.map((b) => (FIXED[p.title]!(b) ? { ...b, fixed: true } : b)) } : p);
 
@@ -283,11 +305,11 @@ export interface Calc { mods: Record<string, number | undefined>; prof?: number;
 export function calcSheet(sheet: Sheet): Calc {
   const all = sheet.pages.flatMap((p) => p.blocks);
   const mods: Calc['mods'] = {};
-  for (const b of all) if (b.type === 'ability') { const k = keyOf(b); if (k) mods[k] = parseMod(b.mod || abilityMod(b.score ?? '')); }
+  for (const b of all) if (b.type === 'ability' || b.type === 'abilityx') { const k = keyOf(b); if (k) mods[k] = parseMod(b.mod || abilityMod(b.score ?? '')); }
   const level = parseInt(all.find((b) => keyOf(b) === 'level')?.value ?? '', 10);
   const profBlock = all.find((b) => keyOf(b) === 'prof');
   const prof = parseMod(profBlock?.value) ?? (level >= 1 ? 2 + Math.floor((Math.min(level, 20) - 1) / 4) : undefined);
-  const perc = all.find((b) => b.type === 'checklist' && b.items?.some((i) => i.name === 'Внимательность'))?.items?.find((i) => i.name === 'Внимательность');
+  const perc = all.find((b) => (b.type === 'checklist' || b.type === 'abilityx') && b.items?.some((i) => i.name === 'Внимательность'))?.items?.find((i) => i.name === 'Внимательность');
   const perception = perc ? parseMod(perc.value) ?? autoItem(perc, mods, prof) : undefined;
   return { mods, prof, perception };
 }

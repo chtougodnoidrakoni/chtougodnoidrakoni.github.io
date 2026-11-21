@@ -32,7 +32,7 @@ export function BlockView({ b, sheet, fill }: { b: Block; sheet: Sheet; fill: bo
   const set = (patch: Partial<Block>) => updateBlock(b.id, patch);
   const inputStyle: CSSProperties = { fontSize: fs };
   const frameCls = b.frame === 'frame' ? 'b-frame' : b.frame === 'line' ? 'b-line' : '';
-  const calc = b.type === 'checklist' || b.type === 'stat' ? calcSheet(sheet) : undefined;
+  const calc = b.type === 'checklist' || b.type === 'stat' || b.type === 'abilityx' ? calcSheet(sheet) : undefined;
 
   switch (b.type) {
     case 'title':
@@ -86,6 +86,32 @@ export function BlockView({ b, sheet, fill }: { b: Block; sheet: Sheet; fill: bo
           <Label b={b} scale={scale} />
           <input className="inp font-display-sc text-center abil-mod" style={{ fontSize: pt(b.fontSize * 2.1, scale) }} value={mod} placeholder="±" readOnly={!fill} onChange={(e) => set({ mod: e.target.value })} />
           <input className="inp text-center abil-score" inputMode="numeric" style={{ fontSize: fs }} value={b.score ?? ''} placeholder="10" readOnly={!fill} onChange={(e) => set({ score: e.target.value.replace(/[^\d]/g, '').slice(0, 2), mod: '' })} />
+        </div>
+      );
+    }
+    case 'abilityx': {
+      const mod = b.mod || abilityMod(b.score ?? '');
+      const row = (it: NonNullable<Block['save']>, bold = false) => {
+        const a = autoItem(it, calc!.mods, calc!.prof);
+        return (
+          <div className={`abx-row ${bold ? 'abx-save' : ''}`}>
+            <span className={`dot ${it.checked ? 'on' : ''}`} />
+            <span className="abx-val">{it.value || (a === undefined ? '' : signed(a))}</span>
+            <span className="abx-name">{bold ? 'Спасбросок' : it.name}</span>
+          </div>
+        );
+      };
+      return (
+        <div className={`blk ${frameCls} blk-abx`} style={{ fontSize: fs }}>
+          <Label b={b} scale={scale} />
+          <div className="abx-top">
+            <div className="abx-mod">{mod || '±'}</div>
+            <div className="abx-score">{b.score || ''}</div>
+            <div className="abx-cap abx-cap-mod">модификатор</div>
+            <div className="abx-cap abx-cap-score">значение</div>
+          </div>
+          {b.save && row(b.save, true)}
+          {!!b.items?.length && <div className="abx-skills">{b.items.map((it, i) => <div key={i}>{row(it)}</div>)}</div>}
         </div>
       );
     }

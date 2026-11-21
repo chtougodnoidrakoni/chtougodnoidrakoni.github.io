@@ -61,6 +61,32 @@ export function FillModal() {
         const auto = autoStat(b, calc!);
         return <L t={auto ? `Число (если пусто — ${auto}, посчитано само)` : 'Число'}><In value={b.value ?? ''} placeholder={auto} onChange={(e) => set({ value: e.target.value })} className="text-2xl text-center" autoFocus={!auto} /></L>;
       }
+      case 'abilityx': {
+        const mod = abilityMod(b.score ?? '');
+        const skillRow = (it: NonNullable<Block['save']>, up: (p: Partial<NonNullable<Block['save']>>) => void, title: string) => {
+          const a = autoItem(it, calc!.mods, calc!.prof);
+          return (
+            <div className="flex items-center gap-3 py-1.5 border-b border-moss-light/30">
+              <Ring on={!!it.checked} onClick={() => up({ checked: !it.checked })} label={`Владение: ${title}`} />
+              <div className="flex-1 min-w-0 leading-tight">{title}</div>
+              <input className={`${base} flex-none h-10 text-center`} style={{ width: 64 }} value={it.value ?? ''} placeholder={a === undefined ? '—' : signed(a)} onChange={(e) => up({ value: e.target.value })} />
+            </div>
+          );
+        };
+        return (
+          <div className="grid gap-3">
+            <div className="grid grid-cols-2 gap-3">
+              <L t="Значение"><In inputMode="numeric" value={b.score ?? ''} placeholder="10" onChange={(e) => set({ score: e.target.value.replace(/[^\d]/g, '').slice(0, 2) })} className="text-2xl text-center" /></L>
+              <L t="Модификатор (считается сам)"><In value={b.mod ?? ''} placeholder={mod || '±'} onChange={(e) => set({ mod: e.target.value })} className="text-2xl text-center" /></L>
+            </div>
+            <div className="text-xs text-cream/60 px-1">Кружок — владение (добавляет бонус мастерства). Число считается само, можно вписать своё.</div>
+            <div>
+              {b.save && skillRow(b.save, (p) => set({ save: { ...b.save!, ...p } }), 'Спасбросок')}
+              {(b.items ?? []).map((it, i) => <div key={i}>{skillRow(it, (p) => set({ items: b.items!.map((x, j) => (j === i ? { ...x, ...p } : x)) }), it.name)}</div>)}
+            </div>
+          </div>
+        );
+      }
       case 'checklist':
         return (
           <div className="grid gap-1.5">

@@ -23,12 +23,12 @@ test('лист: заполнение в окне, редактор страни�
   await blk('Сила').scrollIntoViewIfNeeded(); await blk('Сила').click();
   await page.getByLabel('Значение').fill('16');
   await save();
-  await expect(blk('Сила').locator('.abil-mod')).toHaveValue('+3');
-  await expect(blk('Навыки').locator('.list-row', { hasText: 'Атлетика' }).locator('.list-val')).toHaveValue('+3');
+  await expect(blk('Сила').locator('.abx-mod')).toHaveText('+3');
+  await expect(blk('Сила').locator('.abx-row', { hasText: 'Атлетика' }).locator('.abx-val')).toHaveText('+3');
   // отмена ничего не меняет
   await blk('Сила').click(); await page.getByLabel('Значение').fill('8');
   await page.getByRole('button', { name: 'Отмена' }).click();
-  await expect(blk('Сила').locator('.abil-mod')).toHaveValue('+3');
+  await expect(blk('Сила').locator('.abx-mod')).toHaveText('+3');
 
   // редактор страницы «Биография»
   await page.getByRole('button', { name: 'Изменить страницу Биография' }).click();

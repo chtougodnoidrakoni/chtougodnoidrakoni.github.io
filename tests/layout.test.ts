@@ -175,3 +175,32 @@ describe('закреплённые блоки и обновление стары
     expect(migrateLayout(m)).toBe(m);
   });
 });
+
+describe('карточки характеристик', () => {
+  it('навыки и спасбросок считаются от значения внутри карточки', async () => {
+    const { calcSheet, autoItem } = await import('../src/model');
+    const s = clubTemplate();
+    const wis = s.pages[1]!.blocks.find((x) => x.type === 'abilityx' && x.key === 'МДР')!;
+    wis.score = '14'; wis.items = wis.items!.map((i) => (i.name === 'Внимательность' ? { ...i, checked: true } : i));
+    s.pages[0]!.blocks.find((x) => x.key === 'level')!.value = '5';
+    const c = calcSheet(s);
+    expect(c.mods['МДР']).toBe(2);
+    expect(autoItem(wis.items!.find((i) => i.name === 'Внимательность')!, c.mods, c.prof)).toBe(5);
+    expect(autoItem(wis.save!, c.mods, c.prof)).toBe(2);
+    expect(c.perception).toBe(5);
+  });
+  it('старая страница: значения и отметки переезжают в карточки', async () => {
+    const { relayoutFromTemplate } = await import('../src/model');
+    const old = { id: 'p', title: 'Характеристики', kind: 'layout' as const, blocks: [
+      { ...makeBlock('ability'), id: 'str', label: 'Сила', score: '16', x: 12, y: 47, w: 30, h: 26 },
+      { ...makeBlock('checklist'), id: 'sv', label: 'Спасброски', x: 44, y: 47, w: 60, h: 50, items: [{ name: 'Сила', sub: 'СИЛ', checked: true }] },
+      { ...makeBlock('checklist'), id: 'sk', label: 'Навыки', x: 44, y: 99, w: 60, h: 100, items: [{ name: 'Атлетика', sub: 'СИЛ', checked: true, value: '+9' }] },
+    ] };
+    const r = relayoutFromTemplate(old, findFree)!;
+    const str = r.page.blocks.find((x) => x.type === 'abilityx' && x.key === 'СИЛ')!;
+    expect(str).toMatchObject({ id: 'str', score: '16' });
+    expect(str.save!.checked).toBe(true);
+    expect(str.items![0]).toMatchObject({ name: 'Атлетика', checked: true, value: '+9' });
+    expect(r.page.blocks.some((x) => x.type === 'checklist' || x.type === 'ability')).toBe(false);
+  });
+});
