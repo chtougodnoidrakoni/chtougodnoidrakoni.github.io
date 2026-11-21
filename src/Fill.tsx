@@ -9,7 +9,8 @@ import { useStore } from './store';
 import { abilityMod, autoItem, autoStat, calcSheet, signed, spellOf, BLOCK_NAMES, type Block } from './model';
 import { downscale } from './blocks';
 
-const box = 'w-full px-3 rounded-xl bg-moss-deep border border-moss-light text-cream outline-none focus:border-sand';
+const base = 'px-3 rounded-xl bg-moss-deep border border-moss-light text-cream outline-none focus:border-sand';
+const box = `w-full ${base}`;
 const In = (p: React.InputHTMLAttributes<HTMLInputElement>) => <input {...p} className={`${box} h-12 ${p.className ?? ''}`} />;
 const Area = (p: React.TextareaHTMLAttributes<HTMLTextAreaElement>) => <textarea {...p} className={`${box} py-3 leading-relaxed ${p.className ?? ''}`} />;
 const L = ({ t, children }: { t: string; children: ReactNode }) => <label className="block"><div className="text-xs text-cream/60 mb-1 px-1">{t}</div>{children}</label>;
@@ -68,10 +69,10 @@ export function FillModal() {
               const a = autoItem(it, calc!.mods, calc!.prof);
               const up = (patch: Partial<typeof it>) => set({ items: b.items!.map((x, j) => (j === i ? { ...x, ...patch } : x)) });
               return (
-                <div key={i} className="flex items-center gap-3 py-1">
+                <div key={i} className="flex items-center gap-3 py-1.5 border-b border-moss-light/30">
                   <Ring on={!!it.checked} onClick={() => up({ checked: !it.checked })} label={`Владение: ${it.name}`} />
-                  <div className="flex-1 min-w-0">{it.name}{it.sub && <span className="text-cream/50 text-sm"> ({it.sub})</span>}</div>
-                  <input className={`${box} h-11 w-20 text-center`} value={it.value ?? ''} placeholder={a === undefined ? '—' : signed(a)} onChange={(e) => up({ value: e.target.value })} />
+                  <div className="flex-1 min-w-0 leading-tight">{it.name}{it.sub && <span className="text-cream/50 text-sm"> {it.sub}</span>}</div>
+                  <input inputMode="text" className={`${base} flex-none h-10 text-center`} style={{ width: 64 }} value={it.value ?? ''} placeholder={a === undefined ? '—' : signed(a)} onChange={(e) => up({ value: e.target.value })} />
                 </div>
               );
             })}
