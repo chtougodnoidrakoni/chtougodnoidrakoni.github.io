@@ -16,14 +16,14 @@ export function Dragon() {
     resize(); addEventListener('resize', resize);
 
     const size = () => Math.min(380, Math.max(240, W * 0.55)); // длина дракона в пикселях экрана
-    // Дракон не разворачивается на месте: он проплывает экран насквозь, исчезает за краем
-    // и через пару секунд появляется с другой стороны на другой высоте.
+    // Дракон не разворачивается на месте: он проплывает экран насквозь, исчезает за краем,
+    // «разворачивается» за экраном и через пару секунд выплывает оттуда же, на другой высоте.
     let x = 0, y = 0, th = 0, dir = 1, speed = 40, t = 0, wait = 0, base = 0;
     let targetSpeed = 40, nextChange = 0, wob = Math.random() * 10;
     const spawn = (first = false) => {
       const L = size();
-      dir = Math.random() < 0.5 ? 1 : -1;
-      x = first ? W * (dir > 0 ? 0.25 : 0.75) : dir > 0 ? -L * 0.6 : W + L * 0.6;
+      if (first) { dir = Math.random() < 0.5 ? 1 : -1; x = W * (dir > 0 ? 0.25 : 0.75); }
+      else { dir = -dir; x = dir > 0 ? -L * 0.6 : W + L * 0.6; } // возвращается с той стороны, куда уплыл
       base = 140 + Math.random() * Math.max(10, H - 300); y = base;
       th = dir > 0 ? 0 : Math.PI; speed = targetSpeed = 30 + Math.random() * 25;
     };
