@@ -114,7 +114,9 @@ export function BlockView({ b: b0, sheet, fill }: { b: Block; sheet: Sheet; fill
         <div className={`blk ${frameCls} blk-pct`}>
           <Label b={b} scale={scale} />
           <div className="pct-row">
-            <div className="pct-main" style={{ fontSize: pt(b.fontSize * 2.4, scale) }}>{b.value || ''}</div>
+            {fill
+              ? <input className="inp pct-main text-center" inputMode="numeric" style={{ fontSize: pt(b.fontSize * 2.4, scale) }} value={b.value ?? ''} onChange={(e) => set({ value: e.target.value.replace(/[^\d]/g, '').slice(0, 3) })} />
+              : <div className="pct-main" style={{ fontSize: pt(b.fontSize * 2.4, scale) }}>{b.value || ''}</div>}
             <div className="pct-parts" style={{ fontSize: pt(b.fontSize * 1.05, scale) }}>
               <div><span>{ok ? Math.floor(n / 2) : ''}</span><i>½</i></div>
               <div><span>{ok ? Math.floor(n / 5) : ''}</span><i>⅕</i></div>

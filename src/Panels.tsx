@@ -220,7 +220,7 @@ function CustomSpell({ open, onClose }: { open: boolean; onClose: () => void }) 
 }
 
 export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { sheet, commit, say } = useStore();
+  const { sheet, commit, say, fillMode, setFillMode } = useStore();
   if (!sheet) return null;
   return (
     <Sheet open={open} onClose={onClose} title="Настройки листа">
@@ -248,6 +248,9 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
             <input type="checkbox" className="w-6 h-6 accent-[#aa9173]" checked={sheet.oldLabels !== false} onChange={(e) => commit((s) => ({ ...s, oldLabels: e.target.checked }))} />
           </label>
         )}
+        <Field label="Как заполнять поля (на этом телефоне)">
+          <div className="grid grid-cols-2 gap-2">{(['inline', 'modal'] as const).map((m) => <Btn key={m} tone={fillMode === m ? 'gold' : 'base'} onClick={() => setFillMode(m)}>{m === 'inline' ? 'Прямо на листе' : 'В отдельном окне'}</Btn>)}</div>
+        </Field>
         <Field label="Шрифты листа">
           <div className="grid grid-cols-2 gap-2">{FONT_SETS.map((f) => (
             <button key={f.id} onClick={() => commit((s) => ({ ...s, fonts: f.id }))} className={`fonts-${f.id} rounded-xl border p-3 text-left ${sheetFonts(sheet) === f.id ? 'border-sand bg-sand/15' : 'border-moss-light bg-moss-deep'}`}>

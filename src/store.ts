@@ -33,6 +33,11 @@ interface State {
   /** изменение содержимого без записи в историю (заполнение) */
   edit(fn: (s: Sheet) => Sheet): void;
   updateBlock(id: string, patch: Partial<Block>, history?: boolean): void;
+  /** точка отмены перед правкой прямо на листе */
+  checkpoint(): void;
+  /** как заполнять блоки: прямо на листе или в отдельном окне (настройка устройства) */
+  fillMode: 'inline' | 'modal';
+  setFillMode(m: 'inline' | 'modal'): void;
   updatePage(patch: Partial<Page>): void;
   undo(): void;
   redo(): void;
@@ -56,6 +61,9 @@ function persist(s: Sheet) {
 }
 
 export const useStore = create<State>((set, get) => ({
+  fillMode: (() => { try { return localStorage.getItem('fill-mode') === 'modal' ? 'modal' : 'inline'; } catch { return 'inline'; } })(),
+  setFillMode(m) { try { localStorage.setItem('fill-mode', m); } catch { /* приватный режим */ } set({ fillMode: m }); },
+  checkpoint() { const cur = get().sheet; if (cur) set({ past: [...get().past.slice(-60), cur], future: [] }); },
   ready: false, index: [], pageIdx: 0, past: [], future: [], spells: [], spellMap: new Map(),
 
   async boot() {

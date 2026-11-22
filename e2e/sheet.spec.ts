@@ -1,4 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
+
+// эти проверки идут через окно заполнения
+test.beforeEach(async ({ page }) => { await page.addInitScript(() => localStorage.setItem('fill-mode', 'modal')); });
 async function noOverflow(page: Page, where: string) {
   const [cw, sw] = await page.evaluate(() => [document.documentElement.clientWidth, document.documentElement.scrollWidth]);
   expect(sw, `горизонтальная прокрутка: ${where}`).toBeLessThanOrEqual(cw + 1);
@@ -124,4 +127,20 @@ test('два пальца масштабируют страницу и не тр
   await page.waitForTimeout(200);
   expect(await css()).toBe(s0);
   await expect(page.getByRole('button', { name: 'Сохранить' })).toHaveCount(0);
+});
+
+test('заполнение прямо на листе', async ({ browser }) => {
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+  const page = await ctx.newPage();
+  await page.goto('./');
+  await page.getByRole('button', { name: /D&D 5e/ }).click();
+  const name = page.locator('.bw[data-label="Имя персонажа"] input').first();
+  await name.click(); await name.fill('Гордрик');
+  await expect(page.getByLabel('Что вписать')).toHaveCount(0);
+  const cls = page.locator('.bw[data-label="Класс"] input').first();
+  await cls.click(); await cls.fill('Волшебник');
+  await page.getByRole('button', { name: 'Отменить' }).click();
+  await expect(page.locator('.bw[data-label="Класс"] input').first()).toHaveValue('');
+  await expect(page.locator('.bw[data-label="Имя персонажа"] input').first()).toHaveValue('Гордрик');
+  await ctx.close();
 });

@@ -207,7 +207,10 @@ input, select, textarea { font-size: 16px; }
 @media screen {
   .bw { cursor: pointer; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
   .bw .blk { pointer-events: none; }
-  .filling .bw:active::after { content: ''; position: absolute; inset: 0; background: rgba(170,145,115,.14); border-radius: 4px; }
+  .filling .bw.live { cursor: text; -webkit-user-select: text; user-select: text; }
+  .filling .bw.live .blk { pointer-events: auto; }
+  .filling .bw.live:focus-within { z-index: 5; box-shadow: 0 0 0 2px rgba(192,138,62,.7); border-radius: 3px; }
+  .filling .bw:not(.live):active::after { content: ''; position: absolute; inset: 0; background: rgba(170,145,115,.14); border-radius: 4px; }
 }
 .layout .bw::after { content: ''; position: absolute; inset: 0; outline: 1px dashed rgba(91,106,94,.55); outline-offset: 0; }
 .bw.sel::after { outline: 2px solid #c08a3e !important; }

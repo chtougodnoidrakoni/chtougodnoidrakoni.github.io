@@ -105,6 +105,9 @@ export function PageShell({ scale, sheet, num, children }: { scale: number; shee
   );
 }
 
+/** блоки, которые заполняются прямо на листе; остальные (навыки, заклинания, шкалы) — в окне */
+const INLINE = new Set<Block['type']>(['title', 'field', 'text', 'stat', 'table', 'circles', 'checklist', 'pctstat', 'image']);
+
 type Drag = { edge: 'right' | 'bottom'; id: string; x: number; y: number; cx: number; cy: number };
 
 /**
@@ -147,8 +150,11 @@ export function LayoutPage({ page, pageIndex, sheet, scale, num }: { page: Page;
     return () => document.removeEventListener('touchstart', multi);
   }, []);
 
+  const fillMode = useStore((st) => st.fillMode);
+  const live = (b: Block) => !layout && fillMode === 'inline' && INLINE.has(b.type) && !(b.type === 'circles' && /ячейк/i.test(b.label));
   const tap = (b: Block) => {
     setPage(pageIndex);
+    if (live(b)) return;
     if (layout) { if (locked(b)) { useStore.getState().say(b.type === 'qr' ? 'QR-коды клуба не редактируются' : 'Этот блок закреплён: его место и размер менять нельзя'); return; } select(b.id); return; }
     if (b.type === 'emblem' || b.type === 'ornament' || b.type === 'qr') return;
     fill(b.id);
@@ -160,10 +166,11 @@ export function LayoutPage({ page, pageIndex, sheet, scale, num }: { page: Page;
       <PageShell scale={scale} sheet={sheet} num={num}>
         <div className="absolute inset-0" onClick={() => layout && select(undefined)} />
         {blocks.map((b) => (
-          <div key={b.id} data-label={b.label} className={`bw ${layout && selected === b.id ? 'sel' : ''} ${layout && locked(b) ? 'locked' : ''}`}
+          <div key={b.id} data-label={b.label} className={`bw ${live(b) ? 'live' : ''} ${layout && selected === b.id ? 'sel' : ''} ${layout && locked(b) ? 'locked' : ''}`}
+            onFocusCapture={live(b) ? () => useStore.getState().checkpoint() : undefined}
             style={{ left: `calc(var(--u) * ${b.x})`, top: `calc(var(--u) * ${b.y})`, width: `calc(var(--u) * ${b.w})`, height: `calc(var(--u) * ${b.h})` }}
             onClick={() => tap(b)}>
-            <BlockView b={b} sheet={sheet} fill={false} />
+            <BlockView b={b} sheet={sheet} fill={live(b)} />
             {!layout && b.type === 'text' && (
               <div className="fs-ctl no-print" onClick={(e) => e.stopPropagation()}>
                 {([-0.5, 0.5] as const).map((d) => (

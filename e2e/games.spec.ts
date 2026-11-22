@@ -1,4 +1,7 @@
 import { test, expect } from '@playwright/test';
+
+// эти проверки идут через окно заполнения
+test.beforeEach(async ({ page }) => { await page.addInitScript(() => localStorage.setItem('fill-mode', 'modal')); });
 for (const [g, file] of [['Зов Ктулху', 'coc'], ['Клинки во тьме', 'bitd'], ['Киберпанк RED', 'cpr']] as const) {
   test(g, async ({ page }) => {
     await page.goto('./');
