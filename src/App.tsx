@@ -167,6 +167,7 @@ function Editor() {
           const header = (
             <div className="no-print max-w-[820px] mx-auto px-3 flex items-center gap-2 text-sm text-cream/70 mb-1.5">
               <span className="font-display-sc text-base text-sand-light truncate">{p.title}</span>
+              {i === 0 && <button className="h-9 px-3 rounded-full border border-sand/60 text-sand-light inline-flex items-center gap-1.5 shrink-0" onClick={() => setSettings(true)} aria-label="Стиль листа"><Pencil size={15} />Стиль</button>}
               <span className="flex-1" />
               {p.kind === 'layout' && (editPage === p.id
                 ? <button className="h-9 px-4 rounded-full bg-gradient-to-b from-sand-light to-sand text-moss-deep font-semibold inline-flex items-center gap-1.5" onClick={() => setEditPage(undefined)}><Check size={16} />Готово</button>
