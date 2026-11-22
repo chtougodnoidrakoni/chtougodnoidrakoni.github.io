@@ -5,13 +5,17 @@
 export const PAGE_W = 210, PAGE_H = 297, MARGIN = 12;
 
 export type Frame = 'frame' | 'line' | 'none';
-export type BlockType = 'title' | 'field' | 'text' | 'image' | 'ability' | 'stat' | 'checklist' | 'circles' | 'table' | 'spells' | 'emblem' | 'ornament' | 'qr' | 'abilityx' | 'pctstat' | 'pctlist' | 'sumlist';
+export type BlockType = 'title' | 'field' | 'text' | 'image' | 'ability' | 'stat' | 'checklist' | 'circles' | 'table' | 'spells' | 'emblem' | 'ornament' | 'qr' | 'abilityx' | 'pctstat' | 'pctlist' | 'sumlist' | 'track';
 
 export interface CheckItem { name: string; sub?: string; checked?: boolean; value?: string }
 export interface CircleRow { name: string; count: number; filled: number }
 
 export interface Block {
   id: string;
+  /** шкала чисел: до какого числа (ПЗ 20, рассудок 99) */
+  count?: number;
+  /** картинка-украшение из папки art */
+  art?: string;
   type: BlockType;
   x: number; y: number; w: number; h: number;
   label: string;
@@ -71,6 +75,8 @@ export interface Sheet {
   theme?: SheetTheme;
   /** игра: D&D 5e (по умолчанию), Зов Ктулху, Клинки во тьме, Киберпанк RED */
   system?: GameSystem;
+  /** «Былина»: старинные подписи (по умолчанию включены) */
+  oldLabels?: boolean;
   /** версия разметки листа (для однократных обновлений старых листов) */
   ver?: number;
   pages: Page[];
@@ -128,22 +134,41 @@ export function relayoutFromTemplate(page: Page, findFree: (bl: Block[], w: numb
 
 export type GameSystem = 'dnd' | 'coc' | 'bitd' | 'cpr';
 
-export type SheetTheme = 'club' | 'chronicle' | 'strict' | 'eldritch' | 'noir' | 'cyber';
+export type SheetTheme = 'club' | 'chronicle' | 'strict' | 'eldritch' | 'noir' | 'cyber' | 'fae' | 'dark' | 'slavic';
 export const THEMES: { id: SheetTheme; name: string; hint: string; fonts: FontSet; ink: string; accent: string; label: string }[] = [
   { id: 'club', name: 'Клубный', hint: 'зелёный и песочный, звёзды и месяц', fonts: 'tale', ink: '#444e46', accent: '#aa9173', label: '#8a7357' },
   { id: 'chronicle', name: 'Летопись', hint: 'старинная рукопись, завитки по углам', fonts: 'chronicle', ink: '#4a3426', accent: '#b08a5a', label: '#7d2f28' },
   { id: 'strict', name: 'Строгий', hint: 'чёрно-белый, экономит краску', fonts: 'strict', ink: '#222222', accent: '#9a9a9a', label: '#4a4a4a' },
   { id: 'eldritch', name: 'Досье', hint: 'папка сыщика 20-х, ар-деко, машинка', fonts: 'typewriter', ink: '#2f2b24', accent: '#7d8a63', label: '#35574f' },
   { id: 'noir', name: 'Газовый свет', hint: 'тёмный город, латунь, заклёпки', fonts: 'gaslight', ink: '#1e2326', accent: '#9a7b4f', label: '#7b2121' },
+  { id: 'fae', name: 'Волшебный сад', hint: 'феи, цветы и звёздочки, пастель', fonts: 'fae', ink: '#5b4a73', accent: '#e58fb6', label: '#8a63c2' },
+  { id: 'dark', name: 'Кровь и сталь', hint: 'кованое железо, кровь, вороны', fonts: 'dark', ink: '#1c1818', accent: '#857b72', label: '#7d1014' },
+  { id: 'slavic', name: 'Былина', hint: 'вышивка, буквицы, старинные подписи', fonts: 'slavic', ink: '#2a1c16', accent: '#c0392b', label: '#b3261e' },
   { id: 'cyber', name: 'Неон', hint: 'срезанные углы, красный и бирюза', fonts: 'neon', ink: '#17171f', accent: '#13a3b5', label: '#d01f3c' },
 ];
+
+/** Старинные подписи для стиля «Былина». */
+export const OLD_LABELS: Record<string, string> = {
+  'Имя персонажа': 'Имя богатыря', 'Класс': 'Стезя', 'Подкласс': 'Путь', 'Вид': 'Род-племя', 'Уровень': 'Ступень', 'Предыстория': 'Былое', 'Игрок': 'Сказитель',
+  'Мировоззрение': 'Правда', 'Родина': 'Отчина', 'Вера, божество': 'Вера', 'Внешность': 'Облик', 'Черты характера и манеры': 'Нрав и повадки',
+  'Предыстория персонажа': 'Сказ о герое', 'Союзники и организации': 'Други и братчины', 'Цели': 'Чаяния', 'Задачи': 'Заботы', 'Триггеры, страхи и слабости': 'Страхи и слабины',
+  'Портрет': 'Парсуна', 'Сила': 'Сила', 'Ловкость': 'Проворство', 'Телосложение': 'Крепость', 'Интеллект': 'Разум', 'Мудрость': 'Мудрость', 'Харизма': 'Обаяние',
+  'Максимум хитов': 'Здравие, предел', 'Текущие хиты': 'Здравие', 'Временные хиты': 'Здравие временное', 'Кости хитов': 'Кости здравия', 'Спасброски от смерти': 'На краю гибели',
+  'Успехи': 'Удачи', 'Провалы': 'Неудачи', 'Класс доспеха': 'Броня', 'Инициатива': 'Почин', 'Скорость': 'Ход', 'Бонус мастерства': 'Умелость', 'Вдохновение': 'Воодушевление',
+  'Снаряжение': 'Скарб', 'Владения': 'Навыки и владения', 'Языки': 'Наречия', 'Оружие': 'Оружие', 'Монеты': 'Казна: гривны и куны', 'Сокровища': 'Сокровища', 'Заметки': 'Записи',
+  'Способности': 'Умения', 'Способности класса и подкласса': 'Умения стези', 'Способности вида и предыстории': 'Умения рода и былого', 'Черты и дополнительные способности': 'Дары и иные умения',
+  'Магия': 'Чародейство', 'Заклинания': 'Заговоры и чары', 'Заговоры': 'Присловья', 'Ячейки заклинаний': 'Чародейские ячейки', 'Заклинательный класс': 'Источник чар',
+  'СЛ спасброска': 'СЛ спасброска', 'Бонус атаки': 'Бонус атаки', 'Биография': 'Летопись героя', 'Характеристики': 'Стати', 'Книга заклинаний': 'Чародейная книга',
+};
+export const oldLabelsOn = (s: { theme?: SheetTheme; system?: GameSystem; oldLabels?: boolean }) => sheetTheme(s) === 'slavic' && s.oldLabels !== false;
+export const oldLabel = (s: { theme?: SheetTheme; system?: GameSystem; oldLabels?: boolean }, l: string) => (oldLabelsOn(s) ? OLD_LABELS[l] ?? l : l);
 
 /** стиль листа по умолчанию для каждой игры */
 export const SYSTEM_THEME: Record<GameSystem, SheetTheme> = { dnd: 'club', coc: 'eldritch', bitd: 'noir', cpr: 'cyber' };
 export const sheetTheme = (s: { theme?: SheetTheme; system?: GameSystem }): SheetTheme => s.theme ?? SYSTEM_THEME[s.system ?? 'dnd'];
 export const sheetFonts = (s: { theme?: SheetTheme; system?: GameSystem; fonts?: FontSet }): FontSet => s.fonts ?? THEMES.find((t) => t.id === sheetTheme(s))!.fonts;
 
-export type FontSet = 'tale' | 'chronicle' | 'rune' | 'strict' | 'typewriter' | 'gaslight' | 'neon';
+export type FontSet = 'tale' | 'chronicle' | 'rune' | 'strict' | 'typewriter' | 'gaslight' | 'neon' | 'fae' | 'dark' | 'slavic';
 export const FONT_SETS: { id: FontSet; name: string; hint: string }[] = [
   { id: 'tale', name: 'Сказание', hint: 'книжный, как в старых томах' },
   { id: 'rune', name: 'Руны', hint: 'резкие высокие буквы' },
@@ -152,6 +177,9 @@ export const FONT_SETS: { id: FontSet; name: string; hint: string }[] = [
   { id: 'typewriter', name: 'Машинка', hint: 'ар-деко и печатная машинка' },
   { id: 'gaslight', name: 'Газовый свет', hint: 'викторианский, с засечками' },
   { id: 'neon', name: 'Неон', hint: 'рубленый, технический' },
+  { id: 'fae', name: 'Сказочный', hint: 'рукописный и мягкий' },
+  { id: 'dark', name: 'Суровый', hint: 'тяжёлый, с засечками' },
+  { id: 'slavic', name: 'Вязь', hint: 'старорусский, полуустав' },
 ];
 
 /** Имя для списка и шапки: своё название листа, а если оно не задано — имя героя с первой страницы. */
@@ -165,7 +193,7 @@ export const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().to
 
 export const BLOCK_NAMES: Record<BlockType, string> = {
   title: 'Заголовок', field: 'Поле', text: 'Текст', image: 'Картинка', ability: 'Характеристика', stat: 'Число', checklist: 'Список с отметками',
-  circles: 'Кружки (ячейки, спасброски)', table: 'Таблица', spells: 'Список заклинаний', emblem: 'Эмблема клуба', ornament: 'Украшение', qr: 'QR-код', abilityx: 'Характеристика с навыками', pctstat: 'Характеристика в %', pctlist: 'Навыки в %', sumlist: 'Навыки: характеристика + уровень',
+  circles: 'Кружки (ячейки, спасброски)', table: 'Таблица', spells: 'Список заклинаний', emblem: 'Эмблема клуба', ornament: 'Украшение', qr: 'QR-код', abilityx: 'Характеристика с навыками', pctstat: 'Характеристика в %', pctlist: 'Навыки в %', sumlist: 'Навыки: характеристика + уровень', track: 'Шкала чисел (ПЗ, рассудок)',
 };
 
 export function makeBlock(type: BlockType, p: Partial<Block> = {}): Block {
@@ -186,6 +214,7 @@ export function makeBlock(type: BlockType, p: Partial<Block> = {}): Block {
     : type === 'pctlist' ? { w: 60, h: 80, label: 'Навыки', items: [{ name: 'Навык' }] }
     : type === 'sumlist' ? { w: 60, h: 80, label: 'Навыки', items: [{ name: 'Навык', sub: 'ИНТ' }] }
     : type === 'abilityx' ? { w: 60, h: 40, label: 'Сила', key: 'СИЛ', items: [], save: { name: 'Спасбросок', sub: 'СИЛ' } }
+    : type === 'track' ? { w: 90, h: 22, label: 'Шкала', count: 20, value: '' }
     : type === 'qr' ? { w: 22, h: 30, label: 'Наш канал', src: 'icons/qr-channel.png', fontSize: 7 }
     : { w: 120, h: 6, frame: 'none', label: '' };
   return { ...base, ...d, ...p };
@@ -347,15 +376,33 @@ export function calcSheet(sheet: Sheet): Calc {
   const all = sheet.pages.flatMap((p) => p.blocks);
   const mods: Calc['mods'] = {};
   const vals: Calc['vals'] = {};
-  for (const b of all) if ((b.type === 'stat' || b.type === 'pctstat') && b.key) { const n = parseInt(b.value ?? '', 10); vals[b.key] = Number.isNaN(n) ? undefined : n; }
+  for (const b of all) if ((b.type === 'stat' || b.type === 'pctstat' || b.type === 'field') && b.key) { const n = parseInt(b.value ?? '', 10); vals[b.key] = Number.isNaN(n) ? undefined : n; }
   for (const b of all) if (b.type === 'ability' || b.type === 'abilityx') { const k = keyOf(b); if (k) mods[k] = parseMod(b.mod || abilityMod(b.score ?? '')); }
   const level = parseInt(all.find((b) => keyOf(b) === 'level')?.value ?? '', 10);
   const profBlock = all.find((b) => keyOf(b) === 'prof');
   const prof = parseMod(profBlock?.value) ?? (level >= 1 ? 2 + Math.floor((Math.min(level, 20) - 1) / 4) : undefined);
   const perc = all.find((b) => (b.type === 'checklist' || b.type === 'abilityx') && b.items?.some((i) => i.name === 'Внимательность'))?.items?.find((i) => i.name === 'Внимательность');
   const perception = perc ? parseMod(perc.value) ?? autoItem(perc, mods, prof) : undefined;
+  // Зов Ктулху: сколько очков вложено в навыки сверх базы и значение «Мифов Ктулху»
+  let spent = 0, any = false;
+  for (const b of all) if (b.type === 'pctlist') for (const it of b.items ?? []) {
+    if (!it.sub || it.sub === '#') continue;
+    const v = parseInt(it.value ?? '', 10); if (Number.isNaN(v)) continue;
+    any = true; spent += Math.max(0, v - (cocBase(it.sub, vals) ?? 0));
+    if (it.name.startsWith('Мифы Ктулху')) vals['coc:mythos'] = v;
+  }
+  if (any) vals['coc:spent'] = spent;
   return { mods, prof, perception, vals };
 }
+/** База навыка Зова Ктулху: число («25») или формула («ЛВК/2», «ОБР»). */
+export function cocBase(sub: string | undefined, vals: Record<string, number | undefined>): number | undefined {
+  if (!sub || sub === '#') return undefined;
+  if (/^\d+$/.test(sub)) return parseInt(sub, 10);
+  if (sub === 'ЛВК/2') return vals['coc:DEX'] !== undefined ? Math.floor(vals['coc:DEX']! / 2) : undefined;
+  if (sub === 'ОБР') return vals['coc:EDU'];
+  return undefined;
+}
+export const cocBaseText = (sub?: string) => (!sub || sub === '#' ? '' : /^\d+$/.test(sub) ? sub.padStart(2, '0') + '%' : sub === 'ЛВК/2' ? '½ ЛВК' : sub);
 const CODE: Record<string, string> = { СИЛ: 'СИЛ', ЛВК: 'ЛВК', ТЕЛ: 'ТЕЛ', ИНТ: 'ИНТ', МДР: 'МДР', ХАР: 'ХАР' };
 /** Навык или спасбросок: модификатор характеристики + бонус мастерства, если отмечено владение. */
 export function autoItem(it: CheckItem, mods: Calc['mods'], prof?: number): number | undefined {
@@ -373,6 +420,21 @@ export function autoStat(b: Block, c: Calc): string {
   const has = (...xs: string[]) => xs.every((x) => v(x) !== undefined);
   // Зов Ктулху
   if (k === 'coc:hp' && has('coc:CON', 'coc:SIZ')) return String(Math.floor((v('coc:CON')! + v('coc:SIZ')!) / 10));
+  if ((k === 'coc:db' || k === 'coc:build') && has('coc:STR', 'coc:SIZ')) {
+    const t = v('coc:STR')! + v('coc:SIZ')!;
+    const row = t <= 64 ? ['−2', '−2'] : t <= 84 ? ['−1', '−1'] : t <= 124 ? ['0', '0'] : t <= 164 ? ['+1d4', '+1'] : t <= 204 ? ['+1d6', '+2'] : (() => { const n = Math.floor((t - 205) / 80) + 2; return [`+${n}d6`, `+${n + 1}`]; })();
+    return k === 'coc:db' ? row[0]! : row[1]!;
+  }
+  if (k === 'coc:mov' && has('coc:STR', 'coc:DEX', 'coc:SIZ')) {
+    const [st, dx, sz] = [v('coc:STR')!, v('coc:DEX')!, v('coc:SIZ')!];
+    let m = st < sz && dx < sz ? 7 : st > sz && dx > sz ? 9 : 8;
+    const age = v('coc:age');
+    if (age !== undefined && age >= 40) m -= Math.min(5, Math.floor((age - 30) / 10));
+    return String(m);
+  }
+  if (k === 'coc:sanmax') return String(99 - (v('coc:mythos') ?? 0));
+  if (k === 'coc:pts' && has('coc:EDU', 'coc:INT')) return String(v('coc:EDU')! * 4 + v('coc:INT')! * 2);
+  if (k === 'coc:spent' && v('coc:spent') !== undefined) return String(v('coc:spent'));
   if (k === 'coc:mp' && has('coc:POW')) return String(Math.floor(v('coc:POW')! / 5));
   if (k === 'coc:san' && has('coc:POW')) return String(v('coc:POW'));
   // Киберпанк RED

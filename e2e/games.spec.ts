@@ -12,7 +12,7 @@ for (const [g, file] of [['Зов Ктулху', 'coc'], ['Клинки во т�
 test('Ктулху: заполнение процентов', async ({ page }) => {
   await page.goto('./');
   await page.getByRole('button', { name: /Зов Ктулху/ }).click();
-  const con = page.locator('.bw[data-label="Телосложение"]').first();
+  const con = page.locator('.bw[data-label="ВЫН · выносливость"]').first();
   await con.click(); await page.getByLabel('Значение, %').fill('60'); await page.getByRole('button', { name: 'Сохранить' }).click();
   await expect(con.locator('.pct-parts')).toContainText('30');
   await expect(con.locator('.pct-parts')).toContainText('12');

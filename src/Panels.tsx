@@ -242,6 +242,12 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
             );
           })}</div>
         </Field>
+        {sheetTheme(sheet) === 'slavic' && (
+          <label className="flex items-center justify-between gap-3 rounded-xl border border-moss-light bg-moss-deep p-3">
+            <span><span className="block text-cream">Старинные подписи</span><span className="block text-xs text-cream/55">«Здравие» вместо хитов, «Проворство» вместо ловкости, «Казна» вместо монет</span></span>
+            <input type="checkbox" className="w-6 h-6 accent-[#aa9173]" checked={sheet.oldLabels !== false} onChange={(e) => commit((s) => ({ ...s, oldLabels: e.target.checked }))} />
+          </label>
+        )}
         <Field label="Шрифты листа">
           <div className="grid grid-cols-2 gap-2">{FONT_SETS.map((f) => (
             <button key={f.id} onClick={() => commit((s) => ({ ...s, fonts: f.id }))} className={`fonts-${f.id} rounded-xl border p-3 text-left ${sheetFonts(sheet) === f.id ? 'border-sand bg-sand/15' : 'border-moss-light bg-moss-deep'}`}>

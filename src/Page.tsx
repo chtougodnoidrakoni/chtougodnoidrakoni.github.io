@@ -1,8 +1,9 @@
 /** Страница A4 с блоками: в режиме «Макет» блоки двигаются и меняют размер пальцем. */
+import { ThemeArt } from './art';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { locked, resizeEdge } from './layout';
 import { BlockView, pt } from './blocks';
-import { PAGE_H, PAGE_W, SCHOOLS, sheetFonts, sheetTheme, spellOf, type Block, type Page, type Sheet, type SpellData } from './model';
+import { PAGE_H, PAGE_W, SCHOOLS, oldLabel, sheetFonts, sheetTheme, spellOf, type Block, type Page, type Sheet, type SpellData } from './model';
 import { useStore } from './store';
 
 
@@ -17,7 +18,7 @@ const star = (cx: number, cy: number, r: number, k = 0.45) => Array.from({ lengt
  * Всё внутри зоны печати (не ближе 7 мм к краю листа), иначе принтер срежет.
  */
 function Sky({ theme }: { theme: string }) {
-  if (theme === 'strict') return null;
+  if (theme === 'strict' || theme === 'fae' || theme === 'dark' || theme === 'slavic') return null;
   if (theme === 'chronicle') return <Flourishes />;
   if (theme === 'cyber') return <CyberFrame />;
   if (theme === 'noir') return <Rivets />;
@@ -96,7 +97,7 @@ export function PageShell({ scale, sheet, num, children }: { scale: number; shee
   return (
     <div className={`page fonts-${sheetFonts(sheet)} theme-${sheetTheme(sheet)} ${sheet.paper === 'parchment' ? 'parchment' : ''}`} style={{ ['--u' as string]: `${scale}px` }}>
       <div className="page-inner" />
-      <div className="page-frame" /><Sky theme={sheetTheme(sheet)} />
+      <div className="page-frame" /><Sky theme={sheetTheme(sheet)} /><ThemeArt theme={sheetTheme(sheet)} />
       {children}
       <div className="page-foot">Что Угодно и Драконы • г. Астрахань</div>
       <div className="page-num">{num}</div>
@@ -244,7 +245,7 @@ export function SpellbookPages({ page, sheet, scale, startNum }: { page: Page; s
       {pages.map((cols, i) => (
         <div key={i} className="page-wrap py-3">
           <PageShell scale={scale} sheet={sheet} num={startNum + i}>
-            <div className="absolute font-display-sc" style={{ left: 'calc(var(--u) * 12)', top: 'calc(var(--u) * 13)', fontSize: pt(18, sheet.fontScale), color: 'var(--color-moss)', fontWeight: 700 }}>{page.title}{pages.length > 1 ? ` · ${i + 1}` : ''}</div>
+            <div className="absolute font-display-sc page-title" style={{ left: 'calc(var(--u) * 12)', top: 'calc(var(--u) * 13)', fontSize: pt(18, sheet.fontScale), color: 'var(--color-moss)', fontWeight: 700 }}>{oldLabel(sheet, page.title)}{pages.length > 1 ? ` · ${i + 1}` : ''}</div>
             <img src={sheet.emblem ?? `${import.meta.env.BASE_URL}icons/club-emblem.png`} alt="" className="absolute" style={{ right: 'calc(var(--u) * 12)', top: 'calc(var(--u) * 11)', width: 'calc(var(--u) * 16)', height: 'calc(var(--u) * 16)' }} />
             <div className="sb-cols">{cols.map((c, k) => <div key={k} className="sb-col">{c.map((d) => <SpellCard key={d.id} d={d} scale={sheet.fontScale} />)}</div>)}</div>
             {!list.length && <div className="absolute inset-0 grid place-items-center text-center no-print" style={{ color: 'var(--color-sand-dark)', fontSize: pt(11) }}>Добавьте заклинания на странице «Магия» —<br />здесь появятся их полные описания</div>}

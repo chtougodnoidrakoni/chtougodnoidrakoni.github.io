@@ -6,7 +6,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Plus, Trash2, ImagePlus } from 'lucide-react';
 import { useStore } from './store';
-import { abilityMod, autoItem, autoStat, calcSheet, signed, spellOf, BLOCK_NAMES, type Block } from './model';
+import { abilityMod, autoItem, autoStat, calcSheet, cocBase, signed, spellOf, BLOCK_NAMES, type Block } from './model';
 import { CPR_KEY, downscale } from './blocks';
 
 const base = 'px-3 rounded-xl bg-moss-deep border border-moss-light text-cream outline-none focus:border-sand';
@@ -57,6 +57,15 @@ export function FillModal() {
             <L t="Модификатор (считается сам)"><In value={b.mod ?? ''} placeholder={abilityMod(b.score ?? '') || '±'} onChange={(e) => set({ mod: e.target.value })} className="text-2xl text-center" /></L>
           </div>
         );
+      case 'track': {
+        return (
+          <div className="grid gap-3">
+            <L t={`Текущее значение (0–${b.count ?? 20})`}><In inputMode="numeric" value={b.value ?? ''} onChange={(e) => set({ value: e.target.value.replace(/[^\d]/g, '').slice(0, 2) })} className="text-2xl text-center" autoFocus /></L>
+            <L t="До какого числа шкала"><In inputMode="numeric" value={String(b.count ?? 20)} onChange={(e) => set({ count: Math.max(1, Math.min(99, parseInt(e.target.value || '1', 10))) })} className="text-center" /></L>
+            <div className="text-xs text-cream/55 px-1">На листе это число будет обведено кружком. На распечатке можно просто зачёркивать числа ручкой.</div>
+          </div>
+        );
+      }
       case 'stat': {
         const auto = autoStat(b, calc!);
         return <L t={auto ? `Число (если пусто — ${auto}, посчитано само)` : 'Число'}><In value={b.value ?? ''} placeholder={auto} onChange={(e) => set({ value: e.target.value })} className="text-2xl text-center" autoFocus={!auto} /></L>;
@@ -100,17 +109,20 @@ export function FillModal() {
         const sum = b.type === 'sumlist';
         return (
           <div className="grid gap-1">
-            <div className="text-xs text-cream/60 px-1">{sum ? 'Впишите уровень навыка. База = характеристика + уровень, считается сама.' : 'Впишите процент навыка, половина и пятая часть посчитаются сами. Кружок — отметка успешного применения.'}</div>
+            <div className="text-xs text-cream/60 px-1">{sum ? 'Впишите уровень навыка. База = характеристика + уровень, считается сама.' : 'Серым показана база навыка — она уже стоит на листе. Впишите итоговый процент, если вкладывали очки; половина и пятая часть посчитаются сами. Кружок — отметка успешного применения для развития.'}</div>
             {(b.items ?? []).map((it, i) => {
               const up = (patch: Partial<typeof it>) => set({ items: b.items!.map((x, j) => (j === i ? { ...x, ...patch } : x)) });
-              const n = parseInt(it.value ?? '', 10);
+              if (it.sub === '#') return <div key={i} className="text-xs uppercase tracking-wider text-sand-light pt-3 px-1">{it.name}</div>;
+              const cb = sum ? undefined : cocBase(it.sub, calc!.vals);
+              const n0 = parseInt(it.value ?? '', 10);
+              const n = Number.isNaN(n0) && cb !== undefined ? cb : n0;
               const stat = sum ? calc!.vals[`cpr:${CPR_KEY[it.sub ?? ''] ?? ''}`] : undefined;
               return (
                 <div key={i} className="flex items-center gap-2 py-1.5 border-b border-moss-light/30">
                   {!sum && <Ring on={!!it.checked} onClick={() => up({ checked: !it.checked })} label={`Отметка: ${it.name}`} />}
                   <input className={`${base} flex-1 min-w-0 h-10`} value={it.name} onChange={(e) => up({ name: e.target.value })} aria-label="Навык" />
                   {sum && <span className="text-cream/50 text-sm w-12 text-center">{it.sub}</span>}
-                  <input inputMode="numeric" className={`${base} flex-none h-10 text-center`} style={{ width: 56 }} value={it.value ?? ''} placeholder={sum ? 'ур.' : '%'} onChange={(e) => up({ value: e.target.value.replace(/[^\d]/g, '').slice(0, 3) })} />
+                  <input inputMode="numeric" className={`${base} flex-none h-10 text-center`} style={{ width: 56 }} value={it.value ?? ''} placeholder={sum ? 'ур.' : cb !== undefined ? String(cb) : '%'} onChange={(e) => up({ value: e.target.value.replace(/[^\d]/g, '').slice(0, 3) })} />
                   <span className="text-xs text-cream/60 w-14 text-right">{sum ? (stat !== undefined ? `= ${stat + (Number.isNaN(n) ? 0 : n)}` : '') : Number.isNaN(n) ? '' : `${Math.floor(n / 2)} / ${Math.floor(n / 5)}`}</span>
                 </div>
               );

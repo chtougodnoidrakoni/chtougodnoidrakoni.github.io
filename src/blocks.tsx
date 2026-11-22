@@ -1,6 +1,7 @@
 /** Отрисовка блоков листа. Все размеры — в миллиметрах через переменную --u (1 мм на печати). */
 import { useState, type CSSProperties, type ReactNode } from 'react';
-import { abilityMod, autoItem, autoStat, calcSheet, signed, spellOf, type Block, type Sheet } from './model';
+import { abilityMod, autoItem, autoStat, calcSheet, cocBase, cocBaseText, oldLabel, oldLabelsOn, sheetTheme, signed, spellOf, type Block, type Sheet } from './model';
+import { artUrl, DIVIDER, watermarkFor } from './art';
 import { useStore } from './store';
 
 export const u = (n: number) => `calc(var(--u) * ${n})`;
@@ -8,7 +9,16 @@ export const pt = (n: number, scale = 1) => `calc(var(--u) * ${(n * 0.3528 * sca
 
 function Label({ b, scale, children }: { b: Block; scale: number; children?: ReactNode }) {
   if (!b.label) return null;
-  return <div className="blk-label" style={{ fontSize: pt(Math.max(5.5, b.fontSize * 0.72), scale) }}>{children ?? b.label}</div>;
+  return <div className="blk-label" style={{ fontSize: pt(Math.max(5.5, b.fontSize * 0.72), scale) }}>{children ?? <span className="lbl-t">{b.label}</span>}</div>;
+}
+
+/** Бледная иллюстрация в углу большого текстового блока (только в стилях с картинками). */
+function Watermark({ b, sheet, theme }: { b: Block; sheet: Sheet; theme: ReturnType<typeof sheetTheme> }) {
+  if (b.h < 45 || b.w < 50 || b.lined === false) return null;
+  const big = sheet.pages.flatMap((p) => p.blocks).filter((x) => x.type === 'text' && x.h >= 45 && x.w >= 50);
+  const src = watermarkFor(theme, Math.max(0, big.findIndex((x) => x.id === b.id)));
+  if (!src) return null;
+  return <img className="wm" src={src} alt="" style={{ height: u(Math.min(b.h * 0.72, 70)), maxWidth: '62%' }} />;
 }
 
 /**
@@ -28,14 +38,16 @@ function AutoInput({ value, auto, onChange, readOnly, className, style, inputMod
 /** Русское сокращение характеристики Киберпанка → ключ блока. */
 export const CPR_KEY: Record<string, string> = { ИНТ: 'INT', РЕФ: 'REF', ЛВК: 'DEX', ТЕХ: 'TECH', ХЛАД: 'COOL', ВОЛЯ: 'WILL', УДАЧА: 'LUCK', СКОР: 'MOVE', ТЕЛО: 'BODY', ЭМП: 'EMP' };
 
-export function BlockView({ b, sheet, fill }: { b: Block; sheet: Sheet; fill: boolean }) {
+export function BlockView({ b: b0, sheet, fill }: { b: Block; sheet: Sheet; fill: boolean }) {
+  const b = oldLabelsOn(sheet) && b0.label ? { ...b0, label: oldLabel(sheet, b0.label) } : b0;
+  const theme = sheetTheme(sheet);
   const scale = sheet.fontScale;
   const { updateBlock, edit, spellMap } = useStore();
   const fs = pt(b.fontSize, scale);
   const set = (patch: Partial<Block>) => updateBlock(b.id, patch);
   const inputStyle: CSSProperties = { fontSize: fs };
   const frameCls = b.frame === 'frame' ? 'b-frame' : b.frame === 'line' ? 'b-line' : '';
-  const calc = ['checklist', 'stat', 'abilityx', 'sumlist'].includes(b.type) ? calcSheet(sheet) : undefined;
+  const calc = ['checklist', 'stat', 'abilityx', 'sumlist', 'pctlist'].includes(b.type) ? calcSheet(sheet) : undefined;
 
   switch (b.type) {
     case 'title':
@@ -57,6 +69,7 @@ export function BlockView({ b, sheet, fill }: { b: Block; sheet: Sheet; fill: bo
         const lh = { fontSize: pt(ts, scale), lineHeight: 1.45, ['--lh' as string]: pt(ts * 1.45, scale) };
         return (
           <div className={`blk ${frameCls} blk-text`}>
+            <Watermark b={b} sheet={sheet} theme={theme} />
             <Label b={b} scale={scale} />
             <div className="parts" style={{ gridTemplateColumns: `repeat(${b.parts.length}, minmax(0,1fr))` }}>
               {b.parts.map((title, i) => (
@@ -72,6 +85,7 @@ export function BlockView({ b, sheet, fill }: { b: Block; sheet: Sheet; fill: bo
       }
       return (
         <div className={`blk ${frameCls} blk-text`}>
+          <Watermark b={b} sheet={sheet} theme={theme} />
           <Label b={b} scale={scale} />
           <textarea className={`inp area ${b.lined !== false ? 'lined' : ''}`} style={{ fontSize: pt(b.textSize ?? b.fontSize, scale), lineHeight: 1.45, ['--lh' as string]: pt((b.textSize ?? b.fontSize) * 1.45, scale) }} value={b.value ?? ''} readOnly={!fill} onChange={(e) => set({ value: e.target.value })} />
         </div>
@@ -116,12 +130,16 @@ export function BlockView({ b, sheet, fill }: { b: Block; sheet: Sheet; fill: bo
           <div className="pl-head"><span /><span /><span>%</span><span>½</span><span>⅕</span></div>
           <div className="pl-rows">
             {(b.items ?? []).map((it, i) => {
-              const n = parseInt(it.value ?? '', 10); const ok = !Number.isNaN(n);
+              if (it.sub === '#') return <div key={i} className="pl-cat">{it.name}</div>;
+              const base = cocBase(it.sub, calc!.vals);
+              const own = parseInt(it.value ?? '', 10);
+              const n = Number.isNaN(own) ? base ?? NaN : own; const ok = !Number.isNaN(n);
+              const bt = cocBaseText(it.sub);
               return (
                 <div key={i} className="pl-row">
                   <span className={`dot ${it.checked ? 'on' : ''}`} />
-                  <span className="pl-name">{it.name}</span>
-                  <span className="pl-val">{it.value ?? ''}</span>
+                  <span className="pl-name">{it.name}{bt && <i className="pl-base-t"> ({bt})</i>}</span>
+                  <span className={`pl-val ${Number.isNaN(own) && ok ? 'auto' : ''}`}>{ok ? n : ''}</span>
                   <span className="pl-sub">{ok ? Math.floor(n / 2) : ''}</span>
                   <span className="pl-sub">{ok ? Math.floor(n / 5) : ''}</span>
                 </div>
@@ -266,7 +284,22 @@ export function BlockView({ b, sheet, fill }: { b: Block; sheet: Sheet; fill: bo
     }
     case 'emblem':
       return <div className="blk blk-emblem"><img src={sheet.emblem ?? `${import.meta.env.BASE_URL}icons/club-emblem.png`} alt="" className="w-full h-full object-contain" /></div>;
+    case 'track': {
+      const cur = parseInt(b.value ?? '', 10);
+      const nums = Array.from({ length: (b.count ?? 20) + 1 }, (_, i) => i);
+      const cols = (b.count ?? 20) > 30 ? 15 : (b.count ?? 20) > 20 ? 9 : 7;
+      return (
+        <div className={`blk ${frameCls} blk-track`} style={{ fontSize: fs }}>
+          <Label b={b} scale={scale} />
+          <div className="trk" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0,1fr))` }}>
+            {nums.map((x) => <span key={x} className={x === cur ? 'on' : ''}>{String(x).padStart(2, '0')}</span>)}
+          </div>
+        </div>
+      );
+    }
     case 'ornament':
+      if (b.art) return <div className="blk blk-ornament blk-art"><img src={artUrl(b.art)} alt="" /></div>;
+      if (DIVIDER[theme]) return <div className="blk blk-ornament"><img src={artUrl(DIVIDER[theme]!)} alt="" className="w-full h-full object-contain" /></div>;
       return <div className="blk blk-ornament"><svg viewBox="0 0 200 10" preserveAspectRatio="none" className="w-full h-full"><path d="M0 5 H86 M114 5 H200" stroke="currentColor" strokeWidth="0.8" /><path d="M92 5 L100 1 L108 5 L100 9 Z" fill="none" stroke="currentColor" strokeWidth="0.8" /><circle cx="100" cy="5" r="1.4" fill="currentColor" /></svg></div>;
   }
 }

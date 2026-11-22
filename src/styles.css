@@ -34,6 +34,20 @@
 @import '@fontsource/amatic-sc/cyrillic-700.css';
 @import '@fontsource/amatic-sc/latin-700.css';
 @import '@fontsource/kurale/latin-400.css';
+@import '@fontsource/marck-script/cyrillic-400.css';
+@import '@fontsource/marck-script/latin-400.css';
+@import '@fontsource/comfortaa/cyrillic-400.css';
+@import '@fontsource/comfortaa/latin-400.css';
+@import '@fontsource/comfortaa/cyrillic-700.css';
+@import '@fontsource/comfortaa/latin-700.css';
+@import '@fontsource/ruslan-display/cyrillic-400.css';
+@import '@fontsource/ruslan-display/latin-400.css';
+@import '@fontsource/yeseva-one/cyrillic-400.css';
+@import '@fontsource/yeseva-one/latin-400.css';
+@import '@fontsource/philosopher/cyrillic-400.css';
+@import '@fontsource/philosopher/latin-400.css';
+@import '@fontsource/philosopher/cyrillic-700.css';
+@import '@fontsource/philosopher/latin-700.css';
 @import '@fontsource/russo-one/cyrillic-400.css';
 @import '@fontsource/russo-one/latin-400.css';
 @import '@fontsource/oswald/cyrillic-500.css';
@@ -88,6 +102,13 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 .fonts-typewriter .inp, .fonts-typewriter .area, .fonts-typewriter td { font-family: 'PT Mono', 'Courier New', monospace; }
 .fonts-typewriter .blk-title .inp { font-family: var(--f-display); }
 .fonts-gaslight { --f-display: 'Playfair Display SC', Georgia, serif; --f-label: 'Oswald', sans-serif; --f-body: 'Old Standard TT', Georgia, serif; }
+.fonts-fae { --f-display: 'Marck Script', cursive; --f-label: 'Comfortaa', sans-serif; --f-body: 'Comfortaa', sans-serif; }
+.fonts-dark { --f-display: 'Yeseva One', Georgia, serif; --f-label: 'Oswald', sans-serif; --f-body: 'Philosopher', Georgia, serif; }
+.fonts-slavic { --f-display: 'Ruslan Display', serif; --f-label: 'Kurale', serif; --f-body: 'Kurale', serif; }
+.fonts-fae .blk-label, .fonts-fae .blk th { font-weight: 700; letter-spacing: .02em; }
+.fonts-fae .blk-title .inp { font-size: 1.15em; }
+.fonts-dark .blk-label, .fonts-dark .blk th { font-weight: 600; letter-spacing: .12em; }
+.fonts-slavic .blk-label, .fonts-slavic .blk th { letter-spacing: .03em; }
 .fonts-neon { --f-display: 'Russo One', sans-serif; --f-label: 'Oswald', sans-serif; --f-body: 'Exo 2', system-ui, sans-serif; }
 .fonts-typewriter .blk-title .inp, .fonts-typewriter .blk-stat .inp, .fonts-typewriter .pct-main { font-weight: 400; }
 .fonts-gaslight .blk-label, .fonts-neon .blk-label, .fonts-gaslight .blk th, .fonts-neon .blk th, .fonts-gaslight .pl-head, .fonts-neon .pl-head { font-weight: 500; letter-spacing: .09em; }
@@ -430,3 +451,57 @@ input, select, textarea { font-size: 16px; }
 .help-print .help-fig img { box-shadow: none; }
 .help-print .help-tip { background: #f6efe2; }
 .help-print { padding-bottom: 0 !important; } .help-print > div:last-child { margin-top: 16px; }
+
+/* ================= иллюстрации стилей ================= */
+.theme-art { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+.theme-art img { position: absolute; display: block; height: auto; }
+.blk .wm { position: absolute; right: calc(var(--u) * 1); bottom: calc(var(--u) * 1); width: auto; object-fit: contain; opacity: .2; pointer-events: none; z-index: 0; mix-blend-mode: multiply; }
+.blk-text > .blk-label, .blk-text > .inp, .blk-text > .parts { position: relative; z-index: 1; }
+.blk-text > .inp.area { background-color: transparent; }
+
+/* «Волшебный сад»: пастель, сиреневый и розовый, мягкие углы, звёздочки вместо кружков */
+.page.theme-fae { --color-moss: #5b4a73; --color-sand: #e7a6c4; --color-sand-dark: #8a63c2; --color-ink: #4a3d5e; }
+.theme-fae .page-frame { border-radius: calc(var(--u) * 5); border-width: calc(var(--u) * .3); border-color: #c9a7e0; inset: calc(var(--u) * 7); }
+.theme-fae .page-frame::after { border-radius: calc(var(--u) * 4); border-color: #f2c6d8; border-style: dotted; border-width: calc(var(--u) * .35); }
+.theme-fae .b-frame { border-radius: calc(var(--u) * 3); border-color: #b996d6; border-width: calc(var(--u) * .3); box-shadow: inset 0 0 0 calc(var(--u) * .6) #fff, inset 0 0 0 calc(var(--u) * .8) #f4cfe0; }
+.theme-fae .blk-label, .theme-fae .blk th { color: #8a63c2; }
+.theme-fae .dot, .theme-fae .circ { border-radius: 0; border: 0; background: #c9a7e0; clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%); transform: scale(1.35); }
+.theme-fae .dot.on, .theme-fae .circ.on { background: #e58fb6; }
+.theme-fae .blk-title .inp { color: #6c4f94; }
+.theme-fae .pct-parts span, .theme-fae .blk-ph { border-radius: calc(var(--u) * 1.5); }
+.theme-fae .page-foot { color: #8a63c2; -webkit-text-stroke-color: #8a63c2; }
+
+/* «Кровь и сталь»: чёрное железо, тёмная кровь, прямые тяжёлые рамки */
+.page.theme-dark { --color-moss: #1c1818; --color-sand: #857b72; --color-sand-dark: #7d1014; --color-ink: #161212; }
+.theme-dark .page-frame { border-radius: 0; border-width: calc(var(--u) * .8); inset: calc(var(--u) * 7); border-color: #1c1818; }
+.theme-dark .page-frame::after { border-radius: 0; inset: calc(var(--u) * 1.2); border-width: calc(var(--u) * .25); border-color: #7d1014; }
+.theme-dark .b-frame { border-radius: 0; border-width: calc(var(--u) * .5); border-color: #1c1818; box-shadow: inset 0 0 0 calc(var(--u) * .5) #fff, inset 0 0 0 calc(var(--u) * .65) #7d1014; }
+.theme-dark .b-frame > .blk-label { color: #7d1014; text-transform: uppercase; }
+.theme-dark .blk th { color: #7d1014; }
+.theme-dark .dot.on, .theme-dark .circ.on { background: #7d1014; border-color: #7d1014; }
+.theme-dark .pct-parts span, .theme-dark .blk-ph, .theme-dark .pl-base { border-radius: 0; }
+.theme-dark .blk-title .inp { text-transform: uppercase; letter-spacing: .04em; }
+.theme-dark .page-foot { color: #7d1014; -webkit-text-stroke-color: #7d1014; }
+
+/* «Былина»: красное по льну, буквицы, тонкая двойная рамка */
+.page.theme-slavic { --color-moss: #2a1c16; --color-sand: #c0392b; --color-sand-dark: #b3261e; --color-ink: #2a1c16; }
+.theme-slavic .page-frame { border-radius: 0; border-width: calc(var(--u) * .35); border-color: #b3261e; inset: calc(var(--u) * 7); }
+.theme-slavic .page-frame::after { border-radius: 0; inset: calc(var(--u) * .9); border-width: calc(var(--u) * .2); border-color: #2a1c16; }
+.theme-slavic .b-frame { border-radius: 0; border-width: calc(var(--u) * .28); border-color: #2a1c16; box-shadow: inset 0 calc(var(--u) * .9) 0 0 #fff, inset 0 calc(var(--u) * 1.3) 0 0 #c0392b; }
+.theme-slavic .lbl-t, .theme-slavic .page-title { display: inline-block; }
+.theme-slavic .lbl-t::first-letter, .theme-slavic .page-title::first-letter, .theme-slavic .blk th::first-letter { font-family: 'Ruslan Display', serif; color: #b3261e; font-size: 1.55em; line-height: .8; }
+.theme-slavic .blk-label { color: #2a1c16; }
+.theme-slavic .dot.on, .theme-slavic .circ.on { background: #c0392b; border-color: #c0392b; }
+.theme-slavic .pct-parts span, .theme-slavic .blk-ph, .theme-slavic .pl-base { border-radius: 0; }
+.theme-slavic .blk-title .inp { color: #8a1c14; }
+.theme-slavic .page-title::first-letter { font-size: 1.35em; }
+.theme-slavic .page-foot { color: #b3261e; -webkit-text-stroke-color: #b3261e; }
+
+/* навыки с базой, категории, шкалы чисел, картинка-блок */
+.pl-cat { font-family: var(--f-label); font-weight: 700; text-transform: uppercase; letter-spacing: .08em; font-size: .78em; color: var(--color-sand-dark); padding-top: .35em; border-bottom: max(1px, calc(var(--u) * .15)) solid color-mix(in srgb, var(--color-sand) 60%, transparent); }
+.pl-base-t { font-style: normal; opacity: .6; font-size: .85em; }
+.pl-val.auto { opacity: .45; }
+.blk-track .trk { flex: 1; display: grid; align-content: space-evenly; font-family: var(--f-body); font-size: .9em; line-height: 1.25; text-align: center; color: color-mix(in srgb, var(--color-moss) 75%, transparent); }
+.blk-track .trk span.on { border-radius: 50%; box-shadow: 0 0 0 max(1px, calc(var(--u) * .3)) var(--color-sand-dark); color: var(--color-moss); font-weight: 700; }
+.blk-art { display: grid; place-items: center; }
+.blk-art img { max-width: 100%; max-height: 100%; object-fit: contain; }
