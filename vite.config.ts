@@ -13,7 +13,7 @@ export default defineConfig({
   plugins: [
     react(), tailwindcss(), versionFile,
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
       injectRegister: false,
       includeAssets: ['icons/*'],
       manifest: {

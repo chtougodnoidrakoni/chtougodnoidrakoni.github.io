@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Check, Copy, ExternalLink, Sparkles, Wand2 } from 'lucide-react';
 import { Btn, Sheet } from './Panels';
 import { SYSTEMS } from './systems';
@@ -21,12 +21,14 @@ export function PromptButton() {
 
 function PromptSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const say = useStore((s) => s.say);
-  const [game, setGame] = useState<GameSystem | null>(null);
-  const [vals, setVals] = useState<Record<string, string>>({});
+  const saved = (() => { try { return JSON.parse(localStorage.getItem('prompt-form') ?? 'null') as { game: GameSystem | null; vals: Record<string, string> } | null; } catch { return null; } })();
+  const [game, setGame] = useState<GameSystem | null>(saved?.game ?? null);
+  const [vals, setVals] = useState<Record<string, string>>(saved?.vals ?? {});
+  useEffect(() => { try { localStorage.setItem('prompt-form', JSON.stringify({ game, vals })); } catch { /* приватный режим */ } }, [game, vals]);
   const [prompt, setPrompt] = useState('');
   const [copied, setCopied] = useState(false);
   const [paste, setPaste] = useState(false);
-  const close = () => { onClose(); setTimeout(() => { setGame(null); setPrompt(''); setVals({}); setCopied(false); }, 300); };
+  const close = () => { onClose(); setTimeout(() => { setPrompt(''); setCopied(false); }, 300); };
   const copy = async () => {
     try { await navigator.clipboard.writeText(prompt); setCopied(true); say('Промт скопирован'); }
     catch { say('Не получилось скопировать — выделите текст и скопируйте вручную'); }
@@ -48,7 +50,7 @@ function PromptSheet({ open, onClose }: { open: boolean; onClose: () => void }) 
       )}
       {game && !prompt && (
         <div className="grid gap-3" ref={(el) => el?.scrollIntoView({ block: 'start' })}>
-          <button className="text-sm text-sand-light text-left" onClick={() => setGame(null)}>← другая игра</button>
+          <div className="flex justify-between"><button className="text-sm text-sand-light text-left" onClick={() => setGame(null)}>← другая игра</button><button className="text-sm text-cream/50" onClick={() => setVals({})}>очистить</button></div>
           <p className="text-xs text-cream/60 leading-relaxed">Заполните, что знаете. Пустые поля нейросеть заполнит сама.</p>
           {PROMPT_FIELDS[game].map((f) => {
             const val = vals[f.id] ?? '';
