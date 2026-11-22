@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ArrowLeft, Undo2, Redo2, Settings2, Printer, Download, Plus, Pencil, Check, Trash2, Copy, ChevronUp, ChevronDown, Upload, FilePlus2, MoreHorizontal, LayoutTemplate, BookOpen } from 'lucide-react';
 import { Help } from './Help';
+import { Feedback } from './Feedback';
 import { useStore } from './store';
 import { makeBlock, PAGE_TEMPLATES, relayoutFromTemplate, sheetName, uid, type BlockType, type Sheet } from './model';
 import { LayoutPage, SpellbookPages } from './Page';
@@ -84,6 +85,7 @@ function Home() {
           }} />
         </label>
       </div>
+      <Feedback />
       <div className="mt-6 grid gap-2">
         {index.map((m) => (
           <div key={m.id} className="flex items-center gap-2 p-4 rounded-2xl bg-moss/70 border border-moss-light">
