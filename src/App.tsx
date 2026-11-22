@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { ArrowLeft, Undo2, Redo2, Settings2, Printer, Download, Plus, Pencil, Check, Trash2, Copy, ChevronUp, ChevronDown, Upload, FilePlus2, MoreHorizontal, LayoutTemplate, BookOpen } from 'lucide-react';
 import { Help } from './Help';
 import { Feedback } from './Feedback';
+import { PromptButton } from './PromptMaker';
 import { useStore } from './store';
 import { makeBlock, PAGE_TEMPLATES, relayoutFromTemplate, sheetName, uid, type BlockType, type Sheet } from './model';
 import { LayoutPage, SpellbookPages } from './Page';
@@ -98,6 +99,7 @@ function Home() {
             <div className={`text-xs mt-1 ${g.id === 'dnd' ? 'text-moss-deep/70' : 'text-cream/60'}`}>{g.hint}</div>
           </button>
         ))}</div>
+        <PromptButton />
         <a href="#help" onClick={() => scrollTo(0, 0)} className="h-11 rounded-xl border border-sand/60 text-sand-light inline-flex items-center justify-center gap-2"><BookOpen size={18} />Как пользоваться сайтом</a>
         <label className="h-11 rounded-xl bg-moss border border-moss-light inline-flex items-center justify-center gap-2 cursor-pointer"><Upload size={18} />Открыть файл листа (.json)
           <input type="file" accept=".json,application/json" className="hidden" onChange={async (e) => {
