@@ -508,3 +508,4 @@ input, select, textarea { font-size: 16px; }
 .blk-track .trk span.on { border-radius: 50%; box-shadow: 0 0 0 max(1px, calc(var(--u) * .3)) var(--color-sand-dark); color: var(--color-moss); font-weight: 700; }
 .blk-art { display: grid; place-items: center; }
 .blk-art img { max-width: 100%; max-height: 100%; object-fit: contain; }
+body:has(.z-50) .nav-fab, body:has(.z-\[60\]) .nav-fab { display: none; }

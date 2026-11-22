@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { ArrowLeft, Undo2, Redo2, Settings2, Printer, Download, Plus, Pencil, Check, Trash2, Copy, ChevronUp, ChevronDown, Upload, FilePlus2, MoreHorizontal, LayoutTemplate, BookOpen, Wand2 } from 'lucide-react';
 import { Help } from './Help';
 import { Dragon } from './Dragon';
+import { NavFab } from './NavFab';
+import { InstallButtons } from './Install';
 import { Feedback } from './Feedback';
 import { PromptButton } from './PromptMaker';
 import { AiPaste } from './AiPaste';
@@ -52,6 +54,7 @@ export function App() {
   return (
     <>
       {sheet ? <Editor /> : hash.startsWith('#help') ? <Help print={hash === '#help-print'} onBack={hash === '#help-print' ? undefined : () => { history.replaceState(null, '', location.pathname); setHash(''); scrollTo(0, 0); }} /> : <Home />}
+      {hash !== '#help-print' && <NavFab />}
       {toast && <div className="fixed top-0 inset-x-0 z-[70] flex justify-center pt-16 pointer-events-none no-print"><div className="px-4 py-3 rounded-xl bg-moss border border-sand/50 text-sm shadow-xl">{toast}</div></div>}
     </>
   );
@@ -117,6 +120,7 @@ function Home() {
           }} />
         </label>
       </div>
+      <InstallButtons />
       <ClubLinks />
       <Feedback />
       <div className="mt-6 grid gap-2">
