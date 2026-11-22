@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Undo2, Redo2, Settings2, Printer, Download, Plus, Pencil, Check, Trash2, Copy, ChevronUp, ChevronDown, Upload, FilePlus2, MoreHorizontal, LayoutTemplate, BookOpen } from 'lucide-react';
+import { ArrowLeft, Undo2, Redo2, Settings2, Printer, Download, Plus, Pencil, Check, Trash2, Copy, ChevronUp, ChevronDown, Upload, FilePlus2, MoreHorizontal, LayoutTemplate, BookOpen, Wand2 } from 'lucide-react';
 import { Help } from './Help';
 import { Feedback } from './Feedback';
 import { PromptButton } from './PromptMaker';
+import { AiPaste } from './AiPaste';
 import { useStore } from './store';
 import { makeBlock, PAGE_TEMPLATES, relayoutFromTemplate, sheetName, uid, type BlockType, type Sheet } from './model';
 import { LayoutPage, SpellbookPages } from './Page';
@@ -143,6 +144,7 @@ function Editor() {
   const scale = useScale();
   const [menu, setMenu] = useState(false);
   const [settings, setSettings] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
   const [pdf, setPdf] = useState<{ done: number; total: number; bytes?: Uint8Array } | null>(null);
   const makePdf = async () => {
     if (pdf && !pdf.bytes) return;
@@ -227,6 +229,7 @@ function Editor() {
       <FillModal />
       <SpellPicker />
       <SettingsPanel open={settings} onClose={() => setSettings(false)} />
+      <AiPaste open={aiOpen} onClose={() => setAiOpen(false)} />
       {pdf && (
         <div className="fixed inset-0 z-[60] no-print bg-black/60 grid place-items-center p-6" onClick={() => pdf.bytes && setPdf(null)}>
           <div className="w-full max-w-sm rounded-2xl bg-moss-dark border border-moss-light p-5 text-center" onClick={(e) => e.stopPropagation()}>
@@ -275,6 +278,7 @@ function Editor() {
       <Panel open={menu} onClose={() => setMenu(false)} title="Лист">
         <div className="grid gap-2 pb-2">
           <Btn onClick={() => { setMenu(false); setSettings(true); }}><Settings2 size={18} />Стиль, название, шрифт, эмблема</Btn>
+          <Btn onClick={() => { setMenu(false); setAiOpen(true); }}><Wand2 size={18} />Заполнить ответом нейросети</Btn>
           <Btn onClick={() => { setMenu(false); close(); location.hash = '#help'; scrollTo(0, 0); }}><BookOpen size={18} />Как пользоваться сайтом</Btn>
           <Btn onClick={() => { setMenu(false); setTimeout(makePdf, 300); }}><Printer size={18} />Скачать PDF</Btn>
           <Btn onClick={() => { setMenu(false); setTimeout(() => window.print(), 300); }}><Printer size={18} />Системная печать Safari</Btn>

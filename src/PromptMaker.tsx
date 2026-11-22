@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Check, Copy, ExternalLink, Sparkles } from 'lucide-react';
+import { Check, Copy, ExternalLink, Sparkles, Wand2 } from 'lucide-react';
 import { Btn, Sheet } from './Panels';
 import { SYSTEMS } from './systems';
 import { buildPrompt, PROMPT_FIELDS } from './prompts';
 import type { GameSystem } from './model';
 import { useStore } from './store';
+import { AiPaste } from './AiPaste';
 
 const inp = 'w-full h-11 px-3 rounded-xl bg-moss-deep border border-moss-light text-cream outline-none focus:border-sand';
 
@@ -24,6 +25,7 @@ function PromptSheet({ open, onClose }: { open: boolean; onClose: () => void }) 
   const [vals, setVals] = useState<Record<string, string>>({});
   const [prompt, setPrompt] = useState('');
   const [copied, setCopied] = useState(false);
+  const [paste, setPaste] = useState(false);
   const close = () => { onClose(); setTimeout(() => { setGame(null); setPrompt(''); setVals({}); setCopied(false); }, 300); };
   const copy = async () => {
     try { await navigator.clipboard.writeText(prompt); setCopied(true); say('Промт скопирован'); }
@@ -76,13 +78,15 @@ function PromptSheet({ open, onClose }: { open: boolean; onClose: () => void }) 
             <li>Нажмите «Скопировать».</li>
             <li>Откройте ChatGPT (рекомендуем) или другую нейросеть: DeepSeek, Gemini, GigaChat, Алису.</li>
             <li>Вставьте промт и отправьте. Получите готового персонажа.</li>
-            <li>Вернитесь сюда, создайте лист нужной игры и перепишите значения в поля по порядку.</li>
+            <li>Скопируйте весь ответ, вернитесь сюда и нажмите «Вставить ответ нейросети». Лист заполнится сам.</li>
           </ol>
+          <Btn tone="gold" onClick={() => setPaste(true)}><Wand2 size={18} />Вставить ответ нейросети</Btn>
           <a href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer" className="h-10 rounded-xl border border-moss-light text-cream/85 text-sm inline-flex items-center justify-center gap-2"><ExternalLink size={16} />Открыть ChatGPT</a>
           <textarea readOnly value={prompt} rows={12} className={`${inp} h-auto py-2.5 text-xs leading-relaxed font-mono`} onFocus={(e) => e.target.select()} />
           <p className="text-xs text-cream/50">Нейросеть иногда ошибается в правилах. Если что-то выглядит странно, спросите мастера.</p>
         </div>
       )}
+      {game && <AiPaste open={paste} onClose={() => setPaste(false)} game={game} />}
     </Sheet>
   );
 }

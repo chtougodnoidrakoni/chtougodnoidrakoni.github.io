@@ -1,5 +1,6 @@
 /** Генератор промтов для нейросети: игрок описывает героя, получает готовый текст запроса. */
 import type { GameSystem } from './model';
+import { aiSkeleton } from './aiImport';
 
 export type PField = { id: string; label: string; hint?: string; options?: string[]; kind?: 'text' | 'area' | 'select' | 'number' };
 
@@ -57,6 +58,9 @@ const COMMON_END = (sheet: string) => [
 const v = (x: Record<string, string>, k: string, fb: string) => (x[k]?.trim() ? x[k]!.trim() : fb);
 
 export function buildPrompt(game: GameSystem, x: Record<string, string>): string {
+  return buildText(game, x) + '\n' + aiSkeleton(game);
+}
+function buildText(game: GameSystem, x: Record<string, string>): string {
   if (game === 'dnd') {
     const ed = v(x, 'ed', 'D&D 5e, правила 2014 года');
     return [
