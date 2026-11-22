@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Undo2, Redo2, Settings2, Printer, Download, Plus, Pencil, Check, Trash2, Copy, ChevronUp, ChevronDown, Upload, FilePlus2, MoreHorizontal, LayoutTemplate } from 'lucide-react';
+import { ArrowLeft, Undo2, Redo2, Settings2, Printer, Download, Plus, Pencil, Check, Trash2, Copy, ChevronUp, ChevronDown, Upload, FilePlus2, MoreHorizontal, LayoutTemplate, BookOpen } from 'lucide-react';
+import { Help } from './Help';
 import { useStore } from './store';
 import { makeBlock, PAGE_TEMPLATES, relayoutFromTemplate, sheetName, uid, type BlockType, type Sheet } from './model';
 import { LayoutPage, SpellbookPages } from './Page';
@@ -38,13 +39,15 @@ function useScale() {
 
 export function App() {
   const { ready, sheet, boot, open, toast } = useStore();
+  const [hash, setHash] = useState(location.hash);
+  useEffect(() => { const f = () => setHash(location.hash); window.addEventListener('hashchange', f); return () => window.removeEventListener('hashchange', f); }, []);
   useEffect(() => {
     void boot().then(() => { const m = location.hash.match(/sheet\/(\w+)/); if (m) void open(m[1]!); });
   }, [boot, open]);
   if (!ready) return <div className="h-screen grid place-items-center text-sand">…</div>;
   return (
     <>
-      {sheet ? <Editor /> : <Home />}
+      {sheet ? <Editor /> : hash.startsWith('#help') ? <Help print={hash === '#help-print'} onBack={hash === '#help-print' ? undefined : () => { history.replaceState(null, '', location.pathname); setHash(''); scrollTo(0, 0); }} /> : <Home />}
       {toast && <div className="fixed top-0 inset-x-0 z-[70] flex justify-center pt-16 pointer-events-none no-print"><div className="px-4 py-3 rounded-xl bg-moss border border-sand/50 text-sm shadow-xl">{toast}</div></div>}
     </>
   );
@@ -68,6 +71,7 @@ function Home() {
             <div className={`text-xs mt-1 ${g.id === 'dnd' ? 'text-moss-deep/70' : 'text-cream/60'}`}>{g.hint}</div>
           </button>
         ))}</div>
+        <a href="#help" onClick={() => scrollTo(0, 0)} className="h-11 rounded-xl border border-sand/60 text-sand-light inline-flex items-center justify-center gap-2"><BookOpen size={18} />Как пользоваться сайтом</a>
         <label className="h-11 rounded-xl bg-moss border border-moss-light inline-flex items-center justify-center gap-2 cursor-pointer"><Upload size={18} />Открыть файл листа (.json)
           <input type="file" accept=".json,application/json" className="hidden" onChange={async (e) => {
             const f = e.target.files?.[0]; if (!f) return;
@@ -239,6 +243,7 @@ function Editor() {
       <Panel open={menu} onClose={() => setMenu(false)} title="Лист">
         <div className="grid gap-2 pb-2">
           <Btn onClick={() => { setMenu(false); setSettings(true); }}><Settings2 size={18} />Стиль, название, шрифт, эмблема</Btn>
+          <Btn onClick={() => { setMenu(false); close(); location.hash = '#help'; scrollTo(0, 0); }}><BookOpen size={18} />Как пользоваться сайтом</Btn>
           <Btn onClick={() => { setMenu(false); setTimeout(makePdf, 300); }}><Printer size={18} />Скачать PDF</Btn>
           <Btn onClick={() => { setMenu(false); setTimeout(() => window.print(), 300); }}><Printer size={18} />Системная печать Safari</Btn>
           <Btn onClick={() => saveFile(`${sheetName(sheet).replace(/[^\p{L}\p{N}]+/gu, '_') || 'list'}.json`, new Blob([JSON.stringify(sheet)], { type: 'application/json' }))}><Download size={18} />Сохранить файлом (.json)</Btn>
