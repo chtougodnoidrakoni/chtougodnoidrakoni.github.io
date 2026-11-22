@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ArrowLeft, Undo2, Redo2, Settings2, Printer, Download, Plus, Pencil, Check, Trash2, Copy, ChevronUp, ChevronDown, Upload, FilePlus2, MoreHorizontal, LayoutTemplate, BookOpen, Wand2 } from 'lucide-react';
 import { Help } from './Help';
+import { Dragon } from './Dragon';
 import { Feedback } from './Feedback';
 import { PromptButton } from './PromptMaker';
 import { AiPaste } from './AiPaste';
@@ -86,7 +87,9 @@ function Home() {
   const { index, create, open, remove, say } = useStore();
   const [confirm, setConfirm] = useState<string | null>(null);
   return (
-    <div className="max-w-xl mx-auto px-4 pb-16">
+    <>
+    <Dragon />
+    <div className="max-w-xl mx-auto px-4 pb-16 relative" style={{ zIndex: 1 }}>
       <header className="safe-top pt-6 pb-4 flex items-center gap-4">
         <img src={`${import.meta.env.BASE_URL}icons/club-emblem.png`} alt="" className="w-16 h-16" />
         <div><div className="font-display-sc text-3xl text-sand-light leading-none">Лист персонажа</div><div className="text-sm text-cream/60 mt-1">клуб «Что угодно и драконы»</div><div className="text-xs text-cream/50 mt-1">Разработано inst: <a href="https://instagram.com/zamir.digital" target="_blank" rel="noopener" className="text-sand-light underline underline-offset-2">zamir.digital</a></div></div>
@@ -135,6 +138,7 @@ function Home() {
       </div>
       <p className="text-xs text-cream/40 mt-10 leading-relaxed">Описания заклинаний — из System Reference Document 5.1 и 5.2 (Wizards of the Coast, CC-BY-4.0). Листы Зова Ктулху, Клинков во тьме и Киберпанка RED нарисованы клубом с нуля и содержат только названия полей. Неофициальный проект, не связан с правообладателями игр.</p>
     </div>
+    </>
   );
 }
 
