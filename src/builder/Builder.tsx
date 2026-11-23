@@ -4,9 +4,9 @@ import { set as idbSet, get as idbGet } from 'idb-keyval';
 import { Btn, Field, TextIn } from '../Panels';
 import { SCHOOLS, sheetName, type SpellData } from '../model';
 import { ABS, AB_RU, AB_SHORT, ALIGNMENTS, ALL_SKILLS, ARMORS, BACKGROUNDS, DRAGONS, ORIGIN_FEATS, SKILLS, STYLES, WEAPONS, slots, type Ab, type Ed } from './data';
-import { POINT_COST, STANDARD, allSkills, armorClass, armorProf, featureTexts, packSub, saves, subSpells, asiLevels, attacks, bgOf, classOf, emptyBuild, expertiseCount, feats, features, fixedSkills, maxHp, mod, originBonus, pb, problems, proficientWeapon, raceOf, rule, scores, sgn, speed, subAt, subName, subOf, type AsiPick, type Build } from './engine';
+import { POINT_COST, STANDARD, featById, prereqFail, allSkills, armorClass, armorProf, featureTexts, packSub, saves, subSpells, asiLevels, attacks, bgOf, classOf, emptyBuild, expertiseCount, feats, features, fixedSkills, maxHp, mod, originBonus, pb, problems, proficientWeapon, raceOf, rule, scores, sgn, speed, subAt, subName, subOf, type AsiPick, type Build } from './engine';
 import { racialSpells, toSheet } from './toSheet';
-import { classesFor, racesFor, loadClub, loadLocal, setActive, subsFor, type StoredPack } from './content';
+import { backgroundsFor, classesFor, featsFor, racesFor, loadClub, loadLocal, setActive, subsFor, type StoredPack } from './content';
 import { Library } from './Library';
 
 const cx = (...c: (string | false | undefined)[]) => c.filter(Boolean).join(' ');
@@ -233,14 +233,15 @@ function StepRace({ b, up }: P) {
 function StepBg({ b, up }: P) {
   const bg = bgOf(b);
   const pick = (id: string) => { if (id === b.bg) return; up({ bg: id, bgSkills: [], bgAbs: [], bgPlus1: undefined, bgPlus2: undefined, bgFeat: undefined }); };
-  const abs = bg?.custom ? ABS : bg?.abs ?? [];
+  const abs = bg?.custom || !bg?.abs?.length ? ABS : bg.abs;
   return (
     <>
       <Note>{b.ed === '2014' ? 'В открытых правилах 2014 одна предыстория — Прислужник. Любую другую можно собрать как свою: два навыка на выбор.' : 'Предыстория даёт два навыка, инструмент, черту происхождения и бонусы к характеристикам.'}</Note>
-      <div className="grid gap-2">{BACKGROUNDS[b.ed].map((x) => (
+      <div className="grid gap-2">{backgroundsFor(b.ed).map((x) => (
         <Card key={x.id} on={b.bg === x.id} onClick={() => pick(x.id)}>
           <div className="font-display-sc text-xl text-sand-light">{x.name}</div>
-          {!x.custom && <div className="text-xs text-cream/65">{x.skills.join(', ')}{x.tool ? ` · ${x.tool}` : ''}{x.feat ? ` · черта: ${x.feat}` : ''}{x.abs ? ` · ${x.abs.map((a) => AB_SHORT[a]).join('/')}` : ''}</div>}
+          {!x.custom && <div className="text-xs text-cream/65">{[x.skills.join(', '), x.skillChoice ? `+${x.skillChoice.choose} навык на выбор` : '', x.tool ?? '', x.feat ? `черта: ${featById(b, x.feat)?.name ?? x.feat}` : '', x.abs?.length ? x.abs.map((a) => AB_SHORT[a]).join('/') : ''].filter(Boolean).join(' · ')}</div>}
+          {x.source && <div className="text-[11px] text-cream/45">{x.source}</div>}
         </Card>
       ))}</div>
       {bg?.custom && (
@@ -266,7 +267,20 @@ function StepBg({ b, up }: P) {
           )}
         </>
       )}
-      {bg && !bg.custom && <div className="text-xs text-cream/55 mt-4">Снаряжение: {bg.gear}</div>}
+      {bg?.skillChoice && (
+        <>
+          <H>Навыки на выбор: {b.bgSkills.length} из {bg.skillChoice.choose}</H>
+          <div className="flex flex-wrap gap-2">{(bg.skillChoice.from === 'any' ? ALL_SKILLS : bg.skillChoice.from).map((x) => { const on = b.bgSkills.includes(x); return <Chip key={x} on={on} disabled={bg.skills.includes(x) || (!on && b.bgSkills.length >= bg.skillChoice!.choose)} onClick={() => up({ bgSkills: on ? b.bgSkills.filter((y) => y !== x) : [...b.bgSkills, x], skills: b.skills.filter((y) => y !== x) })}>{x}</Chip>; })}</div>
+        </>
+      )}
+      {bg && !bg.custom && (
+        <div className="text-sm text-cream/75 mt-4 grid gap-1.5 leading-snug">
+          {bg.description && <p>{bg.description}</p>}
+          {bg.feature && <p><b className="text-cream font-medium">{bg.feature}.</b> {bg.featureText}</p>}
+          {bg.langs && <p className="text-xs text-cream/60">Языки: {bg.langs}</p>}
+          <p className="text-xs text-cream/60">Снаряжение: {bg.gear || '—'}</p>
+        </div>
+      )}
     </>
   );
 }
@@ -351,7 +365,7 @@ function StepAsi({ b, up }: P) {
               ) : (
                 <>
                   <div className="flex flex-wrap gap-2 mb-2"><Chip on={p.mode === 'two'} onClick={() => set(l, { mode: 'two' })}>+1 и +1</Chip><Chip on={p.mode === 'one'} onClick={() => set(l, { mode: 'one' })}>+2</Chip><Chip on={p.mode === 'feat'} onClick={() => set(l, { mode: 'feat' })}>Черта</Chip></div>
-                  {p.mode === 'feat' ? <TextIn aria-label={`Черта ${l}`} placeholder="Название черты" value={p.feat ?? ''} onChange={(e) => set(l, { feat: e.target.value })} /> : (
+                  {p.mode === 'feat' ? <FeatPick b={b} l={l} p={p} set={(x) => set(l, x)} /> : (
                     <div className={cx('grid gap-2', p.mode === 'two' && 'grid-cols-2')}>
                       <Sel label={`Улучшение ${l}`} value={p.a ?? ''} onChange={(v) => set(l, { a: (v || undefined) as Ab })}><option value="">—</option>{ABS.map((a) => <option key={a} value={a}>{AB_RU[a]} ({s[a]})</option>)}</Sel>
                       {p.mode === 'two' && <Sel label={`Второе улучшение ${l}`} value={p.b ?? ''} onChange={(v) => set(l, { b: (v || undefined) as Ab })}><option value="">—</option>{ABS.filter((a) => a !== p.a).map((a) => <option key={a} value={a}>{AB_RU[a]} ({s[a]})</option>)}</Sel>}
@@ -364,6 +378,30 @@ function StepAsi({ b, up }: P) {
         })}
       </div>
     </>
+  );
+}
+
+function FeatPick({ b, l, p, set }: { b: Build; l: number; p: AsiPick; set: (x: Partial<AsiPick>) => void }) {
+  const list = featsFor(b.ed);
+  const fd = featById(b, p.featId);
+  const val = fd ? fd.id : p.featId === '__custom' || p.feat ? '__custom' : '';
+  return (
+    <div className="grid gap-2">
+      <Sel label={`Черта ${l}`} value={val} onChange={(v) => set(v === '__custom' ? { featId: '__custom', featAb: undefined } : { featId: v || undefined, feat: undefined, featAb: undefined })}>
+        <option value="">— выберите черту —</option>
+        {list.map((f) => { const why = prereqFail(b, f, l); return <option key={f.id} value={f.id} disabled={!!why}>{f.name}{f.prereqText ? ` · ${f.prereqText}` : ''}{why ? ` — ${why}` : ''}</option>; })}
+        <option value="__custom">Другая (вписать название)</option>
+      </Sel>
+      {val === '__custom' && <TextIn aria-label={`Название черты ${l}`} placeholder="Название черты" value={p.feat ?? ''} onChange={(e) => set({ feat: e.target.value, featId: '__custom' })} />}
+      {fd && (
+        <div className="text-sm text-cream/80 leading-snug grid gap-1">
+          <div className="text-xs text-cream/55">{fd.source}{fd.prereqText ? ` · предусловие: ${fd.prereqText}` : ''}{fd.repeatable ? ' · можно брать повторно' : ''}</div>
+          <p>{fd.text}</p>
+          {fd.benefits.map((x) => <p key={x} className="text-cream/70">• {x}</p>)}
+          {fd.asi && <Field label={`+${fd.asi.value} к характеристике`}><Sel label={`Характеристика черты ${l}`} value={p.featAb ?? ''} onChange={(v) => set({ featAb: (v || undefined) as Ab })}><option value="">—</option>{fd.asi.abilities.map((a) => <option key={a} value={a}>{AB_RU[a]}</option>)}</Sel></Field>}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -484,10 +522,25 @@ function StepPerson({ b, up }: P) {
         <Field label="Возраст"><TextIn value={b.age} onChange={(e) => up({ age: e.target.value })} /></Field>
       </div>
       <Field label="Внешность"><textarea value={b.appearance} onChange={(e) => up({ appearance: e.target.value })} className="w-full min-h-20 p-3 rounded-xl bg-moss-deep border border-moss-light outline-none" /></Field>
+      <Suggest b={b} up={up} />
       <Field label="Характер и манеры"><textarea value={b.personality} onChange={(e) => up({ personality: e.target.value })} className="w-full min-h-20 p-3 rounded-xl bg-moss-deep border border-moss-light outline-none" /></Field>
       <Field label="История персонажа"><textarea value={b.backstory} onChange={(e) => up({ backstory: e.target.value })} className="w-full min-h-28 p-3 rounded-xl bg-moss-deep border border-moss-light outline-none" /></Field>
       <div className="text-xs text-cream/50">Всё это можно оставить пустым и дописать потом прямо на листе.</div>
     </div>
+  );
+}
+
+function Suggest({ b, up }: P) {
+  const ch = bgOf(b)?.chars; if (!ch) return null;
+  const groups: [string, string[] | undefined][] = [['Черты характера', ch.personality_traits], ['Идеалы', ch.ideals], ['Привязанности', ch.bonds], ['Слабости', ch.flaws]];
+  return (
+    <details className="rounded-2xl border border-moss-light p-3"><summary className="text-sm text-sand-light">Подсказки из предыстории — нажмите строку, чтобы добавить</summary>
+      {groups.filter(([, v]) => v?.length).map(([t, v]) => (
+        <div key={t} className="mt-2"><div className="text-xs text-cream/55 mb-1">{t}</div>
+          <div className="grid gap-1">{v!.map((x) => <button key={x} onClick={() => up({ personality: (b.personality ? `${b.personality}\n` : '') + `${t.slice(0, -1)}: ${x}` })} className="text-left text-sm text-cream/85 rounded-lg bg-moss-deep/60 border border-moss-light/60 px-2 py-1.5">{x}</button>)}</div>
+        </div>
+      ))}
+    </details>
   );
 }
 

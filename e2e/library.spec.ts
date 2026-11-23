@@ -52,3 +52,39 @@ test('библиотека: импорт вида и выбор в сборке'
   await expect(page.getByText('Лёгкий шаг.')).toBeVisible();
   expect(errors).toEqual([]);
 });
+
+test('библиотека: черты и предыстории — импорт, своя черта, выбор с предусловием', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.goto('./builder/#library');
+  await page.locator('input[type=file]').setInputFiles('e2e/fixtures/fb_pack.txt');
+  await expect(page.getByText('Новые черты: Силач')).toBeVisible();
+  await expect(page.getByText('Новые предыстории: Моряк')).toBeVisible();
+  await page.getByRole('button', { name: 'Импортировать', exact: true }).click();
+  // своя черта через редактор
+  await page.getByRole('button', { name: 'Черты', exact: true }).click();
+  await page.getByRole('button', { name: 'Добавить', exact: true }).click();
+  await page.locator('label:has-text("Название (рус.)") input').fill('Стойкий');
+  await page.locator('label:has-text("Название (англ.)") input').fill('Steadfast');
+  await page.locator('label:has-text("Источник") input').fill('Клуб');
+  await page.locator('label:has-text("Описание") textarea').last().fill('Своя черта для проверки.');
+  await page.getByRole('button', { name: 'Сохранить' }).click();
+  await expect(page.getByRole('button', { name: 'Редактировать: Стойкий' })).toBeVisible();
+  await page.getByLabel('Предусловие', { exact: true }).selectOption('yes');
+  await expect(page.getByText('Силач')).toBeVisible(); await expect(page.getByText('Стойкий')).toHaveCount(0);
+  await page.screenshot({ path: 'e2e/shots/l4-catalog.png', fullPage: true });
+  await page.getByRole('button', { name: 'Назад к сборке' }).click();
+  await page.getByText('Классическая пятая редакция').click();
+  await page.getByRole('button', { name: '2. Уровень' }).click(); await page.getByRole('button', { name: 'Уровень 4', exact: true }).click();
+  await page.getByRole('button', { name: '3. Класс' }).click(); await page.getByRole('button', { name: /^Воин/ }).click();
+  await page.getByRole('button', { name: '5. Предыстория' }).click(); await page.getByRole('button', { name: /^Моряк/ }).click();
+  await expect(page.getByText('Место на корабле.')).toBeVisible();
+  await page.getByRole('button', { name: '7. Улучшения' }).click();
+  await page.getByRole('button', { name: 'Черта', exact: true }).click();
+  const sel = page.getByLabel('Черта 4', { exact: true });
+  await expect(sel.locator('option', { hasText: 'Силач' })).toBeDisabled();
+  await sel.selectOption('steadfast');
+  await expect(page.getByText('Своя черта для проверки.')).toBeVisible();
+  await page.screenshot({ path: 'e2e/shots/l5-feat.png' });
+  expect(errors).toEqual([]);
+});

@@ -1,0 +1,50 @@
+{
+ "format": "dnd-content-pack",
+ "format_version": 1,
+ "ruleset": "5e-2014",
+ "pack_id": "e2e_fb",
+ "pack_name": "Черты и предыстории для проверки",
+ "pack_version": 1,
+ "feats": [
+  {
+   "id": "strong_test",
+   "name": "Силач",
+   "name_en": "Strongman",
+   "source": "Тест",
+   "description": "Проверка предусловия.",
+   "prerequisite": "Сила 18+",
+   "prerequisites": [
+    {
+     "type": "ability",
+     "ability": "strength",
+     "min": 18
+    }
+   ]
+  }
+ ],
+ "backgrounds": [
+  {
+   "id": "sailor_test",
+   "name": "Моряк",
+   "name_en": "Sailor",
+   "source": "Тест",
+   "description": "Ходил по морям.",
+   "skill_proficiencies": [
+    "Атлетика",
+    "Внимательность"
+   ],
+   "equipment": [
+    "Верёвка"
+   ],
+   "feature": {
+    "name": "Место на корабле",
+    "description": "Проезд."
+   },
+   "suggested_characteristics": {
+    "ideals": [
+     "Свобода"
+    ]
+   }
+  }
+ ]
+}

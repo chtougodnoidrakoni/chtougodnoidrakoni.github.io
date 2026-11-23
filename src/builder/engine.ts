@@ -1,9 +1,10 @@
 // Расчёт персонажа из выборов игрока. Чистые функции — их же проверяют тесты.
-import { abOf, classesFor, findSub, racesFor, type Effect, type SubDef } from './content';
-import { ABS, AB_RU, ARMORS, BACKGROUNDS, DRAGONS, SKILLS, WEAPONS, slots, spellRule, type Ab, type ClassDef, type Ed, type Race, type Sub, type Background, type SpellRule } from './data';
+import { abOf, backgroundsFor, classesFor, featsFor, findSub, racesFor, type Effect, type SubDef } from './content';
+import type { FeatDef } from './data';
+import { ABS, AB_RU, ARMORS, DRAGONS, SKILLS, WEAPONS, slots, spellRule, type Ab, type ClassDef, type Ed, type Race, type Sub, type Background, type SpellRule } from './data';
 
 export type Method = 'standard' | 'pointbuy' | 'roll' | 'manual';
-export interface AsiPick { mode: 'two' | 'one' | 'feat'; a?: Ab; b?: Ab; feat?: string }
+export interface AsiPick { mode: 'two' | 'one' | 'feat'; a?: Ab; b?: Ab; feat?: string; featId?: string; featAb?: Ab }
 export interface Build {
   ed: Ed; level: number; hp: 'avg' | 'max';
   cls?: string; subclass?: string; customSub?: string; style?: string;
@@ -34,7 +35,8 @@ export const classOf = (b: Build): ClassDef | undefined => classesFor(b.ed).find
 export const packSub = (b: Build): SubDef | undefined => (b.subclass && b.subclass !== 'srd' && b.subclass !== 'custom' ? findSub(b.ed, b.subclass) : undefined);
 export const raceOf = (b: Build): Race | undefined => racesFor(b.ed).find((r) => r.id === b.race);
 export const subOf = (b: Build): Sub | undefined => raceOf(b)?.subs?.find((s) => s.id === b.sub);
-export const bgOf = (b: Build): Background | undefined => BACKGROUNDS[b.ed].find((x) => x.id === b.bg);
+export const bgOf = (b: Build): Background | undefined => backgroundsFor(b.ed).find((x) => x.id === b.bg);
+export const featById = (b: Build, id?: string): FeatDef | undefined => (id ? featsFor(b.ed).find((f) => f.id === id) : undefined);
 export const subAt = (c: ClassDef, ed: Ed, s?: SubDef) => s?.level ?? (ed === '2014' ? c.sub.at14 : c.sub.at24);
 export const subName = (b: Build) => {
   const c = classOf(b); const ps = packSub(b); if (!c || b.level < subAt(c, b.ed, ps)) return '';
@@ -46,6 +48,7 @@ export function effects(b: Build): Effect[] {
   const c = classOf(b); const ps = packSub(b); const out: Effect[] = [...(raceOf(b)?.effects ?? []), ...(subOf(b)?.effects ?? [])];
   for (const f of c?.fdefs ?? []) if (f.level <= b.level) out.push(...f.effects);
   if (ps && c && b.level >= subAt(c, b.ed, ps)) for (const f of ps.features) if (f.level <= b.level) out.push(...f.effects);
+  for (const l of asiLevels(b)) { const p = b.asi[l]; if (p?.mode === 'feat') out.push(...(featById(b, p.featId)?.effects ?? [])); }
   return out;
 }
 const eff = <T extends Effect['type']>(b: Build, t: T) => effects(b).filter((e): e is Extract<Effect, { type: T }> => e.type === t);
@@ -77,6 +80,7 @@ export function scores(b: Build): Record<Ab, number> {
     const cap = b.ed === '2024' && l === 19 ? 30 : 20;
     if (p.mode === 'one' && p.a) s[p.a] = Math.min(cap, s[p.a] + (b.ed === '2024' && l === 19 ? 1 : 2));
     if (p.mode === 'two') { if (p.a) s[p.a] = Math.min(cap, s[p.a] + 1); if (p.b && p.b !== p.a) s[p.b] = Math.min(cap, s[p.b] + 1); }
+    if (p.mode === 'feat') { const f = featById(b, p.featId); if (f?.asi && p.featAb && f.asi.abilities.includes(p.featAb)) s[p.featAb] = Math.min(cap, s[p.featAb] + f.asi.value); }
   }
   return s;
 }
@@ -84,9 +88,9 @@ export function scores(b: Build): Record<Ab, number> {
 export function feats(b: Build): string[] {
   const out: string[] = [];
   const bg = bgOf(b);
-  if (b.ed === '2024') { const f = bg?.custom ? b.bgFeat : bg?.feat; if (f) out.push(`${f} (предыстория)`); }
+  if (b.ed === '2024') { const f = bg?.custom ? b.bgFeat : bg?.feat; if (f) out.push(`${featById(b, f)?.name ?? f} (предыстория)`); }
   if (raceOf(b)?.originFeat && b.originFeat) out.push(`${b.originFeat} (человек)`);
-  for (const l of asiLevels(b)) { const p = b.asi[l]; if (p?.mode === 'feat' && p.feat?.trim()) out.push(`${p.feat.trim()} (${l} ур.)`); if (b.ed === '2024' && l === 19 && p?.feat?.trim() && p.mode !== 'feat') out.push(`Эпический дар: ${p.feat.trim()}`); }
+  for (const l of asiLevels(b)) { const p = b.asi[l]; const fd = p?.mode === 'feat' ? featById(b, p.featId) : undefined; if (fd) out.push(`${fd.name}${fd.asi && p?.featAb ? ` (+${fd.asi.value} ${AB_RU[p.featAb]})` : ''} (${l} ур.)`); else if (p?.mode === 'feat' && p.feat?.trim()) out.push(`${p.feat.trim()} (${l} ур.)`); if (b.ed === '2024' && l === 19 && p?.feat?.trim() && p.mode !== 'feat') out.push(`Эпический дар: ${p.feat.trim()}`); }
   if (b.style) out.push(`Боевой стиль: ${b.style.replace(/\s*\(.*\)/, '')}`);
   return out;
 }
@@ -95,7 +99,7 @@ const hasFeat = (b: Build, name: string) => feats(b).some((f) => f.startsWith(na
 /** Навыки с владением: класс + предыстория + раса + черта «Одарённый». */
 export function allSkills(b: Build): string[] {
   const r = raceOf(b), bg = bgOf(b);
-  const set = new Set<string>([...b.skills, ...(bg?.custom ? b.bgSkills : bg?.skills ?? []), ...(r?.skills ?? []), ...(subOf(b)?.skills ?? []), ...b.raceSkills]);
+  const set = new Set<string>([...b.skills, ...(bg?.custom ? b.bgSkills : [...(bg?.skills ?? []), ...(bg?.skillChoice ? b.bgSkills : [])]), ...(r?.skills ?? []), ...(subOf(b)?.skills ?? []), ...b.raceSkills]);
   if (hasFeat(b, 'Одарённый')) b.skilledFeat.forEach((s) => set.add(s));
   eff(b, 'skill_proficiency').forEach((e) => e.value.forEach((s) => set.add(s)));
   return [...set];
@@ -103,7 +107,7 @@ export function allSkills(b: Build): string[] {
 /** Навыки, занятые не классом (чтобы не выбрать их второй раз). */
 export function fixedSkills(b: Build): string[] {
   const r = raceOf(b), bg = bgOf(b);
-  return [...new Set([...(bg?.custom ? b.bgSkills : bg?.skills ?? []), ...(r?.skills ?? []), ...b.raceSkills])];
+  return [...new Set([...(bg?.custom ? b.bgSkills : [...(bg?.skills ?? []), ...(bg?.skillChoice ? b.bgSkills : [])]), ...(r?.skills ?? []), ...b.raceSkills])];
 }
 
 export function expertiseCount(b: Build): number {
@@ -204,6 +208,23 @@ export function features(b: Build): string[] {
   return out;
 }
 
+/** Почему черта недоступна на уровне l (null — доступна). Характеристики берутся без улучшений этого и следующих уровней. */
+export function prereqFail(b: Build, f: FeatDef, l: number): string | null {
+  const before: Build = { ...b, level: l, asi: Object.fromEntries(Object.entries(b.asi).filter(([k]) => +k < l)) };
+  const sc = scores(before);
+  if (!f.repeatable && asiLevels(b).some((k) => k < l && b.asi[k]?.mode === 'feat' && b.asi[k]?.featId === f.id)) return 'уже взята раньше';
+  for (const q of f.prereq) {
+    if (q.type === 'ability') { const a = abOf(q.ability); if (a && sc[a] < q.min) return `нужно ${AB_RU[a]} ${q.min}+ (сейчас ${sc[a]})`; }
+    if (q.type === 'ability_any') { const as = q.abilities.map((x) => abOf(x)).filter((x): x is Ab => !!x); if (!as.some((a) => sc[a] >= q.min)) return `нужно ${as.map((a) => AB_RU[a]).join(' или ')} ${q.min}+`; }
+    if (q.type === 'level' && l < q.min) return `нужен ${q.min} уровень`;
+    if (q.type === 'class' && !q.value.includes(b.cls ?? '')) return 'не подходит класс';
+    if (q.type === 'race' && !q.value.includes(b.race ?? '') && !q.value.includes(b.sub ?? '')) return 'не подходит вид';
+    if (q.type === 'spellcasting') { const c = classOf(b); const has = (c && slots(c, b.ed, l).length > 0) || !!(raceOf(b)?.spells?.length || subOf(b)?.spells?.length); if (!has) return 'нужно уметь накладывать заклинания'; }
+    if (q.type === 'proficiency') { const ap = armorProf(before); const v = q.value.toLowerCase(); const ok = (['light', 'medium', 'heavy'].includes(v) && ap.kinds.has(v)) || (v === 'shields' && ap.shields) || allSkills(before).map((x) => x.toLowerCase()).includes(v); if (!ok) return `нужно владение: ${q.value}`; }
+  }
+  return null;
+}
+
 export function armorProf(b: Build): { kinds: Set<string>; shields: boolean } {
   const c = classOf(b); const extra = eff(b, 'armor_proficiency').flatMap((e) => e.value as string[]);
   return { kinds: new Set([...(c?.armorKinds ?? []), ...extra.filter((x) => x !== 'shields')]), shields: !!c?.shields || extra.includes('shields') };
@@ -247,6 +268,7 @@ export function problems(b: Build): Record<string, string[]> {
   if (!bg) add('bg', 'Выберите предысторию');
   else {
     if (bg.custom && b.bgSkills.length < 2) add('bg', 'Выберите 2 навыка предыстории');
+    if (bg.skillChoice && b.bgSkills.length < bg.skillChoice.choose) add('bg', `Навыки предыстории: выбрано ${b.bgSkills.length} из ${bg.skillChoice.choose}`);
     if (b.ed === '2024') {
       if (b.bgMode === '21' && (!b.bgPlus2 || !b.bgPlus1 || b.bgPlus1 === b.bgPlus2)) add('bg', 'Распределите +2 и +1');
       if (b.bgMode === '111' && b.bgAbs.length < 3) add('bg', 'Выберите три характеристики для +1');
@@ -255,7 +277,11 @@ export function problems(b: Build): Record<string, string[]> {
   }
   if (ABS.some((a) => b.base[a] === undefined)) add('abil', 'Задайте все шесть характеристик');
   if (b.method === 'pointbuy' && ABS.reduce((s, a) => s + (POINT_COST[b.base[a] ?? 8] ?? 0), 0) > 27) add('abil', 'Потрачено больше 27 очков');
-  for (const l of asiLevels(b)) { const x = b.asi[l]; if (!x || (x.mode === 'one' && !x.a) || (x.mode === 'two' && (!x.a || !x.b)) || (x.mode === 'feat' && !x.feat?.trim())) add('asi', `${l} уровень: сделайте выбор`); }
+  for (const l of asiLevels(b)) {
+    const x = b.asi[l]; const fd = x?.mode === 'feat' ? featById(b, x.featId) : undefined;
+    if (!x || (x.mode === 'one' && !x.a) || (x.mode === 'two' && (!x.a || !x.b)) || (x.mode === 'feat' && !fd && !x.feat?.trim())) add('asi', `${l} уровень: сделайте выбор`);
+    else if (fd) { const why = prereqFail(b, fd, l); if (why) add('asi', `${l} уровень: «${fd.name}» — ${why}`); if (fd.asi && !x.featAb) add('asi', `${l} уровень: выберите характеристику для +${fd.asi.value} от «${fd.name}»`); }
+  }
   if (c && b.skills.length < c.skills.n) add('skills', `Навыки класса: выбрано ${b.skills.length} из ${c.skills.n}`);
   if (b.expertise.length < expertiseCount(b)) add('skills', `Компетентность: выбрано ${b.expertise.length} из ${expertiseCount(b)}`);
   if (hasFeat(b, 'Одарённый') && b.skilledFeat.length < 3) add('skills', 'Черта «Одарённый»: выберите 3 навыка');

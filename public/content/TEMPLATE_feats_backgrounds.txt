@@ -1,0 +1,204 @@
+ШАБЛОН ПАКЕТА: ЧЕРТЫ И ПРЕДЫСТОРИИ — формат dnd-content-pack, версия 1
+Формат тот же, что у классов и видов: один .txt в UTF-8, JSON ниже. В одном файле могут быть classes, subclasses, races, feats и backgrounds вместе.
+Всё, что выше строки, которая начинается с фигурной скобки, сайт пропускает.
+
+Импорт: chtougodnoidrakoni.github.io/builder → кнопка с книгой → «+ Импорт контента». Черты и предыстории можно также добавлять и править прямо на сайте в разделах «Черты» и «Предыстории».
+
+ГЛАВНОЕ
+• format, format_version — не меняйте. ruleset — "5e-2014" или "5e-2024".
+• pack_id — постоянный id пакета, pack_version — поднимайте на 1 при каждом изменении.
+• Все id — латиница, цифры, _ и -, без повторов внутри файла.
+• name — по-русски, name_en — оригинальное английское название (обязательно), source — книга (обязательно).
+• Характеристики: strength, dexterity, constitution, intelligence, wisdom, charisma.
+• Навыки — по-русски, как на листе: Атлетика, Акробатика, Ловкость рук, Скрытность, Анализ, История, Магия, Природа, Религия,
+  Внимательность, Выживание, Медицина, Проницательность, Уход за животными, Выступление, Запугивание, Обман, Убеждение.
+
+ЧЕРТА (feats[])
+• id, name, name_en, source, description — обязательно.
+• prerequisite — предусловие текстом, как в книге (или null, если его нет).
+• prerequisites — то же предусловие для проверки сайтом. Пустой список — предусловия нет. Можно несколько условий, нужны все:
+   { "type": "ability", "ability": "strength", "min": 13 }                — характеристика не ниже;
+   { "type": "ability_any", "abilities": ["intelligence","wisdom"], "min": 13 } — любая из перечисленных не ниже;
+   { "type": "race", "value": ["dwarf","elf"] }                          — вид (id вида в сборщике);
+   { "type": "proficiency", "value": "heavy" }                           — владение: light, medium, heavy, shields или название;
+   { "type": "spellcasting" }                                           — умеет накладывать хотя бы одно заклинание;
+   { "type": "level", "min": 4 }                                        — уровень персонажа не ниже;
+   { "type": "class", "value": ["fighter"] }                            — класс.
+• benefits — отдельные преимущества черты: [{ type, trigger, effect, description }]. type — как вам удобно
+  (attack_modifier, damage_modifier, defense, proficiency, movement, spell, other). Сайт показывает их списком.
+• effects — механика, которую сайт посчитает сам:
+   { "type": "initiative", "value": 5 } — к инициативе;
+   { "type": "hp_per_level", "value": 2 } — хиты за уровень (как у «Крепкого»);
+   { "type": "speed", "value": 10 } — скорость;
+   { "type": "armor_proficiency", "value": ["medium","shields"] }; { "type": "weapon_proficiency", "value": ["martial"] или названия };
+   { "type": "skill_proficiency", "value": ["Магия"] }; { "type": "save_proficiency", "value": ["constitution"] };
+   { "type": "expertise", "count": 1 }; { "type": "passive_perception", "value": 5 }; { "type": "note", "text": "…" }.
+• repeatable — true, если черту можно брать несколько раз.
+• asi_included — true, если черта даёт +1 к характеристике. Тогда нужно asi_choice:
+   { "abilities": ["strength","dexterity"], "value": 1 } — игрок выбирает одну из перечисленных.
+
+ПРЕДЫСТОРИЯ (backgrounds[])
+• id, name, name_en, source, description — обязательно.
+• skill_proficiencies — навыки, которые даёт всегда. skill_choice — если навык выбирается: { "choose": 1, "from": [навыки] }.
+• tool_proficiencies — инструменты. languages — языки (можно «Один язык на выбор»).
+• equipment — снаряжение списком, каждый предмет отдельной строкой.
+• feature — умение предыстории: { name, name_en, description }.
+• suggested_characteristics — таблицы для отыгрыша: personality_traits, ideals, bonds, flaws.
+• variants — варианты предыстории: свой id, name, name_en, description и только те поля, которые отличаются
+  (skill_proficiencies, tool_proficiencies, languages, equipment, feature).
+• Для 5e-2024 у предыстории можно добавить: "abilities": ["intelligence","wisdom","charisma"] — три характеристики для +2/+1 или +1/+1/+1,
+  и "feat": "id черты происхождения".
+
+{
+  "format": "dnd-content-pack",
+  "format_version": 1,
+  "ruleset": "5e-2014",
+  "pack_id": "my_feats_backgrounds",
+  "pack_name": "Мои черты и предыстории",
+  "pack_version": 1,
+  "language": "ru",
+  "author": "Кто подготовил",
+  "description": "О чём этот пакет",
+  "feats": [
+    {
+      "id": "my_feat",
+      "name": "Название черты",
+      "name_en": "Feat Name",
+      "source": "Название книги",
+      "prerequisite": "Сила 13 или выше",
+      "prerequisites": [
+        {
+          "type": "ability",
+          "ability": "strength",
+          "min": 13
+        }
+      ],
+      "description": "Полное описание черты своими словами: что даёт, когда срабатывает, ограничения.",
+      "benefits": [
+        {
+          "type": "attack_modifier",
+          "trigger": "когда срабатывает",
+          "effect": "что происходит",
+          "description": "Отдельное преимущество черты одной фразой."
+        }
+      ],
+      "effects": [
+        {
+          "type": "initiative",
+          "value": 5
+        }
+      ],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "my_half_feat",
+      "name": "Черта с +1 к характеристике",
+      "name_en": "Half Feat",
+      "source": "Название книги",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Описание.",
+      "benefits": [
+        {
+          "type": "proficiency",
+          "description": "Владение одним навыком на выбор."
+        }
+      ],
+      "effects": [
+        {
+          "type": "hp_per_level",
+          "value": 1
+        }
+      ],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "strength",
+          "dexterity"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "my_repeatable_feat",
+      "name": "Повторяемая черта",
+      "name_en": "Repeatable Feat",
+      "source": "Название книги",
+      "prerequisite": "Умение накладывать хотя бы одно заклинание",
+      "prerequisites": [
+        {
+          "type": "spellcasting"
+        }
+      ],
+      "description": "Описание.",
+      "repeatable": true,
+      "asi_included": false
+    }
+  ],
+  "backgrounds": [
+    {
+      "id": "my_background",
+      "name": "Название предыстории",
+      "name_en": "Background Name",
+      "source": "Название книги",
+      "description": "Кто персонаж, откуда, чем занимался — своими словами.",
+      "skill_proficiencies": [
+        "Проницательность",
+        "Религия"
+      ],
+      "skill_choice": {
+        "choose": 0,
+        "from": []
+      },
+      "tool_proficiencies": [
+        "инструменты каллиграфа"
+      ],
+      "languages": [
+        "Один язык на выбор"
+      ],
+      "equipment": [
+        "Предмет 1",
+        "Предмет 2",
+        "Поясной кошель с 10 зм"
+      ],
+      "feature": {
+        "name": "Умение предыстории",
+        "name_en": "Feature Name",
+        "description": "Что даёт умение предыстории."
+      },
+      "suggested_characteristics": {
+        "personality_traits": [
+          "Черта характера 1",
+          "Черта характера 2"
+        ],
+        "ideals": [
+          "Идеал 1 (мировоззрение)"
+        ],
+        "bonds": [
+          "Привязанность 1"
+        ],
+        "flaws": [
+          "Слабость 1"
+        ]
+      },
+      "variants": [
+        {
+          "id": "my_background_variant",
+          "name": "Вариант предыстории",
+          "name_en": "Variant Name",
+          "description": "Чем отличается.",
+          "skill_proficiencies": [
+            "История",
+            "Религия"
+          ],
+          "feature": {
+            "name": "Другое умение",
+            "description": "Описание."
+          }
+        }
+      ]
+    }
+  ]
+}

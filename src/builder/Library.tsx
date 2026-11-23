@@ -3,6 +3,7 @@ import { ArrowLeft, Download, FileUp, History, Power, Trash2, Undo2, Upload, Key
 import { Btn, TextIn } from '../Panels';
 import { allSubs, exportBuiltIn, importPack, loadLog, packText, readPack, removePack, setEnabled, undoLast, validate, type LogEntry, type PackIn, type Report, type StoredPack } from './content';
 import { publish, tokenOk } from './publish';
+import { Catalog } from './Catalog';
 
 const cx = (...c: (string | false | undefined)[]) => c.filter(Boolean).join(' ');
 
@@ -42,7 +43,7 @@ export function Library({ local, club, onChange, onBack }: { local: StoredPack[]
   };
   const confirm = async () => {
     if (!rep?.pack) return;
-    try { const n = await importPack(rep.pack, rep.file); onChange(n); setDone(`Готово: «${rep.pack.pack_name}» — классов ${rep.stats.classes}, подклассов ${rep.stats.subclasses}, видов ${rep.stats.races}, подрас ${rep.stats.subraces}. Уже доступно в сборке.`); setRep(undefined); setPaste(''); }
+    try { const n = await importPack(rep.pack, rep.file); onChange(n); setDone(`Готово: «${rep.pack.pack_name}» — классов ${rep.stats.classes}, подклассов ${rep.stats.subclasses}, видов ${rep.stats.races}, подрас ${rep.stats.subraces}, черт ${rep.stats.feats}, предысторий ${rep.stats.backgrounds}. Уже доступно в сборке.`); setRep(undefined); setPaste(''); }
     catch (e) { setErr(`Импорт не выполнен, ничего не изменилось: ${(e as Error).message}`); }
   };
   const doPublish = async (p: PackIn) => {
@@ -59,7 +60,7 @@ export function Library({ local, club, onChange, onBack }: { local: StoredPack[]
           <div className="flex-1 min-w-0">
             <div className="text-cream">{s.pack.pack_name}</div>
             <div className="text-xs text-cream/55">{s.pack.ruleset === '5e-2014' ? '2014' : '2024'} · v{s.pack.pack_version ?? 1} · {s.origin === 'club' ? 'общий для всех' : 'на этом телефоне'}{s.file ? ` · ${s.file}` : ''}</div>
-            <div className="text-xs text-cream/70 mt-1">{(s.pack.classes ?? []).length ? `Классы: ${(s.pack.classes ?? []).map((c) => c.name).join(', ')}. ` : ''}{subs.length ? `Подклассы: ${subs.map((x) => x.name).join(', ')}. ` : ''}{(s.pack.races ?? []).length ? `Виды: ${(s.pack.races ?? []).map((r) => r.name).join(', ')}.` : ''}</div>
+            <div className="text-xs text-cream/70 mt-1">{(s.pack.classes ?? []).length ? `Классы: ${(s.pack.classes ?? []).map((c) => c.name).join(', ')}. ` : ''}{subs.length ? `Подклассы: ${subs.map((x) => x.name).join(', ')}. ` : ''}{(s.pack.races ?? []).length ? `Виды: ${(s.pack.races ?? []).map((r) => r.name).join(', ')}. ` : ''}{(s.pack.feats ?? []).length ? `Черт: ${(s.pack.feats ?? []).length}. ` : ''}{(s.pack.backgrounds ?? []).length ? `Предысторий: ${(s.pack.backgrounds ?? []).length}.` : ''}</div>
           </div>
           {s.origin === 'local' && <button aria-label={`${s.enabled ? 'Выключить' : 'Включить'}: ${s.pack.pack_name}`} onClick={async () => onChange(await setEnabled(s.pack.pack_id, !s.enabled))} className={cx('p-2 rounded-lg', s.enabled ? 'text-sand-light' : 'text-cream/40')}><Power size={18} /></button>}
         </div>
@@ -80,19 +81,20 @@ export function Library({ local, club, onChange, onBack }: { local: StoredPack[]
         <div className="font-display-sc text-2xl text-sand-light leading-tight">Библиотека контента D&D</div>
       </header>
       <main className="max-w-xl mx-auto px-4 mt-4">
-        <p className="text-sm text-cream/70 leading-snug mb-3">Здесь добавляются новые классы, подклассы и виды из файла-пакета. Пакет — это .txt с JSON внутри; формат описан в шаблоне. Новые записи сразу появляются в сборке персонажа.</p>
+        <p className="text-sm text-cream/70 leading-snug mb-3">Здесь добавляются новые классы, подклассы, виды, черты и предыстории из файла-пакета. Пакет — это .txt с JSON внутри; формат описан в шаблоне. Новые записи сразу появляются в сборке персонажа.</p>
         <input ref={input} type="file" accept=".txt,.json,text/plain,application/json" className="hidden" onChange={(e) => { void onFile(e.target.files?.[0]); e.target.value = ''; }} />
         <div className="grid gap-2">
-          <Btn tone="gold" className="w-full" onClick={() => input.current?.click()}><FileUp size={18} />+ Импорт классов и подклассов</Btn>
+          <Btn tone="gold" className="w-full" onClick={() => input.current?.click()}><FileUp size={18} />+ Импорт контента (классы, подклассы, черты, предыстории)</Btn>
           <Btn tone="gold" className="w-full" onClick={() => input.current?.click()}><VenetianMask size={18} />+ Импорт видов (Races)</Btn>
         </div>
-        <div className="text-xs text-cream/50 mt-1">Обе кнопки принимают один формат: в одном файле могут быть и классы, и виды.</div>
+        <div className="text-xs text-cream/50 mt-1">Обе кнопки принимают один формат: в одном файле могут быть классы, подклассы, виды, черты и предыстории.</div>
         <details className="mt-2"><summary className="text-sm text-cream/70">Или вставить текст пакета</summary>
           <textarea aria-label="Текст пакета" value={paste} onChange={(e) => setPaste(e.target.value)} className="w-full min-h-32 p-3 mt-2 rounded-xl bg-moss-deep border border-moss-light outline-none text-xs font-mono" placeholder='{ "format": "dnd-content-pack", … }' />
           <Btn className="mt-2" disabled={!paste.trim()} onClick={() => check(paste, 'вставка.txt')}>Проверить</Btn>
         </details>
         <div className="flex gap-2 mt-2 flex-wrap">
           <a className="h-9 px-3 rounded-xl bg-moss border border-moss-light inline-flex items-center gap-1.5 text-sm" href={`${import.meta.env.BASE_URL}content/TEMPLATE.txt`} download>Шаблон TEMPLATE.txt</a>
+          <a className="h-9 px-3 rounded-xl bg-moss border border-moss-light inline-flex items-center gap-1.5 text-sm" href={`${import.meta.env.BASE_URL}content/TEMPLATE_feats_backgrounds.txt`} download>Шаблон черт и предысторий</a>
           <a className="h-9 px-3 rounded-xl bg-moss border border-moss-light inline-flex items-center gap-1.5 text-sm" href={`${import.meta.env.BASE_URL}content/EXAMPLE_srd_subclasses.txt`} download>Пример пакета</a>
           <Btn className="h-9 text-sm" onClick={() => download('builtin_2014.txt', packText(exportBuiltIn('2014')))}>Экспорт встроенных 2014</Btn>
         </div>
@@ -103,9 +105,11 @@ export function Library({ local, club, onChange, onBack }: { local: StoredPack[]
           <div className="mt-4 rounded-2xl border border-sand/60 bg-moss-dark p-3">
             <div className="font-display-sc text-xl text-sand-light">Предпросмотр: {rep.pack?.pack_name ?? rep.file}</div>
             <div className="grid grid-cols-3 gap-2 my-2 text-center">
-              {[['Новых классов', rep.stats.newClasses.length], ['Новых подклассов', rep.stats.newSubclasses.length], ['Новых видов', rep.stats.newRaces.length], ['Новых подрас', rep.stats.newSubraces.length], ['Обновится', rep.stats.updated.length], ['Способностей и черт', rep.stats.features]].map(([l, v]) => <div key={l} className="rounded-xl bg-moss-deep border border-moss-light py-2"><div className="text-xl text-cream">{v}</div><div className="text-[11px] text-cream/60 leading-tight">{l}</div></div>)}
+              {[['Новых классов', rep.stats.newClasses.length], ['Новых подклассов', rep.stats.newSubclasses.length], ['Новых видов', rep.stats.newRaces.length], ['Новых подрас', rep.stats.newSubraces.length], ['Новых черт', rep.stats.newFeats.length], ['Новых предысторий', rep.stats.newBackgrounds.length], ['Обновится', rep.stats.updated.length]].map(([l, v]) => <div key={l} className="rounded-xl bg-moss-deep border border-moss-light py-2"><div className="text-xl text-cream">{v}</div><div className="text-[11px] text-cream/60 leading-tight">{l}</div></div>)}
             </div>
-            <div className="text-xs text-cream/70">Всего в файле: классов {rep.stats.classes}, подклассов {rep.stats.subclasses}, видов {rep.stats.races}, подрас {rep.stats.subraces}.</div>
+            <div className="text-xs text-cream/70">Всего в файле: классов {rep.stats.classes}, подклассов {rep.stats.subclasses}, видов {rep.stats.races}, подрас {rep.stats.subraces}, черт {rep.stats.feats}, предысторий {rep.stats.backgrounds}; способностей и черт видов {rep.stats.features}.</div>
+            {rep.stats.newFeats.length > 0 && <div className="text-xs text-cream/80 mt-1">Новые черты: {rep.stats.newFeats.join(', ')}</div>}
+            {rep.stats.newBackgrounds.length > 0 && <div className="text-xs text-cream/80 mt-1">Новые предыстории: {rep.stats.newBackgrounds.join(', ')}</div>}
             {rep.stats.newRaces.length > 0 && <div className="text-xs text-cream/80 mt-1">Новые виды: {rep.stats.newRaces.join(', ')}</div>}
             {rep.stats.newSubraces.length > 0 && <div className="text-xs text-cream/80 mt-1">Новые подрасы: {rep.stats.newSubraces.join(', ')}</div>}
             {rep.stats.newClasses.length > 0 && <div className="text-xs text-cream/80 mt-1">Новые классы: {rep.stats.newClasses.join(', ')}</div>}
@@ -123,6 +127,8 @@ export function Library({ local, club, onChange, onBack }: { local: StoredPack[]
         <div className="text-sm text-sand-light mt-6 mb-2">Пакеты на этом телефоне</div>
         <div className="grid gap-2">{local.length ? local.map(row) : <div className="text-sm text-cream/50">Пока нет. Загрузите файл кнопкой выше.</div>}</div>
         {club.length > 0 && <><div className="text-sm text-sand-light mt-6 mb-2">Общие пакеты клуба</div><div className="grid gap-2">{club.map(row)}</div></>}
+
+        <Catalog onChange={onChange} />
 
         <div className="flex gap-2 mt-6 flex-wrap">
           <Btn className="text-sm" onClick={() => setShowLog(!showLog)}><History size={16} />Журнал импорта</Btn>

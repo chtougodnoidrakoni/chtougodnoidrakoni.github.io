@@ -1,6 +1,6 @@
 import { describe, expect, it, beforeEach } from 'vitest';
 import { readFileSync } from 'fs';
-import { readPack, validate, setActive, classesFor, subsFor, usesAt, exportBuiltIn, type PackIn, type StoredPack } from '../src/builder/content';
+import { readPack, validate, setActive, classesFor, subsFor, usesAt, exportBuiltIn, type PackIn, type StoredPack, type FeatIn } from '../src/builder/content';
 import { emptyBuild, maxHp, armorClass, features, armorProf, subSpells, rule, problems, scores, speed, allSkills, type Build } from '../src/builder/engine';
 import { toSheet } from '../src/builder/toSheet';
 
@@ -118,5 +118,50 @@ describe('библиотека контента: виды', () => {
     expect(validate(racePack, [st(racePack)]).mode).toBe('same');
     const both = { ...racePack, pack_id: 'mixed', classes: testClass.classes };
     const r = validate(both); expect(r.ok).toBe(true); expect(r.stats.classes).toBe(1); expect(r.stats.races).toBe(1);
+  });
+});
+
+describe('библиотека контента: черты и предыстории', () => {
+  const tpl2 = file('public/content/TEMPLATE_feats_backgrounds.txt');
+  const fbPack: PackIn = {
+    format: 'dnd-content-pack', format_version: 1, ruleset: '5e-2014', pack_id: 'fb_test', pack_name: 'Черты для проверки', pack_version: 1,
+    feats: [
+      { id: 'tough_test', name: 'Крепыш', name_en: 'Toughie', source: 'Тест', description: 'Хиты +2 за уровень.', prerequisite: null, prerequisites: [], effects: [{ type: 'hp_per_level', value: 2 }, { type: 'initiative', value: 1 }] },
+      { id: 'strong_test', name: 'Силач', name_en: 'Strongman', source: 'Тест', description: 'x', prerequisite: 'Сила 15+', prerequisites: [{ type: 'ability', ability: 'strength', min: 15 }] },
+      { id: 'half_test', name: 'Половинка', name_en: 'Half', source: 'Тест', description: 'x', asi_included: true, asi_choice: { abilities: ['strength', 'constitution'], value: 1 } },
+      { id: 'caster_test', name: 'Маг', name_en: 'Mage', source: 'Тест', description: 'x', prerequisites: [{ type: 'spellcasting' }] },
+    ],
+    backgrounds: [{ id: 'sailor_test', name: 'Моряк', name_en: 'Sailor', source: 'Тест', description: 'Ходил по морям.', skill_proficiencies: ['Атлетика'], skill_choice: { choose: 1, from: ['Внимательность', 'Выживание'] },
+      tool_proficiencies: ['навигационные инструменты'], languages: ['Один на выбор'], equipment: ['Верёвка', '10 зм'], feature: { name: 'Место на корабле', description: 'Бесплатный проезд.' },
+      suggested_characteristics: { ideals: ['Свобода'] }, variants: [{ id: 'pirate_test', name: 'Пират', feature: { name: 'Дурная слава', description: 'Боятся.' } }] }],
+  };
+  it('шаблон черт и предысторий проходит проверку', () => { const r = validate(tpl2); expect(r.errors).toEqual([]); expect(r.stats.feats).toBe(3); expect(r.stats.backgrounds).toBe(1); });
+  it('ошибки черт и предысторий', () => {
+    const bad = JSON.parse(JSON.stringify(fbPack)) as PackIn;
+    delete (bad.feats![0] as Partial<FeatIn>).name_en; bad.feats![1]!.prerequisites = [{ type: 'magic' } as never]; bad.feats![2]!.asi_choice = undefined;
+    bad.backgrounds![0]!.variants![0]!.id = 'tough_test';
+    const e = validate(bad).errors.join('\n');
+    expect(e).toMatch(/отсутствует поле name_en/); expect(e).toMatch(/неизвестный тип предусловия/); expect(e).toMatch(/asi_included нужно asi_choice/); expect(e).toMatch(/повторяется/);
+  });
+  it('в сборке: предусловия, +1, эффекты, навыки предыстории', () => {
+    setActive([st(fbPack)]);
+    expect(validate(fbPack, [st(fbPack)]).mode).toBe('same');
+    const b = mk({ ed: '2014', level: 8, cls: 'fighter', subclass: 'srd', race: 'human', bg: 'sailor_test', bgSkills: ['Выживание'], skills: ['Акробатика', 'Запугивание'],
+      base: { str: 13, dex: 14, con: 14, int: 10, wis: 12, cha: 8 }, asi: { 4: { mode: 'feat', featId: 'half_test', featAb: 'str' }, 6: { mode: 'feat', featId: 'tough_test' }, 8: { mode: 'feat', featId: 'strong_test' } } });
+    expect(scores(b).str).toBe(15); // 13 + 1 человек + 1 черта
+    expect(problems(b).asi).toBeUndefined(); // на 8 уровне Сила уже 15
+    const weak = { ...b, asi: { ...b.asi, 4: { mode: 'feat' as const, featId: 'half_test', featAb: 'con' as const } } };
+    expect(problems(weak).asi?.join()).toMatch(/Силач.*нужно Сила 15\+ \(сейчас 14\)/);
+    expect(problems({ ...b, asi: { ...b.asi, 8: { mode: 'feat', featId: 'caster_test' } } }).asi?.join()).toMatch(/накладывать заклинания/);
+    expect(problems({ ...b, asi: { ...b.asi, 8: { mode: 'feat', featId: 'tough_test' } } }).asi?.join()).toMatch(/уже взята/);
+    expect(maxHp(b)).toBe(10 + 2 + 7 * (6 + 2) + 2 * 8);
+    expect(allSkills(b)).toEqual(expect.arrayContaining(['Атлетика', 'Выживание']));
+    expect(problems({ ...b, bgSkills: [] }).bg?.join()).toMatch(/Навыки предыстории: выбрано 0 из 1/);
+    const sh = toSheet(b, []);
+    const v = (l: string) => sh.pages.flatMap((p) => p.blocks).find((x) => x.label === l);
+    expect(v('Инициатива')?.value).toBe('+3');
+    expect(v('Способности вида и предыстории')?.values?.[1]).toMatch(/Место на корабле\. Бесплатный проезд/);
+    expect(v('Черты и дополнительные способности')?.values?.[0]).toMatch(/Половинка \(\+1 Сила\) \(4 ур\.\)/);
+    expect(v('Владения')?.value).toMatch(/навигационные инструменты/);
   });
 });

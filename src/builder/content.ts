@@ -4,7 +4,7 @@
  * всё проверяется валидатором и превращается во внутренние структуры сборщика.
  */
 import { get as idbGet, set as idbSet } from 'idb-keyval';
-import { ABS, CLASSES, RACES, type Ab, type ClassDef, type Ed, type Race, type Sub } from './data';
+import { ABS, BACKGROUNDS, BUILTIN_FEATS, CLASSES, RACES, type Ab, type Background, type ClassDef, type Ed, type FeatDef, type Prereq, type Race, type Sub } from './data';
 
 export const FORMAT = 'dnd-content-pack';
 export const FORMAT_VERSION = 1;
@@ -24,6 +24,8 @@ export type Effect =
   | { type: 'save_proficiency'; value: string[] }
   | { type: 'expertise'; count: number }
   | { type: 'darkvision'; value: number }
+  | { type: 'initiative'; value: number }
+  | { type: 'passive_perception'; value: number }
   | { type: 'note'; text: string };
 export interface FeatureIn {
   id: string; name: string; name_en?: string; level: number; description?: string; effect?: string;
@@ -59,10 +61,21 @@ export interface RaceIn {
   age?: { adulthood?: number; lifespan?: number }; alignment?: string; languages?: string[];
   proficiencies?: { skills?: string[]; weapons?: string[]; armor?: string[] }; traits: TraitIn[]; subraces?: SubraceIn[]; subrace_title?: string;
 }
+export interface FeatIn {
+  id: string; name: string; name_en: string; source: string; prerequisite?: string | null; prerequisite_type?: string; prerequisites?: Prereq[];
+  description: string; benefits?: { type?: string; trigger?: string; effect?: string; description?: string }[]; effects?: Effect[];
+  repeatable?: boolean; asi_included?: boolean; asi_choice?: { abilities: string[]; value?: number };
+}
+export interface BackgroundIn {
+  id: string; name: string; name_en: string; source: string; description: string;
+  skill_proficiencies?: string[]; skill_choice?: { choose: number; from: string[] | 'any' }; tool_proficiencies?: string[]; languages?: string[]; equipment?: string[];
+  feature?: { name: string; name_en?: string; description?: string }; suggested_characteristics?: { personality_traits?: string[]; ideals?: string[]; bonds?: string[]; flaws?: string[] };
+  variants?: (Partial<BackgroundIn> & { id: string; name: string })[]; abilities?: string[]; feat?: string;
+}
 export interface PackIn {
   format: string; format_version: number; ruleset: Ruleset; pack_id: string; pack_name: string; pack_version?: number;
   language?: string; author?: string; description?: string; sources?: { id: string; name: string }[];
-  classes?: ClassIn[]; subclasses?: SubclassIn[]; races?: RaceIn[];
+  classes?: ClassIn[]; subclasses?: SubclassIn[]; races?: RaceIn[]; feats?: FeatIn[]; backgrounds?: BackgroundIn[];
 }
 
 // ------------------------------------------------------------------ хранилище
@@ -71,7 +84,7 @@ export interface LogEntry { at: number; file: string; pack: string; result: stri
 const KEY = 'content-packs', PREV = 'content-packs-prev', LOG = 'content-log';
 
 const ID = /^[a-z0-9][a-z0-9_-]{1,63}$/;
-const EFFECTS = ['hp_per_level', 'unarmored_ac', 'speed', 'armor_proficiency', 'weapon_proficiency', 'skill_proficiency', 'save_proficiency', 'expertise', 'darkvision', 'note'];
+const EFFECTS = ['hp_per_level', 'unarmored_ac', 'speed', 'armor_proficiency', 'weapon_proficiency', 'skill_proficiency', 'save_proficiency', 'expertise', 'darkvision', 'initiative', 'passive_perception', 'note'];
 const AB_EN: Record<string, Ab> = { strength: 'str', dexterity: 'dex', constitution: 'con', intelligence: 'int', wisdom: 'wis', charisma: 'cha', str: 'str', dex: 'dex', con: 'con', int: 'int', wis: 'wis', cha: 'cha', сила: 'str', ловкость: 'dex', телосложение: 'con', интеллект: 'int', мудрость: 'wis', харизма: 'cha' };
 export const abOf = (s: string | undefined): Ab | undefined => (s ? AB_EN[s.toLowerCase().trim()] : undefined);
 const AB_NAME: Record<Ab, string> = { str: 'Сила', dex: 'Ловкость', con: 'Телосложение', int: 'Интеллект', wis: 'Мудрость', cha: 'Харизма' };
@@ -79,7 +92,7 @@ const AB_NAME: Record<Ab, string> = { str: 'Сила', dex: 'Ловкость', 
 // ------------------------------------------------------------------ проверка
 export interface Report {
   ok: boolean; pack?: PackIn; errors: string[]; warnings: string[];
-  stats: { classes: number; subclasses: number; features: number; races: number; subraces: number; newClasses: string[]; newSubclasses: string[]; newRaces: string[]; newSubraces: string[]; updated: string[]; duplicates: string[] };
+  stats: { classes: number; subclasses: number; features: number; races: number; subraces: number; feats: number; backgrounds: number; newClasses: string[]; newSubclasses: string[]; newRaces: string[]; newSubraces: string[]; newFeats: string[]; newBackgrounds: string[]; updated: string[]; duplicates: string[] };
   mode?: 'new' | 'update' | 'same' | 'older';
 }
 const arr = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
@@ -118,7 +131,7 @@ function table20(v: unknown, name: string, where: string, e: string[]) {
 
 export function validate(raw: unknown, existing: StoredPack[] = []): Report {
   const errors: string[] = [], warnings: string[] = [];
-  const stats: Report['stats'] = { classes: 0, subclasses: 0, features: 0, races: 0, subraces: 0, newClasses: [], newSubclasses: [], newRaces: [], newSubraces: [], updated: [], duplicates: [] };
+  const stats: Report['stats'] = { classes: 0, subclasses: 0, features: 0, races: 0, subraces: 0, feats: 0, backgrounds: 0, newClasses: [], newSubclasses: [], newRaces: [], newSubraces: [], newFeats: [], newBackgrounds: [], updated: [], duplicates: [] };
   const p = raw as PackIn;
   const fail = (m: string) => ({ ok: false, errors: [m], warnings, stats });
   if (!p || typeof p !== 'object' || Array.isArray(p)) return fail('Корень файла должен быть объектом { … }');
@@ -236,7 +249,55 @@ export function validate(raw: unknown, existing: StoredPack[] = []): Report {
     if (otherRaces.has(r.id)) warnings.push(`${where}: такой вид уже есть в пакете «${otherRaces.get(r.id)}»`);
     else stats.newRaces.push(r.name);
   }
-  if (!stats.classes && !stats.subclasses && !stats.races) errors.push('В пакете нет ни классов, ни подклассов, ни видов');
+  // ---- черты
+  const SKILL_SET = new Set(['Атлетика', 'Акробатика', 'Ловкость рук', 'Скрытность', 'Анализ', 'История', 'Магия', 'Природа', 'Религия', 'Внимательность', 'Выживание', 'Медицина', 'Проницательность', 'Уход за животными', 'Выступление', 'Запугивание', 'Обман', 'Убеждение']);
+  const otherFeats = new Map<string, string>(); const otherBgs = new Map<string, string>();
+  for (const s of others) { for (const f of s.pack.feats ?? []) otherFeats.set(f.id, s.pack.pack_name); for (const g of s.pack.backgrounds ?? []) otherBgs.set(g.id, s.pack.pack_name); }
+  const req = (o: Record<string, unknown>, keys: string[], where: string) => { for (const k of keys) if (typeof o[k] !== 'string' || !(o[k] as string).trim()) errors.push(`${where}: отсутствует поле ${k}`); };
+  const ownIds = new Set<string>([...featIds, ...classIds, ...subIds, ...raceIds]);
+  const takeId = (id: unknown, where: string, kind: string) => {
+    if (typeof id !== 'string' || !ID.test(id)) { errors.push(`${where}: неверный id «${String(id ?? '')}»`); return; }
+    if (ownIds.has(id)) { errors.push(`id ${kind} «${id}» повторяется`); stats.duplicates.push(id); } else ownIds.add(id);
+  };
+  for (const f of arr(p.feats) as FeatIn[]) {
+    const where = `В черте ${f?.name ?? f?.id ?? '?'}`;
+    if (!f || typeof f !== 'object') { errors.push('Черта должна быть объектом'); continue; }
+    stats.feats++;
+    takeId(f.id, where, 'черты');
+    req(f as unknown as Record<string, unknown>, ['name', 'name_en', 'source', 'description'], where);
+    for (const q of arr(f.prerequisites) as Prereq[]) {
+      const t = q?.type;
+      if (!['ability', 'ability_any', 'race', 'proficiency', 'spellcasting', 'level', 'class'].includes(t)) { errors.push(`${where}: неизвестный тип предусловия «${String(t)}»`); continue; }
+      if (t === 'ability' && (!abOf((q as { ability: string }).ability) || !isNum((q as { min: number }).min))) errors.push(`${where}: предусловие ability — { ability, min }`);
+      if (t === 'ability_any' && (arr((q as { abilities: unknown }).abilities).some((a) => !abOf(String(a))) || !isNum((q as { min: number }).min))) errors.push(`${where}: предусловие ability_any — { abilities: [...], min }`);
+      if (t === 'level' && !isNum((q as { min: number }).min)) errors.push(`${where}: предусловие level — { min }`);
+      if ((t === 'race' || t === 'class') && !Array.isArray((q as { value: unknown }).value)) errors.push(`${where}: предусловие ${t} — { value: [id] }`);
+    }
+    if (f.prerequisite && !arr(f.prerequisites).length) warnings.push(`${where}: предусловие указано только текстом — сайт не сможет его проверить (добавьте prerequisites)`);
+    if (f.asi_included) {
+      const c = f.asi_choice;
+      if (!c || !Array.isArray(c.abilities) || !c.abilities.length || c.abilities.some((a) => !abOf(a))) errors.push(`${where}: при asi_included нужно asi_choice: { abilities: [характеристики], value: 1 }`);
+    }
+    for (const ef of arr(f.effects)) if (!EFFECTS.includes((ef as Effect)?.type)) errors.push(`${where}: неизвестный эффект «${(ef as Effect)?.type}»`);
+    if (otherFeats.has(f.id)) warnings.push(`${where}: такая черта уже есть в пакете «${otherFeats.get(f.id)}»`); else stats.newFeats.push(f.name);
+  }
+  // ---- предыстории
+  for (const g of arr(p.backgrounds) as BackgroundIn[]) {
+    const where = `В предыстории ${g?.name ?? g?.id ?? '?'}`;
+    if (!g || typeof g !== 'object') { errors.push('Предыстория должна быть объектом'); continue; }
+    stats.backgrounds++;
+    takeId(g.id, where, 'предыстории');
+    req(g as unknown as Record<string, unknown>, ['name', 'name_en', 'source', 'description'], where);
+    const skills = (list: unknown, w: string) => { if (list === undefined) return; if (!Array.isArray(list)) { errors.push(`${w}: skill_proficiencies — список навыков`); return; } for (const x of list) if (!SKILL_SET.has(String(x))) warnings.push(`${w}: навык «${String(x)}» не совпадает с названиями на листе`); };
+    skills(g.skill_proficiencies, where);
+    if (g.skill_choice && (!isNum(g.skill_choice.choose) || (g.skill_choice.from !== 'any' && !Array.isArray(g.skill_choice.from)))) errors.push(`${where}: skill_choice — { choose: число, from: [навыки] или "any" }`);
+    for (const k of ['tool_proficiencies', 'languages', 'equipment'] as const) if (g[k] !== undefined && !Array.isArray(g[k])) errors.push(`${where}: ${k} — список строк`);
+    if (g.feature && !g.feature.name?.trim()) errors.push(`${where}: у умения предыстории нет name`);
+    if (g.abilities && (g.abilities.length !== 3 || g.abilities.some((a) => !abOf(a)))) errors.push(`${where}: abilities — ровно три характеристики`);
+    for (const v of arr(g.variants) as BackgroundIn[]) { const w2 = `${where} › вариант ${v?.name ?? v?.id ?? '?'}`; takeId(v?.id, w2, 'варианта'); if (!v?.name?.trim()) errors.push(`${w2}: отсутствует поле name`); skills(v?.skill_proficiencies, w2); }
+    if (otherBgs.has(g.id)) warnings.push(`${where}: такая предыстория уже есть в пакете «${otherBgs.get(g.id)}»`); else stats.newBackgrounds.push(g.name);
+  }
+  if (!stats.classes && !stats.subclasses && !stats.races && !stats.feats && !stats.backgrounds) errors.push('В пакете нет ни классов, ни подклассов, ни видов, ни черт, ни предысторий');
   const old = existing.find((s) => s.pack.pack_id === p.pack_id);
   let mode: Report['mode'] = 'new';
   if (old) {
@@ -245,12 +306,14 @@ export function validate(raw: unknown, existing: StoredPack[] = []): Report {
     else if (nv > ov) { mode = 'update'; stats.updated.push(`${p.pack_name}: версия ${ov} → ${nv}`); }
     else if (nv === ov) { mode = 'update'; warnings.push(`Пакет той же версии ${nv}, но содержимое отличается — записи с теми же id обновятся`); stats.updated.push(p.pack_name); }
     else { mode = 'older'; warnings.push(`В приложении версия ${ov}, а в файле старее — ${nv}`); }
-    const oldIds = new Set([...(old.pack.classes ?? []).map((c) => c.id), ...allSubs(old.pack).map((s) => s.id), ...(old.pack.races ?? []).flatMap((r) => [r.id, ...(r.subraces ?? []).map((x) => x.id)])]);
+    const oldIds = new Set([...(old.pack.classes ?? []).map((c) => c.id), ...allSubs(old.pack).map((s) => s.id), ...(old.pack.races ?? []).flatMap((r) => [r.id, ...(r.subraces ?? []).map((x) => x.id)]), ...(old.pack.feats ?? []).map((f) => f.id), ...(old.pack.backgrounds ?? []).map((g) => g.id)]);
+    stats.newFeats = (p.feats ?? []).filter((f) => !oldIds.has(f.id)).map((f) => f.name);
+    stats.newBackgrounds = (p.backgrounds ?? []).filter((g) => !oldIds.has(g.id)).map((g) => g.name);
     stats.newRaces = (p.races ?? []).filter((r) => !oldIds.has(r.id)).map((r) => r.name);
     stats.newSubraces = (p.races ?? []).flatMap((r) => r.subraces ?? []).filter((x) => !oldIds.has(x.id)).map((x) => x.name);
     stats.newClasses = (p.classes ?? []).filter((c) => !oldIds.has(c.id)).map((c) => c.name);
     stats.newSubclasses = allSubs(p).filter((s) => !oldIds.has(s.id)).map((s) => s.name);
-    stats.updated.push(...[...(p.classes ?? []), ...allSubs(p), ...(p.races ?? []), ...(p.races ?? []).flatMap((r) => r.subraces ?? [])].filter((x) => oldIds.has(x.id)).map((x) => x.name));
+    stats.updated.push(...[...(p.classes ?? []), ...allSubs(p), ...(p.races ?? []), ...(p.races ?? []).flatMap((r) => r.subraces ?? []), ...(p.feats ?? []), ...(p.backgrounds ?? [])].filter((x) => oldIds.has(x.id)).map((x) => x.name));
   }
   return { ok: errors.length === 0, pack: p, errors, warnings, stats, mode };
 }
@@ -272,9 +335,31 @@ export async function importPack(p: PackIn, file: string): Promise<StoredPack[]>
   if (!rep.ok) throw new Error(rep.errors[0]);
   const next = [...list.filter((s) => s.pack.pack_id !== p.pack_id), { pack: p, enabled: true, importedAt: Date.now(), file, origin: 'local' as const }];
   await commit(next);
-  await log({ at: Date.now(), file, pack: `${p.pack_name} (${p.pack_id} v${p.pack_version ?? 1})`, result: `${rep.mode === 'new' ? 'добавлен' : 'обновлён'}: классов ${rep.stats.classes}, подклассов ${rep.stats.subclasses}, видов ${rep.stats.races}, подрас ${rep.stats.subraces}, способностей ${rep.stats.features}`, who: 'это устройство' });
+  await log({ at: Date.now(), file, pack: `${p.pack_name} (${p.pack_id} v${p.pack_version ?? 1})`, result: `${rep.mode === 'new' ? 'добавлен' : 'обновлён'}: классов ${rep.stats.classes}, подклассов ${rep.stats.subclasses}, видов ${rep.stats.races}, подрас ${rep.stats.subraces}, черт ${rep.stats.feats}, предысторий ${rep.stats.backgrounds}`, who: 'это устройство' });
   return next;
 }
+/** Запись, добавленная или изменённая на сайте, — в личный пакет «Мои записи» нужной редакции. */
+export async function saveCustom(ed: Ed, kind: 'feats' | 'backgrounds', item: FeatIn | BackgroundIn): Promise<StoredPack[]> {
+  const list = await loadLocal();
+  const id = `my_content_${ed}`;
+  const old = list.find((s) => s.pack.pack_id === id)?.pack;
+  const pack: PackIn = old ? JSON.parse(JSON.stringify(old)) : { format: FORMAT, format_version: FORMAT_VERSION, ruleset: ed === '2014' ? '5e-2014' : '5e-2024', pack_id: id, pack_name: `Мои записи (${ed})`, pack_version: 0, language: 'ru' };
+  const arr2 = (pack[kind] ?? []) as (FeatIn | BackgroundIn)[];
+  const i = arr2.findIndex((x) => x.id === item.id);
+  if (i >= 0) arr2[i] = item; else arr2.push(item);
+  (pack as unknown as Record<string, unknown>)[kind] = arr2;
+  pack.pack_version = (pack.pack_version ?? 0) + 1;
+  const rep = validate(pack, list.filter((s) => s.pack.pack_id !== id));
+  if (!rep.ok) throw new Error(rep.errors[0]);
+  const next = [...list.filter((s) => s.pack.pack_id !== id), { pack, enabled: true, importedAt: Date.now(), file: 'добавлено на сайте', origin: 'local' as const }];
+  await commit(next);
+  await log({ at: Date.now(), file: '', pack: pack.pack_name, result: `${i >= 0 ? 'изменено' : 'добавлено'}: ${item.name}`, who: 'это устройство' });
+  return next;
+}
+/** Исходная запись из пакета — чтобы открыть её в редакторе. */
+export function rawFeat(ed: Ed, id: string): FeatIn | undefined { let r: FeatIn | undefined; for (const s of active) if (s.enabled && (s.pack.ruleset === '5e-2014') === (ed === '2014')) r = s.pack.feats?.find((f) => f.id === id) ?? r; return r; }
+export function rawBg(ed: Ed, id: string): BackgroundIn | undefined { let r: BackgroundIn | undefined; for (const s of active) if (s.enabled && (s.pack.ruleset === '5e-2014') === (ed === '2014')) r = s.pack.backgrounds?.find((g) => g.id === id) ?? r; return r; }
+
 export async function setEnabled(id: string, enabled: boolean) { const l = await loadLocal(); const n = l.map((s) => (s.pack.pack_id === id ? { ...s, enabled } : s)); await commit(n); return n; }
 export async function removePack(id: string) { const l = await loadLocal(); const n = l.filter((s) => s.pack.pack_id !== id); await commit(n); await log({ at: Date.now(), file: '', pack: id, result: 'удалён с устройства', who: 'это устройство' }); return n; }
 export async function undoLast() { const prev = ((await idbGet(PREV)) as StoredPack[] | undefined) ?? []; await idbSet(KEY, prev); await log({ at: Date.now(), file: '', pack: '—', result: 'откат последнего изменения', who: 'это устройство' }); return prev; }
@@ -298,7 +383,7 @@ export interface SubDef { id: string; classId: string; name: string; source: str
 export interface SpellDef { ability: Ab; kind: 'known' | 'prepared' | 'book'; progression: SpellcastingIn['progression']; slots?: number[][]; cantrips?: number[]; known?: number[]; prepared?: SpellcastingIn['prepared']; preparedTable?: number[]; list: string }
 
 let active: StoredPack[] = [];
-let cache: { classes: Record<Ed, ClassDef[]>; subs: Record<Ed, SubDef[]>; races: Record<Ed, Race[]> } | undefined;
+let cache: { classes: Record<Ed, ClassDef[]>; subs: Record<Ed, SubDef[]>; races: Record<Ed, Race[]>; feats: Record<Ed, FeatDef[]>; bgs: Record<Ed, Background[]> } | undefined;
 export function setActive(packs: StoredPack[]) { active = packs; cache = undefined; }
 export const activePacks = () => active;
 
@@ -354,6 +439,9 @@ function build() {
   const classes: Record<Ed, ClassDef[]> = { '2014': [...CLASSES], '2024': [...CLASSES] };
   const subs: Record<Ed, SubDef[]> = { '2014': [], '2024': [] };
   const races: Record<Ed, Race[]> = { '2014': [...RACES['2014']], '2024': [...RACES['2024']] };
+  const feats: Record<Ed, FeatDef[]> = { '2014': [...BUILTIN_FEATS['2014']], '2024': [...BUILTIN_FEATS['2024']] };
+  const bgs: Record<Ed, Background[]> = { '2014': BACKGROUNDS['2014'].filter((x) => !x.custom), '2024': BACKGROUNDS['2024'].filter((x) => !x.custom) };
+  const upsert = <T extends { id: string }>(list: T[], v: T) => { const i = list.findIndex((x) => x.id === v.id); if (i >= 0) list[i] = v; else list.push(v); };
   for (const s of active) {
     if (!s.enabled) continue;
     const ed: Ed = s.pack.ruleset === '5e-2014' ? '2014' : '2024';
@@ -372,9 +460,30 @@ function build() {
       const i = races[ed].findIndex((x) => x.id === r.id);
       if (i >= 0) races[ed][i] = def; else races[ed].push(def);
     }
+    for (const f of s.pack.feats ?? []) upsert(feats[ed], toFeat(f, s.pack));
+    for (const g of s.pack.backgrounds ?? []) { upsert(bgs[ed], toBg(g, s.pack)); for (const v of g.variants ?? []) upsert(bgs[ed], toBg({ ...g, ...v, name: v.name, variants: [] } as BackgroundIn, s.pack, g.name)); }
   }
-  return { classes, subs, races };
+  // «своя предыстория» всегда последней
+  for (const ed of ['2014', '2024'] as Ed[]) bgs[ed].push(BACKGROUNDS[ed].find((x) => x.custom)!);
+  return { classes, subs, races, feats, bgs };
 }
+function toFeat(f: FeatIn, p: PackIn): FeatDef {
+  return {
+    id: f.id, name: f.name, nameEn: f.name_en, source: f.source ?? p.pack_name, pack: p.pack_name, prereqText: f.prerequisite ?? undefined, prereq: f.prerequisites ?? [],
+    text: f.description, benefits: (f.benefits ?? []).map((x) => x.description ?? '').filter(Boolean), effects: f.effects ?? [], repeatable: !!f.repeatable,
+    asi: f.asi_included && f.asi_choice ? { abilities: f.asi_choice.abilities.map((a) => abOf(a)!).filter(Boolean), value: f.asi_choice.value ?? 1 } : undefined,
+  };
+}
+function toBg(g: BackgroundIn, p: PackIn, parent?: string): Background {
+  return {
+    id: g.id, name: parent ? `${g.name} (${parent})` : g.name, skills: g.skill_proficiencies ?? [], tool: (g.tool_proficiencies ?? []).join(', ') || undefined,
+    langs: (g.languages ?? []).join(', ') || undefined, gear: (g.equipment ?? []).join(', '), feature: g.feature?.name, featureText: g.feature?.description,
+    skillChoice: g.skill_choice, source: g.source ?? p.pack_name, pack: p.pack_name, description: g.description, chars: g.suggested_characteristics,
+    abs: g.abilities?.map((a) => abOf(a)!).filter(Boolean), feat: g.feat,
+  };
+}
+export function featsFor(ed: Ed): FeatDef[] { return (cache ??= build()).feats[ed]; }
+export function backgroundsFor(ed: Ed): Background[] { return (cache ??= build()).bgs[ed]; }
 export function racesFor(ed: Ed): Race[] { return (cache ??= build()).races[ed]; }
 export function classesFor(ed: Ed): ClassDef[] { return (cache ??= build()).classes[ed]; }
 export function subsFor(ed: Ed, classId: string): SubDef[] { return (cache ??= build()).subs[ed].filter((s) => s.classId === classId); }

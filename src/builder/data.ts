@@ -213,7 +213,35 @@ export const RACES: Record<Ed, Race[]> = {
 };
 
 // ---------------------------------------------------------------- предыстории
-export interface Background { id: string; name: string; skills: string[]; tool?: string; langs?: string; abs?: Ab[]; feat?: string; gear: string; feature?: string; custom?: boolean }
+export interface Background {
+  id: string; name: string; skills: string[]; tool?: string; langs?: string; abs?: Ab[]; feat?: string; gear: string; feature?: string; custom?: boolean;
+  /** только у предысторий из пакетов контента */
+  featureText?: string; skillChoice?: { choose: number; from: string[] | 'any' }; source?: string; pack?: string; description?: string;
+  chars?: { personality_traits?: string[]; ideals?: string[]; bonds?: string[]; flaws?: string[] };
+}
+/** Черта: встроенная или из пакета. prereq проверяет сборщик. */
+export interface FeatDef {
+  id: string; name: string; nameEn?: string; source: string; pack?: string; prereqText?: string; prereq: Prereq[]; text: string;
+  benefits: string[]; effects: Effect[]; repeatable: boolean; asi?: { abilities: Ab[]; value: number }; origin?: boolean;
+}
+export type Prereq =
+  | { type: 'ability'; ability: string; min: number } | { type: 'ability_any'; abilities: string[]; min: number }
+  | { type: 'race'; value: string[] } | { type: 'proficiency'; value: string } | { type: 'spellcasting' }
+  | { type: 'level'; min: number } | { type: 'class'; value: string[] };
+export const BUILTIN_FEATS: Record<Ed, FeatDef[]> = {
+  '2014': [
+    { id: 'grappler', name: 'Борец', nameEn: 'Grappler', source: 'SRD 5.1', prereqText: 'Сила 13 или выше', prereq: [{ type: 'ability', ability: 'strength', min: 13 }], repeatable: false, effects: [], benefits: [],
+      text: 'Преимущество на броски атаки по существу, которое вы держите в захвате. Действием можно попытаться прижать схваченное существо: при успешной проверке захвата и вы, и оно опутаны до конца захвата.' },
+  ],
+  '2024': [
+    { id: 'alert', name: 'Бдительный', nameEn: 'Alert', source: 'SRD 5.2', prereq: [], repeatable: false, effects: [], benefits: [], origin: true, text: 'Бонус мастерства прибавляется к инициативе. После броска инициативы можно поменяться ею с согласным союзником.' },
+    { id: 'magic_initiate', name: 'Посвящённый в магию', nameEn: 'Magic Initiate', source: 'SRD 5.2', prereq: [], repeatable: true, effects: [], benefits: [], origin: true, text: 'Два заговора и одно заклинание 1 круга из списка жреца, друида или волшебника. Заклинание 1 круга раз в длинный отдых без ячейки.' },
+    { id: 'savage_attacker', name: 'Свирепый атакующий', nameEn: 'Savage Attacker', source: 'SRD 5.2', prereq: [], repeatable: false, effects: [], benefits: [], origin: true, text: 'Раз в ход при попадании оружием можно бросить кости урона дважды и взять любой результат.' },
+    { id: 'skilled', name: 'Одарённый', nameEn: 'Skilled', source: 'SRD 5.2', prereq: [], repeatable: true, effects: [], benefits: [], origin: true, text: 'Владение тремя навыками или инструментами на выбор.' },
+    { id: 'grappler', name: 'Борец', nameEn: 'Grappler', source: 'SRD 5.2', prereqText: 'Уровень 4+, Сила или Ловкость 13+', prereq: [{ type: 'level', min: 4 }, { type: 'ability_any', abilities: ['strength', 'dexterity'], min: 13 }], repeatable: false, effects: [], benefits: [], asi: { abilities: ['str', 'dex'], value: 1 },
+      text: '+1 к Силе или Ловкости. Попадание безоружным ударом может сразу начать захват. Преимущество на атаки по схваченному. Перемещать схваченного не стоит лишнего движения.' },
+  ],
+};
 export const BACKGROUNDS: Record<Ed, Background[]> = {
   '2014': [
     { id: 'acolyte', name: 'Прислужник', skills: ['Проницательность', 'Религия'], langs: 'два языка на выбор', gear: 'Священный символ, молитвенник, 5 палочек благовоний, облачение, 15 зм', feature: 'Приют для верующих' },

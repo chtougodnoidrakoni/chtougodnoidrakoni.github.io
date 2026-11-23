@@ -2,7 +2,7 @@
 import { applyAi } from '../aiImport';
 import { clubTemplate, uid, type Sheet, type SheetSpell, type SpellData } from '../model';
 import { ABS, AB_RU, SKILLS, type Ab } from './data';
-import { allSkills, armorClass, attacks, bgOf, classOf, dragonType, featureTexts, feats, features, maxHp, mod, packSub, pb, raceOf, rule, saves, scores, sgn, slots, speed, subAt, subName, subOf, subSpells, type Build } from './engine';
+import { allSkills, armorClass, asiLevels, effects, featById, attacks, bgOf, classOf, dragonType, featureTexts, feats, features, maxHp, mod, packSub, pb, raceOf, rule, saves, scores, sgn, slots, speed, subAt, subName, subOf, subSpells, type Build } from './engine';
 import { usesAt } from './content';
 
 export function racialSpells(b: Build, db: SpellData[]): SpellData[] {
@@ -14,7 +14,8 @@ export function buildData(b: Build): Record<string, unknown> {
   const c = classOf(b)!; const r = raceOf(b)!; const sub = subOf(b); const bg = bgOf(b)!;
   const s = scores(b); const p = pb(b.level); const sk = allSkills(b);
   const ac = armorClass(b); const hp = maxHp(b);
-  const perception = 10 + mod(s.wis) + (sk.includes('Внимательность') ? p * (b.expertise.includes('Внимательность') ? 2 : 1) : 0);
+  const ex = effects(b); const initBonus = ex.reduce((t, e) => t + (e.type === 'initiative' ? e.value : 0), 0); const ppBonus = ex.reduce((t, e) => t + (e.type === 'passive_perception' ? e.value : 0), 0);
+  const perception = ppBonus + 10 + mod(s.wis) + (sk.includes('Внимательность') ? p * (b.expertise.includes('Внимательность') ? 2 : 1) : 0);
   const alert = feats(b).some((f) => f.startsWith('Бдительный'));
   const sv = saves(b);
   const ab = (a: Ab) => ({ значение: s[a], спасбросок: sv.includes(a), навыки: SKILLS.filter(([n, x]) => x === a && sk.includes(n)).map(([n]) => n) });
@@ -35,14 +36,14 @@ export function buildData(b: Build): Record<string, unknown> {
     'Имя персонажа': b.name.trim(), 'Уровень': String(b.level), 'Класс': c.name, 'Вид': raceName,
     'Предыстория': bg.custom ? (b.bgName?.trim() || 'Своя предыстория') : bg.name, 'Мировоззрение': b.alignment, 'Возраст': b.age, 'Игрок': b.player,
     'Внешность': b.appearance, 'Черты характера и манеры': story, 'Предыстория персонажа': b.backstory,
-    'Класс доспеха': String(ac.ac), 'Инициатива': sgn(mod(s.dex) + (alert ? p : 0)), 'Скорость': `${speed(b)} фт.`, 'Бонус мастерства': sgn(p), 'Пасс. внимательность': String(perception),
+    'Класс доспеха': String(ac.ac), 'Инициатива': sgn(mod(s.dex) + (alert ? p : 0) + initBonus), 'Скорость': `${speed(b)} фт.`, 'Бонус мастерства': sgn(p), 'Пасс. внимательность': String(perception),
     ...Object.fromEntries(ABS.map((a) => [AB_RU[a], ab(a)])),
     'Максимум хитов': String(hp), 'Текущие хиты': String(hp), 'Кости хитов': `${b.level}к${c.hd}`,
     'Снаряжение': gear, 'Владения': prof, 'Языки': r.langs + (bg.langs ? `; ${bg.langs}` : ''),
     'Оружие': arm,
     'Способности класса и подкласса': { 'Класс': [...features(b), ...featureTexts(b).cls].join('\n'), 'Подкласс': [subName(b), ...featureTexts(b).sub].filter(Boolean).join('\n') },
-    'Способности вида и предыстории': { 'Вид': traits, 'Предыстория': [bg.feature, b.ed === '2024' && !bg.custom ? `Черта: ${bg.feat}` : ''].filter(Boolean).join('\n') },
-    'Черты и дополнительные способности': { 'Черты': feats(b).join('\n'), 'Дополнительно': '' },
+    'Способности вида и предыстории': { 'Вид': traits, 'Предыстория': [bg.feature ? `${bg.feature}${bg.featureText ? `. ${bg.featureText}` : ''}` : '', b.ed === '2024' && !bg.custom && bg.feat ? `Черта: ${bg.feat}` : ''].filter(Boolean).join('\n') },
+    'Черты и дополнительные способности': { 'Черты': feats(b).join('\n'), 'Дополнительно': asiLevels(b).map((l) => featById(b, b.asi[l]?.featId)).filter((f, i, a) => f && a.indexOf(f) === i).map((f) => `${f!.name}. ${f!.text}`).join('\n') },
     ...(sr && c.spellAb ? {
       'Заклинательный класс': c.name, 'Характеристика': AB_RU[c.spellAb],
       'СЛ спасброска': String(8 + p + mod(s[c.spellAb])), 'Бонус атаки': sgn(p + mod(s[c.spellAb])), 'Ячейки заклинаний': slotObj,
