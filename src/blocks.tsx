@@ -129,7 +129,8 @@ export function BlockView({ b: b0, sheet, fill }: { b: Block; sheet: Sheet; fill
       return (
         <div className={`blk ${frameCls} blk-plist`} style={{ fontSize: fs }}>
           <Label b={b} scale={scale} />
-          <div className="pl-head pl-head-coc"><span /><span /><span>обыч.</span><span>трудн.</span><span>чрезв.</span></div>
+          <div className="pl-grid">
+          <div className="pl-head pl-head-coc"><span /><span className="pl-succ">Успех</span><span>ОУ</span><span>ТУ</span><span>ЧУ</span></div>
           <div className="pl-rows">
             {(b.items ?? []).map((it, i) => {
               if (it.sub === '#') return <div key={i} className="pl-cat">{it.name}</div>;
@@ -147,6 +148,7 @@ export function BlockView({ b: b0, sheet, fill }: { b: Block; sheet: Sheet; fill
                 </div>
               );
             })}
+          </div>
           </div>
         </div>
       );

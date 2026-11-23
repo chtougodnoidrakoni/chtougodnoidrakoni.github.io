@@ -512,4 +512,12 @@ body:has(.z-50) .nav-fab, body:has(.z-\[60\]) .nav-fab { display: none; }
 
 .pl-name.occ { font-weight: 700; text-decoration: underline; text-decoration-thickness: max(1px, calc(var(--u) * .15)); text-underline-offset: .15em; }
 
-.pl-head-coc span { font-size: .95em; letter-spacing: 0 !important; white-space: nowrap; text-transform: none; }
+.pl-grid { flex: 1; display: flex; flex-direction: column; min-height: 0; --gl: max(1px, calc(var(--u) * .2)); --gc: color-mix(in srgb, var(--color-sand) 75%, transparent);
+  background:
+    linear-gradient(var(--gc), var(--gc)) right 2.275em top / var(--gl) 100% no-repeat,
+    linear-gradient(var(--gc), var(--gc)) right 4.725em top / var(--gl) 100% no-repeat,
+    linear-gradient(var(--gc), var(--gc)) right 7.175em top / var(--gl) 100% no-repeat; }
+.pl-head-coc { font-size: 1em !important; border-bottom: var(--gl) solid var(--gc); padding-bottom: .15em; }
+.pl-head-coc span { font-size: .78em; font-weight: 700; letter-spacing: .04em !important; white-space: nowrap; text-transform: none; }
+.pl-head-coc .pl-succ { text-align: right; font-weight: 600; letter-spacing: .08em !important; }
+.blk-plist .pl-val, .blk-plist .pl-sub { border-bottom-color: color-mix(in srgb, var(--color-sand) 45%, transparent); }
