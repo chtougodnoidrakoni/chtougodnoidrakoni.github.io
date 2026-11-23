@@ -331,7 +331,7 @@ export const markFixed = (p: Page): Page => (FIXED[p.title] ? { ...p, blocks: p.
 export function clubTemplate(): Sheet {
   return {
     id: uid(), name: 'Новый персонаж', updatedAt: Date.now(), fontScale: 1, paper: 'white',
-    ver: 2, system: 'dnd', pages: [markFixed(bioPage()), markFixed(statsPage()), featuresPage(), magicPage(), { id: uid(), title: 'Книга заклинаний', kind: 'spellbook', blocks: [] }, notesPage()],
+    ver: 3, system: 'dnd', pages: [markFixed(bioPage()), markFixed(statsPage()), featuresPage(), magicPage(), { id: uid(), title: 'Книга заклинаний', kind: 'spellbook', blocks: [] }, notesPage()],
     spells: [],
   };
 }

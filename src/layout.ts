@@ -15,22 +15,28 @@ const vSpan = (a: Rect, b: Rect) => Math.min(a.y + a.h, b.y + b.h) - Math.max(a.
 const hSpan = (a: Rect, b: Rect) => Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x);
 const r1 = (v: number) => Math.round(v * 2) / 2;
 /** Неизменяемые блоки: QR-коды клуба нельзя двигать, сжимать, растягивать и удалять. */
-export const locked = (b: Pick<Block, 'type' | 'fixed'>) => b.type === 'qr' || !!b.fixed;
+/** Закреплённый блок: место и размер не меняются. QR клуба (в правом нижнем углу биографии) закреплены всегда, лишний QR можно удалить. */
+export const locked = (b: Pick<Block, 'type' | 'fixed' | 'x' | 'y'>) => !!b.fixed || (b.type === 'qr' && b.x >= 170 && b.y >= 215);
 
 /**
  * Однократное обновление старых листов до версии 2:
  * закрепляем шапку биографии и основу характеристик, убираем «Ресурсы» со страницы способностей.
  */
 export function migrateLayout(s: Sheet): Sheet {
-  if ((s.ver ?? 1) >= 2) return s;
-  return { ...s, ver: 2, pages: s.pages.map((p) => {
+  if ((s.ver ?? 1) >= 3) return s;
+  if ((s.ver ?? 1) === 2) return { ...s, ver: 3, pages: (s.system ?? 'dnd') === 'dnd' ? s.pages : lockGame(s.pages) };
+  return migrateLayout({ ...s, ver: 2, pages: s.pages.map((p) => {
     let page = markFixed(p);
     if (p.title === 'Способности') {
       const res = page.blocks.find((b) => b.type === 'circles' && b.label === 'Ресурсы');
       if (res) page = { ...page, blocks: removeAndFill(page.blocks, res.id) };
     }
     return page;
-  }) };
+  }) });
+}
+/** Листы Ктулху, Клинков и Киберпанка: блоки шаблона закреплены, чтобы за столом у всех был один лист. Заметки свободны. */
+export function lockGame(pages: Sheet['pages']): Sheet['pages'] {
+  return pages.map((p) => (p.title === 'Заметки' ? p : { ...p, blocks: p.blocks.map((b) => ({ ...b, fixed: true })) }));
 }
 
 /** Поменять местами два блока: каждый занимает место и размер другого. */

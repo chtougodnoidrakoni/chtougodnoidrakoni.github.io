@@ -3,6 +3,7 @@
  * Листы нарисованы с нуля в стиле клуба: здесь только названия полей и параметров,
  * без официальных бланков и текстов правил.
  */
+import { lockGame } from './layout';
 import { blankPage, makeBlock as B, notesPage, uid, SYSTEM_THEME, THEMES, type GameSystem, type Page, type Sheet } from './model';
 
 const title = (label: string, size = 22) => B('title', { label, x: 12, y: 13, w: 150, h: 16, fontSize: size });
@@ -183,7 +184,7 @@ export const SYSTEMS: { id: GameSystem; name: string; hint: string }[] = [
 /** Новый лист выбранной игры (для D&D — прежний шаблон клуба). */
 export function systemTemplate(system: Exclude<GameSystem, 'dnd'>): Sheet {
   const pages = system === 'coc' ? [cocMain(), cocSkills(), cocBio()] : system === 'bitd' ? [bitdMain(), bitdCrew()] : [cprMain(), cprSkills()];
-  return { id: uid(), name: 'Новый персонаж', updatedAt: Date.now(), fontScale: 1, paper: 'white', ver: 2, system, theme: SYSTEM_THEME[system], fonts: THEMES.find((t) => t.id === SYSTEM_THEME[system])!.fonts, pages: [...pages, notesPage()], spells: [] };
+  return { id: uid(), name: 'Новый персонаж', updatedAt: Date.now(), fontScale: 1, paper: 'white', ver: 3, system, theme: SYSTEM_THEME[system], fonts: THEMES.find((t) => t.id === SYSTEM_THEME[system])!.fonts, pages: [...lockGame(pages), notesPage()], spells: [] };
 }
 
 export { blankPage };

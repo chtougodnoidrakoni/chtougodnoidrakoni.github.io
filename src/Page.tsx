@@ -155,7 +155,7 @@ export function LayoutPage({ page, pageIndex, sheet, scale, num }: { page: Page;
   const tap = (b: Block) => {
     setPage(pageIndex);
     if (live(b)) return;
-    if (layout) { if (locked(b)) { useStore.getState().say(b.type === 'qr' ? 'QR-коды клуба не редактируются' : 'Этот блок закреплён: его место и размер менять нельзя'); return; } select(b.id); return; }
+    if (layout) { if (locked(b)) { useStore.getState().say(b.type === 'qr' ? 'QR-коды клуба не редактируются' : (sheet.system ?? 'dnd') !== 'dnd' ? 'Разметка этого листа закреплена, чтобы у всех за столом был одинаковый лист. Можно заполнять и добавлять свои страницы' : 'Этот блок закреплён: его место и размер менять нельзя'); return; } select(b.id); return; }
     if (b.type === 'emblem' || b.type === 'ornament' || b.type === 'qr') return;
     fill(b.id);
   };

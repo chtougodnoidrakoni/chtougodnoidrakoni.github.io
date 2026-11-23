@@ -141,7 +141,7 @@ export function AddBlockPanel({ open, onClose, onAdd }: { open: boolean; onClose
   return (
     <Sheet open={open} onClose={onClose} title="Добавить блок">
       <div className="grid grid-cols-2 gap-2 pb-2">
-        {(Object.keys(BLOCK_NAMES) as BlockType[]).map((t) => <Btn key={t} className="h-14 text-sm" onClick={() => { onAdd(t); onClose(); }}>{BLOCK_NAMES[t]}</Btn>)}
+        {(Object.keys(BLOCK_NAMES) as BlockType[]).filter((t) => t !== 'qr' && t !== 'emblem').map((t) => <Btn key={t} className="h-14 text-sm" onClick={() => { onAdd(t); onClose(); }}>{BLOCK_NAMES[t]}</Btn>)}
       </div>
     </Sheet>
   );
