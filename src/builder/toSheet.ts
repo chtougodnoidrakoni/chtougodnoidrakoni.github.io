@@ -2,7 +2,8 @@
 import { applyAi } from '../aiImport';
 import { clubTemplate, uid, type Sheet, type SheetSpell, type SpellData } from '../model';
 import { ABS, AB_RU, SKILLS, type Ab } from './data';
-import { allSkills, armorClass, attacks, bgOf, classOf, dragonType, feats, features, maxHp, mod, pb, raceOf, rule, scores, sgn, slots, speed, subName, subOf, type Build } from './engine';
+import { allSkills, armorClass, attacks, bgOf, classOf, dragonType, featureTexts, feats, features, maxHp, mod, packSub, pb, raceOf, rule, saves, scores, sgn, slots, speed, subAt, subName, subOf, subSpells, type Build } from './engine';
+import { usesAt } from './content';
 
 export function racialSpells(b: Build, db: SpellData[]): SpellData[] {
   const list = [...(raceOf(b)?.spells ?? []), ...(subOf(b)?.spells ?? [])].filter(([, at]) => b.level >= at);
@@ -15,7 +16,8 @@ export function buildData(b: Build): Record<string, unknown> {
   const ac = armorClass(b); const hp = maxHp(b);
   const perception = 10 + mod(s.wis) + (sk.includes('Внимательность') ? p * (b.expertise.includes('Внимательность') ? 2 : 1) : 0);
   const alert = feats(b).some((f) => f.startsWith('Бдительный'));
-  const ab = (a: Ab) => ({ значение: s[a], спасбросок: c.saves.includes(a), навыки: SKILLS.filter(([n, x]) => x === a && sk.includes(n)).map(([n]) => n) });
+  const sv = saves(b);
+  const ab = (a: Ab) => ({ значение: s[a], спасбросок: sv.includes(a), навыки: SKILLS.filter(([n, x]) => x === a && sk.includes(n)).map(([n]) => n) });
   const sr = rule(b); const sl = slots(c, b.ed, b.level);
   const raceName = [sub?.name ?? r.name, r.dragon && b.dragon ? `(${b.dragon.toLowerCase()} предок, ${dragonType(b)})` : ''].filter(Boolean).join(' ');
   const traits = [...r.traits, ...(sub?.traits ?? [])].map((t) => `${t.name}. ${t.text}`).join('\n');
@@ -38,7 +40,7 @@ export function buildData(b: Build): Record<string, unknown> {
     'Максимум хитов': String(hp), 'Текущие хиты': String(hp), 'Кости хитов': `${b.level}к${c.hd}`,
     'Снаряжение': gear, 'Владения': prof, 'Языки': r.langs + (bg.langs ? `; ${bg.langs}` : ''),
     'Оружие': arm,
-    'Способности класса и подкласса': { 'Класс': features(b).join('\n'), 'Подкласс': subName(b) },
+    'Способности класса и подкласса': { 'Класс': [...features(b), ...featureTexts(b).cls].join('\n'), 'Подкласс': [subName(b), ...featureTexts(b).sub].filter(Boolean).join('\n') },
     'Способности вида и предыстории': { 'Вид': traits, 'Предыстория': [bg.feature, b.ed === '2024' && !bg.custom ? `Черта: ${bg.feat}` : ''].filter(Boolean).join('\n') },
     'Черты и дополнительные способности': { 'Черты': feats(b).join('\n'), 'Дополнительно': '' },
     ...(sr && c.spellAb ? {
@@ -60,5 +62,11 @@ export function toSheet(b: Build, db: SpellData[]): Sheet {
   b.spells.forEach((id) => push(id, book ? b.prepared.includes(id) : true));
   b.arcanum.forEach((id) => push(id, true));
   racialSpells(b, db).forEach((sp) => push(sp.id, true));
-  return { ...sheet, name: b.name.trim() || 'Новый персонаж', spells, dnd: { classes: [{ id: c.id, level: b.level }] }, updatedAt: Date.now() };
+  for (const n of subSpells(b)) { const k = n.toLowerCase().trim(); const sp = db.find((x) => x.ed === b.ed && (x.name.toLowerCase() === k || x.ru?.toLowerCase() === k)) ?? db.find((x) => x.name.toLowerCase() === k || x.ru?.toLowerCase() === k); if (sp) push(sp.id, true); }
+  // заряды способностей из пакетов → игровой режим листа
+  const sc = scores(b); const mods = Object.fromEntries(ABS.map((a) => [a, mod(sc[a])])) as Record<Ab, number>;
+  const ps = packSub(b);
+  const feats2 = [...(c.fdefs ?? []), ...(ps && b.level >= subAt(c, b.ed, ps) ? ps.features : [])].filter((f) => f.level <= b.level && f.uses !== undefined);
+  const charges = feats2.map((f) => ({ id: uid(), name: f.name, max: Math.min(20, usesAt(f.uses, b.level, mods, pb(b.level)) ?? 1), used: 0, reset: (f.recharge === 'short' ? 'short' : 'long') as 'short' | 'long' })).filter((x) => x.max > 0);
+  return { ...sheet, name: b.name.trim() || 'Новый персонаж', spells, ...(charges.length ? { play: { charges } } : {}), dnd: { classes: [{ id: c.id, level: b.level }] }, updatedAt: Date.now() };
 }

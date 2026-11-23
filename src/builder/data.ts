@@ -1,6 +1,7 @@
 // Данные сборщика персонажа: открытые правила SRD 5.1 (2014) и SRD 5.2 (2024).
 // Только названия и механика; описания умений — короткие, своими словами.
 
+import type { FeatureDef, SpellDef } from './content';
 export type Ed = '2014' | '2024';
 export type Ab = 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha';
 export const ABS: Ab[] = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
@@ -29,6 +30,8 @@ export interface ClassDef {
   expertise?: Partial<Record<Ed, Record<number, number>>>;
   style?: Partial<Record<Ed, number>>;
   kit: string;
+  /** только у классов из пакетов контента */
+  source?: string; pack?: string; summary?: string; fdefs?: FeatureDef[]; spellDef?: SpellDef;
 }
 
 const A = [4, 8, 12, 16, 19];
@@ -272,6 +275,14 @@ export const ALIGNMENTS = ['Законно-добрый', 'Нейтрально-
 const FULL = [[2], [3], [4, 2], [4, 3], [4, 3, 2], [4, 3, 3], [4, 3, 3, 1], [4, 3, 3, 2], [4, 3, 3, 3, 1], [4, 3, 3, 3, 2], [4, 3, 3, 3, 2, 1], [4, 3, 3, 3, 2, 1], [4, 3, 3, 3, 2, 1, 1], [4, 3, 3, 3, 2, 1, 1], [4, 3, 3, 3, 2, 1, 1, 1], [4, 3, 3, 3, 2, 1, 1, 1], [4, 3, 3, 3, 2, 1, 1, 1, 1], [4, 3, 3, 3, 3, 1, 1, 1, 1], [4, 3, 3, 3, 3, 2, 1, 1, 1], [4, 3, 3, 3, 3, 2, 2, 1, 1]];
 /** Ячейки по кругам. У колдуна — ячейки договора одного круга. */
 export function slots(c: ClassDef, ed: Ed, l: number): number[] {
+  const d = c.spellDef;
+  if (d) {
+    const trim = (a: number[]) => { const x = [...a]; while (x.length && !x[x.length - 1]) x.pop(); return x; };
+    if (d.slots) return trim(d.slots[l - 1] ?? []);
+    if (d.progression === 'third') return l >= 3 ? FULL[Math.ceil(l / 3) - 1]! : [];
+    if (d.progression === 'half_up') return FULL[Math.ceil(l / 2) - 1]!;
+    if (d.progression === 'half') return l >= 2 ? FULL[Math.ceil(l / 2) - 1]! : [];
+  }
   if (c.caster === 'full') return FULL[l - 1]!;
   if (c.caster === 'half') return ed === '2014' && l < 2 ? [] : FULL[Math.ceil(l / 2) - 1]!;
   if (c.caster === 'pact') { const n = l >= 17 ? 4 : l >= 11 ? 3 : l >= 2 ? 2 : 1; const lv = Math.min(5, Math.ceil(l / 2)); return Array.from({ length: lv }, (_, i) => (i === lv - 1 ? n : 0)); }
@@ -311,7 +322,15 @@ export function spellRule(c: ClassDef, ed: Ed, l: number, mod: number): SpellRul
   if (!sl.length) return undefined;
   const maxLvl = sl.length;
   const arcanum = c.caster === 'pact' ? [6, 7, 8, 9].filter((lv) => l >= 2 * lv - 1) : [];
-  const cn = cantrips(c, l);
+  const cn = c.spellDef?.cantrips ? c.spellDef.cantrips[l - 1] ?? 0 : cantrips(c, l);
+  const d = c.spellDef;
+  if (d) {
+    if (d.kind === 'known') { const k = d.known?.[l - 1] ?? 0; return { cantrips: cn, spells: k, maxLvl, arcanum, label: `Известных заклинаний: ${k}` }; }
+    const base = d.prepared?.base === 'half_level' ? Math.floor(l / 2) : d.prepared?.base === 'half_level_up' ? Math.ceil(l / 2) : d.prepared?.base === 'third_level' ? Math.floor(l / 3) : l;
+    const p = d.preparedTable ? d.preparedTable[l - 1] ?? 0 : Math.max(d.prepared?.min ?? 1, mod + base);
+    if (d.kind === 'book') return { cantrips: cn, spells: 6 + 2 * (l - 1), prepared: p, book: true, maxLvl, arcanum, label: `В книге ${6 + 2 * (l - 1)}, подготовлено ${p}` };
+    return { cantrips: cn, spells: p, maxLvl, arcanum, label: `Подготовленных заклинаний: ${p}` };
+  }
   if (ed === '2024') {
     const p = PREP24[c.id]![l - 1]!;
     if (c.id === 'wizard') return { cantrips: cn, spells: 6 + 2 * (l - 1), prepared: p, book: true, maxLvl, arcanum, label: `В книге ${6 + 2 * (l - 1)}, подготовлено ${p}` };

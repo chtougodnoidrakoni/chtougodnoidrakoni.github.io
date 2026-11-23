@@ -1,0 +1,289 @@
+ШАБЛОН ПАКЕТА КОНТЕНТА D&D — формат dnd-content-pack, версия 1
+Сайт: chtougodnoidrakoni.github.io/builder → кнопка с книгой → «Библиотека контента D&D» → «+ Импорт классов и подклассов».
+
+Всё, что выше строки, которая начинается с фигурной скобки, сайт пропускает. Ниже — сам пакет в формате JSON.
+Сохраняйте файл в кодировке UTF-8 с расширением .txt. Размер — до 8 МБ.
+
+ГЛАВНОЕ
+• format = "dnd-content-pack", format_version = 1 — не меняйте.
+• ruleset = "5e-2014" или "5e-2024" — для какой редакции пакет. Пакет 2014 виден только при сборке по 2014.
+• pack_id — постоянный id пакета (латиница, цифры, _ и -). По нему пакет обновляется при повторном импорте.
+• pack_version — целое число. Поднимайте на 1 при каждом изменении пакета: тогда импорт покажет «обновится», а не «дубликат».
+• Все id (классов, подклассов, способностей) — латиница, цифры, _ и -. Внутри файла не повторяются.
+• Характеристики: strength, dexterity, constitution, intelligence, wisdom, charisma.
+• Навыки — по-русски, как на листе: Атлетика, Акробатика, Ловкость рук, Скрытность, Анализ, История, Магия, Природа, Религия,
+  Внимательность, Выживание, Медицина, Проницательность, Уход за животными, Выступление, Запугивание, Обман, Убеждение.
+
+КЛАСС (classes[])
+• id, name (рус.), name_en, source — источник обязателен для порядка.
+• hit_die: 6, 8, 10 или 12. saving_throws: ровно две характеристики.
+• armor_proficiencies: из light, medium, heavy, shields. weapon_proficiencies: { simple, martial, list: [названия оружия] }.
+• skills: { choose: сколько, from: [навыки] или "any" }.
+• subclass_level — уровень выбора подкласса (у каждого класса свой). subclass_title — как называется подкласс у класса.
+• asi_levels — уровни увеличения характеристик.
+• spellcasting (если класс колдует):
+   ability — характеристика; kind — known (известные), prepared (подготовка) или book (книга, как у волшебника);
+   progression — full, half (с 2 уровня), half_up (с 1 уровня, округление вверх), third, pact или custom;
+   slots — своя таблица ячеек: 20 строк, в каждой число ячеек по кругам [1-й, 2-й, …] (нужна при custom);
+   cantrips — 20 чисел (заговоров на уровнях 1–20); spells_known — 20 чисел (для known);
+   prepared — формула { base: level | half_level | half_level_up | third_level, min } (мод. характеристики + база) или prepared_table — 20 чисел;
+   spell_list — по какому списку искать заклинания в базе сайта (id класса, например wizard или artificer).
+• features — способности класса (см. ниже). subclasses — можно вложить подклассы прямо в класс.
+
+ПОДКЛАСС (subclasses[] или classes[].subclasses[])
+• id, class_id (id класса: свой из пакета или встроенный — barbarian, bard, cleric, druid, fighter, monk, paladin, ranger, rogue, sorcerer, warlock, wizard).
+• name, name_en, source, summary, description, restrictions.
+• level — только если подкласс открывается не на уровне класса.
+• spells — заклинания подкласса, всегда подготовлены: [{ level: уровень класса, spells: ["английское или русское название"] }].
+• features — способности подкласса с уровнями получения.
+
+СПОСОБНОСТЬ (features[])
+• id, name, level (1–20) — обязательно. Остальное по желанию:
+  name_en, description, effect, action (action, bonus, reaction, passive, other), range, duration, trigger, limits,
+  uses — применения: число | { "by_level": { "3": 2, "7": 3 } } | { "ability": "charisma", "min": 1 } | { "proficiency": true } | { "per_level": 5 },
+  recharge — short, long, dawn или none; ability, scaling, formula, interactions, source.
+  Способность с uses попадает в лист как заряд в режиме «Играть».
+• effects — механика, которую сайт применяет сам:
+  { "type": "hp_per_level", "value": 1 } — хиты за уровень;
+  { "type": "unarmored_ac", "base": 13, "abilities": ["dexterity"] } — КД без доспеха;
+  { "type": "speed", "value": 10, "condition": "no_armor" | "no_heavy_armor" } — скорость;
+  { "type": "armor_proficiency", "value": ["heavy"] }; { "type": "weapon_proficiency", "value": ["martial"] или названия };
+  { "type": "skill_proficiency", "value": ["Магия"] }; { "type": "save_proficiency", "value": ["wisdom"] };
+  { "type": "expertise", "count": 2 } — компетентность в навыках; { "type": "note", "text": "…" } — просто пометка.
+
+ЧТО ПРОВЕРЯЕТСЯ ПРИ ИМПОРТЕ
+Формат и версия, обязательные поля, id и их повторы, уровни 1–20, кости хитов, характеристики, таблицы по 20 значений,
+существование класса у подкласса, ссылки подкласса на подкласс. Пока есть ошибки, кнопка «Импортировать» не нажимается.
+Импорт добавляет и обновляет, но ничего не удаляет. Повторный импорт того же файла ничего не меняет.
+
+{
+  "format": "dnd-content-pack",
+  "format_version": 1,
+  "ruleset": "5e-2014",
+  "pack_id": "my_pack",
+  "pack_name": "Мой пакет классов",
+  "pack_version": 1,
+  "language": "ru",
+  "author": "Кто подготовил",
+  "description": "О чём этот пакет",
+  "sources": [
+    {
+      "id": "my_book",
+      "name": "Название книги или источника"
+    }
+  ],
+  "classes": [
+    {
+      "id": "my_class",
+      "name": "Название класса",
+      "name_en": "Class Name",
+      "source": "Название книги",
+      "summary": "Одна строка о классе",
+      "description": "Подробное описание концепции своими словами",
+      "role": "Роль в группе",
+      "primary_abilities": [
+        "intelligence"
+      ],
+      "hit_die": 8,
+      "saving_throws": [
+        "constitution",
+        "intelligence"
+      ],
+      "armor_proficiencies": [
+        "light",
+        "medium",
+        "shields"
+      ],
+      "armor_text": "лёгкие и средние доспехи, щиты",
+      "weapon_proficiencies": {
+        "simple": true,
+        "martial": false,
+        "list": []
+      },
+      "tool_proficiencies": "воровские инструменты",
+      "skills": {
+        "choose": 2,
+        "from": [
+          "Магия",
+          "История",
+          "Анализ",
+          "Природа",
+          "Внимательность"
+        ]
+      },
+      "starting_equipment": [
+        "лёгкий арбалет и 20 болтов",
+        "кожаный доспех",
+        "набор исследователя подземелий"
+      ],
+      "subclass_level": 3,
+      "subclass_title": "Специализация",
+      "asi_levels": [
+        4,
+        8,
+        12,
+        16,
+        19
+      ],
+      "spellcasting": {
+        "ability": "intelligence",
+        "kind": "prepared",
+        "progression": "half_up",
+        "cantrips": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          3,
+          3,
+          3,
+          3,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "prepared": {
+          "base": "half_level_up",
+          "min": 1
+        },
+        "spell_list": "my_class"
+      },
+      "progression": [
+        {
+          "level": 1,
+          "notes": "Пояснение к уровню, если нужно"
+        }
+      ],
+      "features": [
+        {
+          "id": "my_class_feature_1",
+          "name": "Способность 1 уровня",
+          "name_en": "Feature",
+          "level": 1,
+          "description": "Что делает способность.",
+          "action": "passive"
+        },
+        {
+          "id": "my_class_feature_2",
+          "name": "Способность с зарядами",
+          "level": 2,
+          "description": "Описание.",
+          "action": "bonus",
+          "range": "30 футов",
+          "duration": "1 минута",
+          "trigger": "когда срабатывает",
+          "limits": "ограничения",
+          "uses": {
+            "ability": "intelligence",
+            "min": 1
+          },
+          "recharge": "long",
+          "ability": "intelligence",
+          "scaling": "как растёт с уровнем",
+          "formula": "1к6 + ИНТ",
+          "interactions": "с чем взаимодействует"
+        },
+        {
+          "id": "my_class_feature_3",
+          "name": "Способность с эффектом",
+          "level": 5,
+          "description": "Скорость растёт на 10 футов, если нет тяжёлого доспеха.",
+          "effects": [
+            {
+              "type": "speed",
+              "value": 10,
+              "condition": "no_heavy_armor"
+            }
+          ]
+        }
+      ],
+      "subclasses": [
+        {
+          "id": "my_subclass",
+          "name": "Подкласс внутри класса",
+          "name_en": "Subclass",
+          "source": "Название книги",
+          "summary": "Коротко",
+          "description": "Подробно",
+          "features": [
+            {
+              "id": "my_subclass_f3",
+              "name": "Способность подкласса",
+              "level": 3,
+              "description": "Описание."
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "subclasses": [
+    {
+      "id": "my_fighter_subclass",
+      "class_id": "fighter",
+      "name": "Подкласс для встроенного воина",
+      "source": "Название книги",
+      "summary": "Коротко",
+      "level": 3,
+      "restrictions": "особые ограничения, если есть",
+      "spells": [
+        {
+          "level": 3,
+          "spells": [
+            "Shield",
+            "Magic Missile"
+          ]
+        }
+      ],
+      "features": [
+        {
+          "id": "my_fighter_f3",
+          "name": "Способность 3 уровня",
+          "level": 3,
+          "description": "Описание.",
+          "uses": {
+            "by_level": {
+              "3": 2,
+              "7": 3,
+              "15": 4
+            }
+          },
+          "recharge": "short",
+          "effects": [
+            {
+              "type": "skill_proficiency",
+              "value": [
+                "Магия"
+              ]
+            },
+            {
+              "type": "weapon_proficiency",
+              "value": [
+                "martial"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "my_fighter_f7",
+          "name": "Способность 7 уровня",
+          "level": 7,
+          "description": "Описание.",
+          "uses": {
+            "proficiency": true
+          },
+          "recharge": "long"
+        }
+      ]
+    }
+  ]
+}

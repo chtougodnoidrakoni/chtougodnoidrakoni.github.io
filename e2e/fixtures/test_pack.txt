@@ -1,0 +1,51 @@
+Тестовый пакет
+
+{
+ "format": "dnd-content-pack",
+ "format_version": 1,
+ "ruleset": "5e-2014",
+ "pack_id": "e2e_pack",
+ "pack_name": "Пакет для проверки",
+ "pack_version": 1,
+ "classes": [
+  {
+   "id": "tester",
+   "name": "Испытатель",
+   "hit_die": 8,
+   "saving_throws": [
+    "constitution",
+    "intelligence"
+   ],
+   "skills": {
+    "choose": 2,
+    "from": "any"
+   },
+   "subclass_level": 3,
+   "subclass_title": "Путь",
+   "features": [
+    {
+     "id": "t1",
+     "name": "Искра",
+     "level": 1,
+     "description": "Тестовая способность.",
+     "uses": 2,
+     "recharge": "short"
+    }
+   ],
+   "subclasses": [
+    {
+     "id": "tsub",
+     "name": "Путь проверки",
+     "features": [
+      {
+       "id": "ts3",
+       "name": "Проверка",
+       "level": 3,
+       "description": "x"
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

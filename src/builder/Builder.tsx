@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { ArrowLeft, ArrowRight, Check, ChevronDown, Dices, RotateCcw, Search, Shield, Sparkles, Swords } from 'lucide-react';
+import { ArrowLeft, ArrowRight, BookOpen, Check, ChevronDown, Dices, RotateCcw, Search, Shield, Sparkles, Swords } from 'lucide-react';
 import { set as idbSet, get as idbGet } from 'idb-keyval';
 import { Btn, Field, TextIn } from '../Panels';
 import { SCHOOLS, sheetName, type SpellData } from '../model';
-import { ABS, AB_RU, AB_SHORT, ALIGNMENTS, ALL_SKILLS, ARMORS, BACKGROUNDS, CLASSES, DRAGONS, ORIGIN_FEATS, RACES, SKILLS, STYLES, WEAPONS, slots, type Ab, type Ed } from './data';
-import { POINT_COST, STANDARD, allSkills, armorClass, asiLevels, attacks, bgOf, classOf, emptyBuild, expertiseCount, feats, features, fixedSkills, maxHp, mod, originBonus, pb, problems, proficientWeapon, raceOf, rule, scores, sgn, speed, subAt, subName, subOf, type AsiPick, type Build } from './engine';
+import { ABS, AB_RU, AB_SHORT, ALIGNMENTS, ALL_SKILLS, ARMORS, BACKGROUNDS, DRAGONS, ORIGIN_FEATS, RACES, SKILLS, STYLES, WEAPONS, slots, type Ab, type Ed } from './data';
+import { POINT_COST, STANDARD, allSkills, armorClass, armorProf, featureTexts, packSub, saves, subSpells, asiLevels, attacks, bgOf, classOf, emptyBuild, expertiseCount, feats, features, fixedSkills, maxHp, mod, originBonus, pb, problems, proficientWeapon, raceOf, rule, scores, sgn, speed, subAt, subName, subOf, type AsiPick, type Build } from './engine';
 import { racialSpells, toSheet } from './toSheet';
+import { classesFor, loadClub, loadLocal, setActive, subsFor, type StoredPack } from './content';
+import { Library } from './Library';
 
 const cx = (...c: (string | false | undefined)[]) => c.filter(Boolean).join(' ');
 const DRAFT = 'builder-draft';
@@ -31,6 +33,11 @@ export function Builder() {
   const [step, setStep] = useState<StepId>(init.step);
   const [db, setDb] = useState<SpellData[]>([]);
   const [busy, setBusy] = useState(false);
+  const [packs, setPacks] = useState<{ local: StoredPack[]; club: StoredPack[] }>({ local: [], club: [] });
+  const [lib, setLib] = useState(() => location.hash === '#library');
+  useEffect(() => { void Promise.all([loadLocal(), loadClub(import.meta.env.BASE_URL)]).then(([local, club]) => { setActive([...club, ...local]); setPacks({ local, club }); }); }, []);
+  useEffect(() => { const f = () => setLib(location.hash === '#library'); addEventListener('hashchange', f); return () => removeEventListener('hashchange', f); }, []);
+  const onPacks = (local: StoredPack[]) => { setActive([...packs.club, ...local]); setPacks((p) => ({ ...p, local })); };
   useEffect(() => { try { localStorage.setItem(DRAFT, JSON.stringify({ b, step })); } catch { /* приватный режим */ } }, [b, step]);
   useEffect(() => { fetch(`${import.meta.env.BASE_URL}spells.json`).then((r) => r.json()).then(setDb).catch(() => {}); }, []);
   const up = (p: Partial<Build>) => setB((x) => ({ ...x, ...p }));
@@ -51,6 +58,7 @@ export function Builder() {
     } catch { alert('Не получилось сохранить лист. Попробуйте ещё раз.'); setBusy(false); }
   }
 
+  if (lib) return <Library local={packs.local} club={packs.club} onChange={onPacks} onBack={() => { history.replaceState(null, '', location.pathname); setLib(false); scrollTo(0, 0); }} />;
   return (
     <div className="min-h-dvh pb-28">
       <header className="max-w-xl mx-auto px-4 pt-[max(1rem,env(safe-area-inset-top))] flex items-center gap-3">
@@ -59,6 +67,7 @@ export function Builder() {
           <div className="font-display-sc text-xl text-sand-light leading-tight">Сборка персонажа</div>
           <div className="text-xs text-cream/60 truncate">{c ? `${b.name || 'Без имени'} · ${c.name} ${b.level} ур. · ${b.ed}` : `Что угодно и драконы · D&D 5e`}</div>
         </div>
+        <button aria-label="Библиотека контента" onClick={() => { location.hash = '#library'; scrollTo(0, 0); }} className="w-10 h-10 grid place-items-center rounded-xl border border-moss-light text-sand-light shrink-0"><BookOpen size={18} /></button>
         {c && <div className="text-right text-xs leading-tight"><div><b className="text-sand-light text-base">{maxHp(b)}</b> хитов</div><div><b className="text-sand-light text-base">{armorClass(b).ac}</b> КД</div></div>}
       </header>
       <nav className="max-w-xl mx-auto px-4 mt-3 flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
@@ -143,16 +152,19 @@ function StepLevel({ b, up }: P) {
 function StepClass({ b, up }: P) {
   const c = classOf(b);
   const pick = (id: string) => { if (id === b.cls) return; up({ cls: id, subclass: undefined, customSub: '', style: undefined, skills: [], expertise: [], cantrips: [], spells: [], prepared: [], arcanum: [] }); };
-  const at = c ? subAt(c, b.ed) : 99;
+  const ps = packSub(b);
+  const at = c ? subAt(c, b.ed, ps) : 99;
+  const extra = c ? subsFor(b.ed, c.id) : [];
+  const srdName = c ? (b.ed === '2014' ? c.sub.name14 : c.sub.name24) : '';
   const st = c?.style?.[b.ed];
   return (
     <>
       <div className="grid grid-cols-2 gap-2">
-        {CLASSES.map((x) => (
+        {classesFor(b.ed).map((x) => (
           <Card key={x.id} on={b.cls === x.id} onClick={() => pick(x.id)}>
             <div className="font-display-sc text-xl text-sand-light leading-tight">{x.name}</div>
             <div className="text-xs text-cream/65 mt-0.5">к{x.hd} · {x.primary}</div>
-            <div className="text-[11px] text-cream/50">{x.caster ? (x.caster === 'pact' ? 'магия договора' : x.caster === 'full' ? 'заклинатель' : 'полузаклинатель') : 'без магии'}</div>
+            <div className="text-[11px] text-cream/50">{x.caster ? (x.caster === 'pact' ? 'магия договора' : x.caster === 'full' ? 'заклинатель' : 'полузаклинатель') : 'без магии'}{x.source ? ` · ${x.source}` : ''}</div>
           </Card>
         ))}
       </div>
@@ -161,7 +173,8 @@ function StepClass({ b, up }: P) {
           <H>{c.sub.title}</H>
           {b.level < at ? <Note>{c.sub.title} выбирается на {at} уровне. На {b.level} уровне его ещё нет.</Note> : (
             <div className="grid gap-2">
-              <Card on={b.subclass === 'srd'} onClick={() => up({ subclass: 'srd' })}><div className="text-cream">{b.ed === '2014' ? c.sub.name14 : c.sub.name24}</div><div className="text-xs text-cream/55">из открытых правил</div></Card>
+              {srdName && !extra.some((x) => x.name === srdName) && <Card on={b.subclass === 'srd'} onClick={() => up({ subclass: 'srd' })}><div className="text-cream">{srdName}</div><div className="text-xs text-cream/55">из открытых правил</div></Card>}
+              {extra.map((x) => <Card key={x.id} on={b.subclass === x.id} onClick={() => up({ subclass: x.id })}><div className="text-cream">{x.name}{x.level && x.level !== at ? ` (с ${x.level} ур.)` : ''}</div><div className="text-xs text-cream/55">{x.source}{x.summary ? ` · ${x.summary}` : ''}</div></Card>)}
               <Card on={b.subclass === 'custom'} onClick={() => up({ subclass: 'custom' })}><div className="text-cream">Другой (из книги или мастера)</div><div className="text-xs text-cream/55">впишите название сами</div></Card>
               {b.subclass === 'custom' && <TextIn aria-label="Название подкласса" placeholder="Название подкласса" value={b.customSub ?? ''} onChange={(e) => up({ customSub: e.target.value })} />}
             </div>
@@ -173,6 +186,7 @@ function StepClass({ b, up }: P) {
             <div><span className="text-cream/55">Доспехи:</span> {c.armor}</div>
             {features(b).map((f) => <div key={f} className="leading-snug">{f}</div>)}
           </div>
+          {(featureTexts(b).cls.length > 0 || featureTexts(b).sub.length > 0) && <details className="mt-3"><summary className="text-sm text-sand-light">Описания способностей</summary><div className="text-sm text-cream/80 mt-2 grid gap-1.5">{[...featureTexts(b).cls, ...featureTexts(b).sub].map((t) => <p key={t}>{t}</p>)}</div></details>}
         </>
       )}
     </>
@@ -378,7 +392,8 @@ function StepSpells({ b, up, db }: P & { db: SpellData[] }) {
   const [tab, setTab] = useState<'c' | 's' | 'a'>(sr.cantrips ? 'c' : 's');
   const [q, setQ] = useState(''); const [lv, setLv] = useState<number | 'all'>('all'); const [peek, setPeek] = useState<string | null>(null);
   const racial = racialSpells(b, db).map((s) => s.id);
-  const pool = useMemo(() => db.filter((s) => s.ed === b.ed && s.cls.includes(cl.id)), [db, b.ed, cl.id]);
+  const listId = cl.spellDef?.list ?? cl.id;
+  const pool = useMemo(() => db.filter((s) => s.ed === b.ed && s.cls.includes(listId)), [db, b.ed, listId]);
   const n = q.trim().toLowerCase();
   const list = pool.filter((s) => (tab === 'c' ? s.lvl === 0 : tab === 'a' ? sr.arcanum.includes(s.lvl) : s.lvl >= 1 && s.lvl <= sr.maxLvl) && (lv === 'all' || s.lvl === lv) && (!n || s.name.toLowerCase().includes(n) || (s.ru ?? '').toLowerCase().includes(n)))
     .sort((x, y) => x.lvl - y.lvl || (x.ru ?? x.name).localeCompare(y.ru ?? y.name));
@@ -394,6 +409,7 @@ function StepSpells({ b, up, db }: P & { db: SpellData[] }) {
   return (
     <>
       <Note>{sr.label}. Ячейки: {slots(cl, b.ed, b.level).map((v, i) => (v ? `${i + 1} кр. × ${v}` : '')).filter(Boolean).join(', ')}. СЛ спасброска {8 + pb(b.level) + mod(sc[ab])}, атака {sgn(pb(b.level) + mod(sc[ab]))} ({AB_RU[ab]}).</Note>
+      {subSpells(b).length > 0 && <Note>От подкласса, всегда подготовлены: {subSpells(b).join(', ')} — добавятся сами.</Note>}
       {racial.length > 0 && <Note>От вида: {racialSpells(b, db).map((s) => s.ru ?? s.name).join(', ')} — добавятся сами.</Note>}
       <div className="flex gap-2 mb-3 flex-wrap">
         {sr.cantrips > 0 && <Chip on={tab === 'c'} onClick={() => { setTab('c'); setLv('all'); }}>Заговоры {b.cantrips.length}/{sr.cantrips}</Chip>}
@@ -441,13 +457,13 @@ function StepGear({ b, up }: P) {
       <H><Shield size={15} className="inline -mt-0.5" /> Доспех</H>
       <div className="grid gap-1.5">
         <Card on={!b.armor} onClick={() => up({ armor: undefined })} className="flex justify-between"><span>Без доспеха</span><span className="text-sand-light">КД {acWith(undefined)}</span></Card>
-        {ARMORS.map((a) => { const ok = cl.armorKinds.includes(a.kind); return (
+        {ARMORS.map((a) => { const ok = armorProf(b).kinds.has(a.kind); return (
           <Card key={a.id} on={b.armor === a.id} onClick={() => up({ armor: a.id })} className={cx('flex justify-between items-center', !ok && 'opacity-50')}>
             <span>{a.name} <span className="text-xs text-cream/50">{a.kind === 'light' ? 'лёгкий' : a.kind === 'medium' ? 'средний' : 'тяжёлый'}{!ok && ' · нет владения'}</span></span><span className="text-sand-light">КД {acWith(a.id)}</span>
           </Card>
         ); })}
       </div>
-      <label className="flex items-center justify-between mt-3 rounded-2xl border border-moss-light bg-moss-deep/60 p-3"><span>Щит (+2 КД){!cl.shields && <span className="text-xs text-cream/50"> · нет владения</span>}</span><input type="checkbox" className="w-6 h-6 accent-[#aa9173]" checked={b.shield} onChange={(e) => up({ shield: e.target.checked })} /></label>
+      <label className="flex items-center justify-between mt-3 rounded-2xl border border-moss-light bg-moss-deep/60 p-3"><span>Щит (+2 КД){!armorProf(b).shields && <span className="text-xs text-cream/50"> · нет владения</span>}</span><input type="checkbox" className="w-6 h-6 accent-[#aa9173]" checked={b.shield} onChange={(e) => up({ shield: e.target.checked })} /></label>
       <div className="text-sm text-cream/70 mt-2">Итого КД: <b className="text-sand-light">{armorClass(b).ac}</b> ({armorClass(b).how})</div>
       <H><Swords size={15} className="inline -mt-0.5" /> Оружие (до 4)</H>
       <div className="flex flex-wrap gap-2">{WEAPONS.map((w) => { const on = b.weapons.includes(w.name); return <Chip key={w.name} on={on} disabled={!on && b.weapons.length >= 4} onClick={() => up({ weapons: on ? b.weapons.filter((x) => x !== w.name) : [...b.weapons, w.name] })}>{w.name}{!proficientWeapon(b, w.name) && ' *'}</Chip>; })}</div>
@@ -498,7 +514,7 @@ function StepDone({ b, db, probs, jump }: { b: Build; db: SpellData[]; probs: Re
           {[['Хиты', maxHp(b)], ['КД', ac.ac], ['Скорость', speed(b)], ['Мастерство', sgn(p)]].map(([l, v]) => <div key={l} className="rounded-xl bg-moss-deep border border-moss-light py-2"><div className="text-[11px] text-cream/60">{l}</div><div className="text-lg text-cream">{v}</div></div>)}
         </div>
         <div className="text-sm mt-3 grid gap-1.5 text-cream/85">
-          <div><span className="text-cream/55">Спасброски:</span> {cl.saves.map((a) => `${AB_RU[a]} ${sgn(mod(s[a]) + p)}`).join(', ')}</div>
+          <div><span className="text-cream/55">Спасброски:</span> {saves(b).map((a) => `${AB_RU[a]} ${sgn(mod(s[a]) + p)}`).join(', ')}</div>
           <div><span className="text-cream/55">Навыки:</span> {sk.map((x) => (b.expertise.includes(x) ? `${x} (комп.)` : x)).join(', ') || '—'}</div>
           <div><span className="text-cream/55">Атаки:</span> {attacks(b).map((a) => `${a.name} ${sgn(a.bonus)}, ${a.dmg}`).join('; ') || '—'}</div>
           {rule(b) && <div><span className="text-cream/55">Заклинания:</span> {[...names(b.cantrips), ...names(b.spells), ...names(b.arcanum), ...racialSpells(b, db).map((x) => x.ru ?? x.name)].join(', ') || '—'}</div>}

@@ -1,5 +1,6 @@
 // Расчёт персонажа из выборов игрока. Чистые функции — их же проверяют тесты.
-import { ABS, AB_RU, ARMORS, BACKGROUNDS, CLASSES, DRAGONS, RACES, SKILLS, WEAPONS, slots, spellRule, type Ab, type ClassDef, type Ed, type Race, type Sub, type Background, type SpellRule } from './data';
+import { abOf, classesFor, findSub, type Effect, type SubDef } from './content';
+import { ABS, AB_RU, ARMORS, BACKGROUNDS, DRAGONS, RACES, SKILLS, WEAPONS, slots, spellRule, type Ab, type ClassDef, type Ed, type Race, type Sub, type Background, type SpellRule } from './data';
 
 export type Method = 'standard' | 'pointbuy' | 'roll' | 'manual';
 export interface AsiPick { mode: 'two' | 'one' | 'feat'; a?: Ab; b?: Ab; feat?: string }
@@ -28,12 +29,26 @@ export const pb = (l: number) => 2 + Math.floor((l - 1) / 4);
 export const STANDARD = [15, 14, 13, 12, 10, 8];
 export const POINT_COST: Record<number, number> = { 8: 0, 9: 1, 10: 2, 11: 3, 12: 4, 13: 5, 14: 7, 15: 9 };
 
-export const classOf = (b: Build): ClassDef | undefined => CLASSES.find((c) => c.id === b.cls);
+export const classOf = (b: Build): ClassDef | undefined => classesFor(b.ed).find((c) => c.id === b.cls);
+/** Подкласс из пакета контента, если выбран он. */
+export const packSub = (b: Build): SubDef | undefined => (b.subclass && b.subclass !== 'srd' && b.subclass !== 'custom' ? findSub(b.ed, b.subclass) : undefined);
 export const raceOf = (b: Build): Race | undefined => RACES[b.ed].find((r) => r.id === b.race);
 export const subOf = (b: Build): Sub | undefined => raceOf(b)?.subs?.find((s) => s.id === b.sub);
 export const bgOf = (b: Build): Background | undefined => BACKGROUNDS[b.ed].find((x) => x.id === b.bg);
-export const subAt = (c: ClassDef, ed: Ed) => (ed === '2014' ? c.sub.at14 : c.sub.at24);
-export const subName = (b: Build) => { const c = classOf(b); if (!c || b.level < subAt(c, b.ed)) return ''; return b.subclass === 'custom' ? (b.customSub ?? '').trim() : b.subclass ? (b.ed === '2014' ? c.sub.name14 : c.sub.name24) : ''; };
+export const subAt = (c: ClassDef, ed: Ed, s?: SubDef) => s?.level ?? (ed === '2014' ? c.sub.at14 : c.sub.at24);
+export const subName = (b: Build) => {
+  const c = classOf(b); const ps = packSub(b); if (!c || b.level < subAt(c, b.ed, ps)) return '';
+  if (ps) return ps.name;
+  return b.subclass === 'custom' ? (b.customSub ?? '').trim() : b.subclass === 'srd' ? (b.ed === '2014' ? c.sub.name14 : c.sub.name24) : '';
+};
+/** Механические эффекты способностей из пакетов, открытых к текущему уровню. */
+export function effects(b: Build): Effect[] {
+  const c = classOf(b); const ps = packSub(b); const out: Effect[] = [];
+  for (const f of c?.fdefs ?? []) if (f.level <= b.level) out.push(...f.effects);
+  if (ps && c && b.level >= subAt(c, b.ed, ps)) for (const f of ps.features) if (f.level <= b.level) out.push(...f.effects);
+  return out;
+}
+const eff = <T extends Effect['type']>(b: Build, t: T) => effects(b).filter((e): e is Extract<Effect, { type: T }> => e.type === t);
 export const asiLevels = (b: Build) => { const c = classOf(b); return c ? (b.ed === '2014' ? c.asi14 : [...c.asi24, 19]).filter((l) => l <= b.level) : []; };
 
 /** Бонусы к характеристикам от расы (2014) или предыстории (2024). */
@@ -80,6 +95,7 @@ export function allSkills(b: Build): string[] {
   const r = raceOf(b), bg = bgOf(b);
   const set = new Set<string>([...b.skills, ...(bg?.custom ? b.bgSkills : bg?.skills ?? []), ...(r?.skills ?? []), ...(subOf(b)?.skills ?? []), ...b.raceSkills]);
   if (hasFeat(b, 'Одарённый')) b.skilledFeat.forEach((s) => set.add(s));
+  eff(b, 'skill_proficiency').forEach((e) => e.value.forEach((s) => set.add(s)));
   return [...set];
 }
 /** Навыки, занятые не классом (чтобы не выбрать их второй раз). */
@@ -89,8 +105,8 @@ export function fixedSkills(b: Build): string[] {
 }
 
 export function expertiseCount(b: Build): number {
-  const c = classOf(b); const t = c?.expertise?.[b.ed]; if (!t) return 0;
-  return Object.entries(t).filter(([l]) => +l <= b.level).reduce((s, [, n]) => s + n, 0);
+  const c = classOf(b); const t = c?.expertise?.[b.ed] ?? {};
+  return Object.entries(t).filter(([l]) => +l <= b.level).reduce((s, [, n]) => s + n, 0) + eff(b, 'expertise').reduce((s, e) => s + e.count, 0);
 }
 
 export function maxHp(b: Build): number {
@@ -99,7 +115,8 @@ export function maxHp(b: Build): number {
   const per = b.hp === 'max' ? c.hd : c.hd / 2 + 1;
   let hp = c.hd + con + (b.level - 1) * (per + con);
   hp += ((raceOf(b)?.hpPerLevel ?? 0) + (subOf(b)?.hpPerLevel ?? 0)) * b.level;
-  if (c.id === 'sorcerer' && subName(b) && b.subclass !== 'custom') hp += b.level; // драконья стойкость
+  if (c.id === 'sorcerer' && b.subclass === 'srd' && subName(b)) hp += b.level; // драконья стойкость
+  hp += eff(b, 'hp_per_level').reduce((s, e) => s + e.value, 0) * b.level;
   return Math.max(b.level, hp);
 }
 
@@ -108,6 +125,7 @@ export function speed(b: Build): number {
   const armor = ARMORS.find((a) => a.id === b.armor);
   if (c?.id === 'monk' && !armor && !b.shield && b.level >= 2) s += b.level >= 18 ? 30 : b.level >= 14 ? 25 : b.level >= 10 ? 20 : b.level >= 6 ? 15 : 10;
   if (c?.id === 'barbarian' && b.level >= 5 && armor?.kind !== 'heavy') s += 10;
+  for (const e of eff(b, 'speed')) if (!e.condition || (e.condition === 'no_armor' && !armor) || (e.condition === 'no_heavy_armor' && armor?.kind !== 'heavy')) s += e.value;
   return s;
 }
 
@@ -123,7 +141,8 @@ export function armorClass(b: Build): { ac: number; how: string } {
   const opts: [number, string][] = [[10 + dex + shield, `без доспеха${shield ? ' + щит' : ''}`]];
   if (c?.id === 'barbarian') opts.push([10 + dex + mod(s.con) + shield, `защита без доспехов (ЛОВ + ТЕЛ)${shield ? ' + щит' : ''}`]);
   if (c?.id === 'monk' && !b.shield) opts.push([10 + dex + mod(s.wis), 'защита без доспехов (ЛОВ + МДР)']);
-  if (c?.id === 'sorcerer' && subName(b) && b.subclass !== 'custom') opts.push([13 + dex + shield, `драконья чешуя (13 + ЛОВ)${shield ? ' + щит' : ''}`]);
+  for (const e of eff(b, 'unarmored_ac')) { const v = e.base + e.abilities.reduce((t, a) => t + (abOf(a) ? mod(s[abOf(a)!]) : 0), 0) + (e.shield === false ? 0 : shield); if (e.shield !== false || !b.shield) opts.push([v, `защита без доспехов (${e.base} + ${e.abilities.map((a) => AB_RU[abOf(a)!]?.slice(0, 3).toUpperCase()).join(' + ')})`]); }
+  if (c?.id === 'sorcerer' && b.subclass === 'srd' && subName(b)) opts.push([13 + dex + shield, `драконья чешуя (13 + ЛОВ)${shield ? ' + щит' : ''}`]);
   const best = opts.sort((x, y) => y[0] - x[0])[0]!;
   return { ac: best[0], how: best[1] };
 }
@@ -135,6 +154,8 @@ export function proficientWeapon(b: Build, name: string): boolean {
   if (b.ed === '2014' && b.sub === 'high' && ['Длинный меч', 'Короткий меч', 'Длинный лук', 'Короткий лук'].includes(name)) return true;
   const rule = b.ed === '2024' && c.weapons24 ? c.weapons24 : c.weapons;
   if (rule === 'martial') return true;
+  const extra = eff(b, 'weapon_proficiency').flatMap((e) => e.value.map((x) => x.toLowerCase()));
+  if (extra.includes('martial') || extra.includes(name.toLowerCase()) || (extra.includes('simple') && !w.martial)) return true;
   if (rule === 'simple') return !w.martial;
   if (rule === 'light') return !w.martial || !!w.light;
   if (rule === 'finesse-light') return !w.martial || !!w.finesse || !!w.light;
@@ -166,14 +187,41 @@ export function rule(b: Build): SpellRule | undefined {
 
 export function features(b: Build): string[] {
   const c = classOf(b); if (!c) return [];
-  const t = b.ed === '2014' ? c.feat14 : c.feat24; const sn = subName(b);
+  const t = b.ed === '2014' ? c.feat14 : c.feat24; const sn = subName(b); const ps = packSub(b);
+  const subOn = !!ps && b.level >= subAt(c, b.ed, ps);
   const out: string[] = [];
   for (let l = 1; l <= b.level; l++) {
-    const f = (t[l] ?? []).map((x) => (x.startsWith('★') ? `умение подкласса${sn ? ` «${sn}»` : ''}` : x.endsWith('выбор подкласса') && sn ? `${x.replace(' — выбор подкласса', '')}: ${sn}` : x));
+    let f = (t[l] ?? []).map((x) => (x.endsWith('выбор подкласса') && sn ? `${x.replace(' — выбор подкласса', '')}: ${sn}` : x));
+    if (subOn) {
+      f = f.filter((x) => !x.startsWith('★'));
+      f.push(...ps!.features.filter((x) => x.level === l).map((x) => `${x.name} (${ps!.name})`));
+    } else f = f.map((x) => (x.startsWith('★') ? `умение подкласса${sn ? ` «${sn}»` : ''}` : x));
     if (asiLevels(b).includes(l) && !(b.ed === '2024' && l === 19)) f.push('Увеличение характеристик или черта');
     if (f.length) out.push(`${l} ур.: ${f.join('; ')}`);
   }
   return out;
+}
+
+export function armorProf(b: Build): { kinds: Set<string>; shields: boolean } {
+  const c = classOf(b); const extra = eff(b, 'armor_proficiency').flatMap((e) => e.value as string[]);
+  return { kinds: new Set([...(c?.armorKinds ?? []), ...extra.filter((x) => x !== 'shields')]), shields: !!c?.shields || extra.includes('shields') };
+}
+export function saves(b: Build): Ab[] {
+  const c = classOf(b); return [...new Set([...(c?.saves ?? []), ...eff(b, 'save_proficiency').flatMap((e) => e.value.map((a) => abOf(a)).filter((a): a is Ab => !!a))])];
+}
+/** Заклинания подкласса, которые всегда подготовлены (английские или русские названия из пакета). */
+export function subSpells(b: Build): string[] {
+  const c = classOf(b); const ps = packSub(b); if (!c || !ps || b.level < subAt(c, b.ed, ps)) return [];
+  return ps.spells.filter((g) => g.level <= b.level).flatMap((g) => g.spells);
+}
+/** Описания способностей из пакетов, открытых к уровню. */
+export function featureTexts(b: Build): { cls: string[]; sub: string[] } {
+  const c = classOf(b); const ps = packSub(b);
+  const fmt = (f: { name: string; level: number; text: string }) => `${f.name} (${f.level} ур.).${f.text ? ` ${f.text}` : ''}`;
+  return {
+    cls: (c?.fdefs ?? []).filter((f) => f.level <= b.level).map(fmt),
+    sub: ps && c && b.level >= subAt(c, b.ed, ps) ? ps.features.filter((f) => f.level <= b.level).map(fmt) : [],
+  };
 }
 
 export function dragonType(b: Build): string { return DRAGONS.find((d) => d[0] === b.dragon)?.[1] ?? ''; }
@@ -184,7 +232,7 @@ export function problems(b: Build): Record<string, string[]> {
   const add = (k: string, m: string) => (p[k] ??= []).push(m);
   const c = classOf(b), r = raceOf(b), bg = bgOf(b);
   if (!c) add('class', 'Выберите класс');
-  else if (b.level >= subAt(c, b.ed) && !subName(b)) add('class', `Выберите ${c.sub.title.toLowerCase()}`);
+  else if (b.level >= subAt(c, b.ed, packSub(b)) && !subName(b)) add('class', `Выберите ${c.sub.title.toLowerCase()}`);
   if (c?.style?.[b.ed] && b.level >= c.style[b.ed]! && !b.style) add('class', 'Выберите боевой стиль');
   if (!r) add('race', 'Выберите вид');
   else {

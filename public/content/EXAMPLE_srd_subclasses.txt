@@ -1,0 +1,301 @@
+ПРИМЕР ПАКЕТА КОНТЕНТА — подклассы SRD 5.1 с описаниями.
+Этот пакет уже загружен на сайт как общий. Файл можно взять за образец.
+Всё, что выше первой фигурной скобки, сайт пропускает — здесь можно писать пояснения.
+
+{
+  "format": "dnd-content-pack",
+  "format_version": 1,
+  "ruleset": "5e-2014",
+  "pack_id": "srd_subclasses_2014",
+  "pack_name": "Подклассы SRD 5.1 с описаниями",
+  "pack_version": 1,
+  "language": "ru",
+  "author": "Клуб «Что угодно и драконы»",
+  "description": "Подклассы из открытых правил SRD 5.1 (CC-BY-4.0), способности пересказаны своими словами.",
+  "sources": [
+    {
+      "id": "srd51",
+      "name": "SRD 5.1"
+    }
+  ],
+  "subclasses": [
+    {
+      "id": "champion",
+      "class_id": "fighter",
+      "name": "Чемпион",
+      "name_en": "Champion",
+      "source": "SRD 5.1",
+      "summary": "простая и надёжная сила удара",
+      "description": "Воин, который полагается на тренированное тело и точность ударов.",
+      "features": [
+        {
+          "id": "champion_crit",
+          "name": "Улучшенный критический удар",
+          "name_en": "Improved Critical",
+          "level": 3,
+          "action": "passive",
+          "description": "Атаки оружием становятся критическими при выпадении 19 или 20 на к20."
+        },
+        {
+          "id": "champion_athlete",
+          "name": "Выдающийся атлет",
+          "name_en": "Remarkable Athlete",
+          "level": 7,
+          "action": "passive",
+          "description": "К проверкам Силы, Ловкости и Телосложения без владения прибавляется половина бонуса мастерства (с округлением вверх). Прыжок в длину с разбега удлиняется на число футов, равное модификатору Силы."
+        },
+        {
+          "id": "champion_style",
+          "name": "Дополнительный боевой стиль",
+          "name_en": "Additional Fighting Style",
+          "level": 10,
+          "action": "passive",
+          "description": "Выберите ещё один боевой стиль из доступных воину."
+        },
+        {
+          "id": "champion_supercrit",
+          "name": "Превосходный критический удар",
+          "name_en": "Superior Critical",
+          "level": 15,
+          "action": "passive",
+          "description": "Атаки оружием становятся критическими при 18–20 на к20."
+        },
+        {
+          "id": "champion_survivor",
+          "name": "Выживший",
+          "name_en": "Survivor",
+          "level": 18,
+          "action": "passive",
+          "description": "В начале своего хода, если у вас не больше половины хитов и не 0, восстановите 5 + модификатор Телосложения хитов.",
+          "formula": "5 + ТЕЛ"
+        }
+      ]
+    },
+    {
+      "id": "life",
+      "class_id": "cleric",
+      "name": "Домен жизни",
+      "name_en": "Life Domain",
+      "source": "SRD 5.1",
+      "summary": "лекарь в тяжёлом доспехе",
+      "description": "Жрец божества, которое хранит жизнь и исцеляет.",
+      "spells": [
+        {
+          "level": 1,
+          "spells": [
+            "Bless",
+            "Cure Wounds"
+          ]
+        },
+        {
+          "level": 3,
+          "spells": [
+            "Lesser Restoration",
+            "Spiritual Weapon"
+          ]
+        },
+        {
+          "level": 5,
+          "spells": [
+            "Beacon of Hope",
+            "Revivify"
+          ]
+        },
+        {
+          "level": 7,
+          "spells": [
+            "Death Ward",
+            "Guardian of Faith"
+          ]
+        },
+        {
+          "level": 9,
+          "spells": [
+            "Mass Cure Wounds",
+            "Raise Dead"
+          ]
+        }
+      ],
+      "features": [
+        {
+          "id": "life_armor",
+          "name": "Дополнительное владение",
+          "name_en": "Bonus Proficiency",
+          "level": 1,
+          "action": "passive",
+          "description": "Вы владеете тяжёлыми доспехами.",
+          "effects": [
+            {
+              "type": "armor_proficiency",
+              "value": [
+                "heavy"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "life_disciple",
+          "name": "Последователь жизни",
+          "name_en": "Disciple of Life",
+          "level": 1,
+          "action": "passive",
+          "description": "Когда заклинание 1 круга и выше восстанавливает хиты, цель получает дополнительно 2 + круг заклинания.",
+          "formula": "2 + круг ячейки"
+        },
+        {
+          "id": "life_preserve",
+          "name": "Божественный канал: сохранение жизни",
+          "name_en": "Channel Divinity: Preserve Life",
+          "level": 2,
+          "action": "action",
+          "range": "30 футов",
+          "description": "Действием и использованием Божественного канала вы распределяете восстановление хитов, равное пятикратному уровню жреца, между существами в пределах 30 футов. Каждое можно вылечить не выше половины его максимума хитов. На нежить и конструктов не действует.",
+          "formula": "5 × уровень жреца"
+        },
+        {
+          "id": "life_blessed",
+          "name": "Благословенный целитель",
+          "name_en": "Blessed Healer",
+          "level": 6,
+          "action": "passive",
+          "description": "Когда ваше заклинание 1 круга и выше лечит другое существо, вы сами восстанавливаете 2 + круг заклинания хитов."
+        },
+        {
+          "id": "life_strike",
+          "name": "Божественный удар",
+          "name_en": "Divine Strike",
+          "level": 8,
+          "action": "passive",
+          "description": "Раз в свой ход при попадании оружием добавляете 1к8 урона излучением.",
+          "scaling": "2к8 с 14 уровня"
+        },
+        {
+          "id": "life_supreme",
+          "name": "Высшее исцеление",
+          "name_en": "Supreme Healing",
+          "level": 17,
+          "action": "passive",
+          "description": "Вместо броска костей лечения заклинанием берите максимальное значение каждой кости."
+        }
+      ]
+    },
+    {
+      "id": "draconic",
+      "class_id": "sorcerer",
+      "name": "Наследие драконьей крови",
+      "name_en": "Draconic Bloodline",
+      "source": "SRD 5.1",
+      "summary": "кровь дракона в жилах",
+      "description": "Магия чародея пришла от далёкого предка-дракона.",
+      "features": [
+        {
+          "id": "draconic_ancestor",
+          "name": "Драконий предок",
+          "name_en": "Dragon Ancestor",
+          "level": 1,
+          "action": "passive",
+          "description": "Выберите вид дракона — от него зависит тип урона. Вы говорите на драконьем, а в проверках Харизмы при общении с драконами бонус мастерства удваивается."
+        },
+        {
+          "id": "draconic_resilience",
+          "name": "Драконья стойкость",
+          "name_en": "Draconic Resilience",
+          "level": 1,
+          "action": "passive",
+          "description": "Максимум хитов растёт на 1 за каждый уровень чародея. Без доспеха КД равен 13 + модификатор Ловкости.",
+          "effects": [
+            {
+              "type": "hp_per_level",
+              "value": 1
+            },
+            {
+              "type": "unarmored_ac",
+              "base": 13,
+              "abilities": [
+                "dexterity"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "draconic_affinity",
+          "name": "Родство со стихией",
+          "name_en": "Elemental Affinity",
+          "level": 6,
+          "action": "passive",
+          "description": "К урону заклинаний вашего драконьего типа прибавляется модификатор Харизмы. За 1 очко чародейства можно получить сопротивление этому типу урона на час."
+        },
+        {
+          "id": "draconic_wings",
+          "name": "Драконьи крылья",
+          "name_en": "Dragon Wings",
+          "level": 14,
+          "action": "bonus",
+          "description": "Бонусным действием у вас вырастают крылья, скорость полёта равна обычной скорости. Не работает в доспехе, который не рассчитан на крылья."
+        },
+        {
+          "id": "draconic_presence",
+          "name": "Драконье присутствие",
+          "name_en": "Draconic Presence",
+          "level": 18,
+          "action": "action",
+          "range": "60 футов",
+          "duration": "концентрация, до 1 минуты",
+          "description": "Потратив 5 очков чародейства, вы окружаете себя аурой страха или трепета. Враждебные существа в пределах 60 футов делают спасбросок Мудрости, при провале они очарованы или испуганы.",
+          "limits": "5 очков чародейства"
+        }
+      ]
+    },
+    {
+      "id": "thief",
+      "class_id": "rogue",
+      "name": "Вор",
+      "name_en": "Thief",
+      "source": "SRD 5.1",
+      "summary": "ловкие руки и лазанье",
+      "description": "Плут, который мастерски проникает туда, куда не звали.",
+      "features": [
+        {
+          "id": "thief_hands",
+          "name": "Быстрые руки",
+          "name_en": "Fast Hands",
+          "level": 3,
+          "action": "bonus",
+          "description": "Хитрым действием можно сделать проверку Ловкости рук, воспользоваться воровскими инструментами или предметом."
+        },
+        {
+          "id": "thief_climb",
+          "name": "Работа на высоте",
+          "name_en": "Second-Story Work",
+          "level": 3,
+          "action": "passive",
+          "description": "Лазанье не тратит лишнее перемещение. Прыжок с разбега удлиняется на модификатор Ловкости в футах."
+        },
+        {
+          "id": "thief_sneak",
+          "name": "Превосходная скрытность",
+          "name_en": "Supreme Sneak",
+          "level": 9,
+          "action": "passive",
+          "description": "Преимущество на Скрытность, если за ход вы переместились не дальше половины скорости."
+        },
+        {
+          "id": "thief_device",
+          "name": "Использование магических устройств",
+          "name_en": "Use Magic Device",
+          "level": 13,
+          "action": "passive",
+          "description": "Вы игнорируете требования класса, вида и уровня для магических предметов."
+        },
+        {
+          "id": "thief_reflexes",
+          "name": "Воровские рефлексы",
+          "name_en": "Thief's Reflexes",
+          "level": 17,
+          "action": "passive",
+          "description": "В первом раунде боя у вас два хода: первый по обычной инициативе, второй — на 10 меньше. Не работает, если вас застали врасплох."
+        }
+      ]
+    }
+  ]
+}
