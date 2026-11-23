@@ -38,3 +38,22 @@ describe('игровой режим', () => {
     const x = doRoll({ group: '', name: 't', kind: 'd100', target: 50 }); expect(x.verdict).toBeTruthy();
   });
 });
+
+import { applyLevel, findClass, plan, slotsFor, CLASSES } from '../src/levelup';
+describe('новый уровень', () => {
+  test('паладин 4 → 5', () => {
+    const s = applyAi(templateFor('dnd'), { 'Класс': 'Паладин', 'Уровень': 4, 'Телосложение': { значение: 14 }, 'Максимум хитов': '36', 'Текущие хиты': '20' }, []).sheet;
+    const cls = findClass(s)!; expect(cls.id).toBe('paladin');
+    const p = plan(s, cls, 6); expect(p.hpGain).toBe(8); expect(p.feats).toContain('Дополнительная атака');
+    const r = applyLevel(s, p, true); const b = r.pages.flatMap((x) => x.blocks);
+    expect(b.find((x) => x.label === 'Уровень')!.value).toBe('5');
+    expect(b.find((x) => x.label === 'Максимум хитов')!.value).toBe('44');
+    expect(b.find((x) => x.label === 'Текущие хиты')!.value).toBe('28');
+    expect(b.find((x) => x.label === 'Кости хитов')!.value).toBe('5к10');
+    expect(b.find((x) => /ячейк/i.test(x.label))!.rows!.map((x) => x.count)).toEqual([4, 2, 0, 0, 0, 0, 0, 0, 0]);
+  });
+  test('таблицы ячеек', () => {
+    const w = CLASSES.find((c) => c.id === 'wizard')!; expect(slotsFor(w, 5)).toEqual([4, 3, 2]);
+    const k = CLASSES.find((c) => c.id === 'warlock')!; expect(slotsFor(k, 5)).toEqual([0, 0, 2]);
+  });
+});

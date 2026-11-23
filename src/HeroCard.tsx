@@ -3,6 +3,7 @@ import { Minus, Plus, Trash2 } from 'lucide-react';
 import { Btn } from './Panels';
 import { useStore } from './store';
 import { CONDITIONS } from './play';
+import { LevelUpButton } from './LevelUp';
 import { autoStat, calcSheet, keyOf, sheetName, sheetSystem, uid, type Block, type Charge, type Sheet } from './model';
 
 const all = (s: Sheet) => s.pages.flatMap((p) => p.blocks);
@@ -73,6 +74,7 @@ export function HeroCard() {
 
       {sys === 'dnd' && (
         <>
+          <LevelUpButton />
           <Counter big title="Хиты" value={num(by('Текущие хиты')?.value) ?? num(by('Максимум хитов')?.value)} max={num(by('Максимум хитов')?.value)} onSet={(v) => setVal('Текущие хиты', v)} />
           <div className="grid grid-cols-2 gap-2">
             <Counter title="Временные хиты" value={num(by('Временные хиты')?.value) ?? 0} onSet={(v) => setVal('Временные хиты', v || '')} />
