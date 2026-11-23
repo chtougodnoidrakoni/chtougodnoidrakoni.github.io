@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Undo2, Redo2, Settings2, Printer, Download, Plus, Pencil, Check, Trash2, Copy, ChevronUp, ChevronDown, Upload, FilePlus2, MoreHorizontal, LayoutTemplate, BookOpen, Wand2, Dices } from 'lucide-react';
+import { ArrowLeft, Undo2, Redo2, Settings2, Printer, Download, Plus, Pencil, Check, Trash2, Copy, ChevronUp, ChevronDown, Upload, FilePlus2, MoreHorizontal, LayoutTemplate, BookOpen, Wand2, Dices, Share2 } from 'lucide-react';
 import { Help } from './Help';
 import { Dragon } from './Dragon';
 import { NavFab } from './NavFab';
@@ -8,6 +8,7 @@ import { Feedback } from './Feedback';
 import { PromptButton } from './PromptMaker';
 import { AiPaste } from './AiPaste';
 import { PlayPanel } from './PlayPanel';
+import { allSheets, BACKUP_KIND, backupDue, markBackup, sheetFromLink, sheetsFromFile, shareLink, snoozeBackup } from './backup';
 import { useStore } from './store';
 import { makeBlock, PAGE_TEMPLATES, relayoutFromTemplate, sheetName, uid, type BlockType, type Sheet } from './model';
 import { LayoutPage, SpellbookPages } from './Page';
@@ -49,7 +50,15 @@ export function App() {
   const [hash, setHash] = useState(location.hash);
   useEffect(() => { const f = () => setHash(location.hash); window.addEventListener('hashchange', f); return () => window.removeEventListener('hashchange', f); }, []);
   useEffect(() => {
-    void boot().then(() => { const m = location.hash.match(/sheet\/(\w+)/); if (m) void open(m[1]!); });
+    void boot().then(async () => {
+      if (location.hash.startsWith('#share=')) {
+        const s = await sheetFromLink(location.hash); history.replaceState(null, '', location.pathname);
+        if (s) { const st = useStore.getState(); const id = await st.create({ ...s, name: s.name && s.name !== 'Новый персонаж' ? `${s.name} (по ссылке)` : s.name }); await st.open(id); st.say('Лист по ссылке добавлен в ваши листы'); }
+        else useStore.getState().say('Ссылка повреждена — попросите прислать её заново');
+        return;
+      }
+      const m = location.hash.match(/sheet\/(\w+)/); if (m) void open(m[1]!);
+    });
   }, [boot, open]);
   if (!ready) return <div className="h-screen grid place-items-center text-sand">…</div>;
   return (
@@ -87,6 +96,29 @@ function ClubLinks() {
   );
 }
 
+function BackupRow() {
+  const { index, say } = useStore();
+  const [due, setDue] = useState(() => backupDue(index.length));
+  if (!index.length) return null;
+  const save = async () => {
+    const sheets = await allSheets(index);
+    const d = new Date().toLocaleDateString('ru-RU').replace(/\./g, '-');
+    await saveFile(`Листы ЧУиД ${d}.json`, new Blob([JSON.stringify({ kind: BACKUP_KIND, at: Date.now(), sheets })], { type: 'application/json' }));
+    markBackup(); setDue(false); say(`Сохранено листов: ${sheets.length}`);
+  };
+  return (
+    <div className="mt-3">
+      {due && (
+        <div className="mb-2 rounded-xl border border-sand/50 bg-sand/10 p-3 text-sm text-cream/85">
+          Листы хранятся только на этом телефоне. Неделю не было резервной копии — сохраните все листы одним файлом, например себе в «Избранное» в Telegram.
+          <div className="mt-2 flex gap-2"><Btn tone="gold" className="flex-1" onClick={save}><Download size={16} />Сохранить</Btn><Btn onClick={() => { snoozeBackup(); setDue(false); }}>Позже</Btn></div>
+        </div>
+      )}
+      {!due && <button onClick={save} className="w-full h-10 rounded-xl border border-moss-light text-sm text-cream/80 inline-flex items-center justify-center gap-2"><Download size={16} />Сохранить все листы одним файлом ({index.length})</button>}
+    </div>
+  );
+}
+
 function Home() {
   const { index, create, open, remove, say } = useStore();
   const [confirm, setConfirm] = useState<string | null>(null);
@@ -109,18 +141,20 @@ function Home() {
         ))}</div>
         <PromptButton />
         <a href="#help" onClick={() => scrollTo(0, 0)} className="h-11 rounded-xl border border-sand/60 text-sand-light inline-flex items-center justify-center gap-2"><BookOpen size={18} />Как пользоваться сайтом</a>
-        <label className="h-11 rounded-xl bg-moss border border-moss-light inline-flex items-center justify-center gap-2 cursor-pointer"><Upload size={18} />Открыть файл листа (.json)
+        <label className="h-11 rounded-xl bg-moss border border-moss-light inline-flex items-center justify-center gap-2 cursor-pointer"><Upload size={18} />Открыть файл листа или копию (.json)
           <input type="file" accept=".json,application/json" className="hidden" onChange={async (e) => {
             const f = e.target.files?.[0]; if (!f) return;
             try {
-              const s = JSON.parse(await f.text()) as Sheet;
-              if (!Array.isArray(s.pages) || !Array.isArray(s.spells)) throw new Error();
-              void open(await create(s)); say('Лист открыт');
+              const list = sheetsFromFile(JSON.parse(await f.text()));
+              if (!list.length) throw new Error();
+              if (list.length === 1) { void open(await create(list[0]!)); say('Лист открыт'); }
+              else { for (const x of [...list].reverse()) await create(x); say(`Загружено листов: ${list.length}`); }
             } catch { say('Это не файл листа'); }
             e.target.value = '';
           }} />
         </label>
       </div>
+      <BackupRow />
       <InstallButtons />
       <ClubLinks />
       <Feedback />
@@ -294,6 +328,7 @@ function Editor() {
           <Btn onClick={() => { setMenu(false); close(); location.hash = '#help'; scrollTo(0, 0); }}><BookOpen size={18} />Как пользоваться сайтом</Btn>
           <Btn onClick={() => { setMenu(false); setTimeout(makePdf, 300); }}><Printer size={18} />Скачать PDF</Btn>
           <Btn onClick={() => { setMenu(false); setTimeout(() => window.print(), 300); }}><Printer size={18} />Системная печать Safari</Btn>
+          <Btn onClick={async () => { const url = await shareLink(sheet); const nav = navigator as Navigator; if (nav.share && /iPhone|iPad|Android/i.test(navigator.userAgent)) { try { await nav.share({ url }); return; } catch (e) { if ((e as Error).name === 'AbortError') return; } } try { await navigator.clipboard.writeText(url); say('Ссылка скопирована — отправьте её мастеру или другу'); } catch { prompt('Скопируйте ссылку', url); } }}><Share2 size={18} />Поделиться ссылкой на лист</Btn>
           <Btn onClick={() => saveFile(`${sheetName(sheet).replace(/[^\p{L}\p{N}]+/gu, '_') || 'list'}.json`, new Blob([JSON.stringify(sheet)], { type: 'application/json' }))}><Download size={18} />Сохранить файлом (.json)</Btn>
           <Btn onClick={async () => { const id = await create({ ...sheet, name: `${sheetName(sheet)} (копия)` }); setMenu(false); await open(id); say('Создана копия листа'); }}><Copy size={18} />Копия листа</Btn>
           <p className="text-xs text-cream/40 px-1 pt-1">Версия от {new Date(Number(__BUILD__)).toLocaleString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}</p>
