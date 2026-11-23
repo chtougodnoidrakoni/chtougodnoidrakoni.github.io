@@ -10,6 +10,8 @@ const versionFile = { name: 'version-file', generateBundle(this: { emitFile: (f:
 export default defineConfig({
   base: process.env.BASE_PATH ?? '/',
   define: { __BUILD__: JSON.stringify(BUILD) },
+  // два сайта клуба из одного кода: лист персонажа (/) и сборка персонажа (/builder/)
+  build: { rollupOptions: { input: { main: 'index.html', builder: 'builder/index.html' } } },
   plugins: [
     react(), tailwindcss(), versionFile,
     VitePWA({
@@ -22,7 +24,7 @@ export default defineConfig({
         theme_color: '#2b322d', background_color: '#2b322d', display: 'standalone',
         icons: [{ src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' }, { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' }, { src: 'icons/icon-maskable.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }],
       },
-      workbox: { skipWaiting: true, clientsClaim: true, cleanupOutdatedCaches: true, globPatterns: ['**/*.{js,css,html,woff2,svg,png,webp,json}'], globIgnores: ['version.json'], navigateFallbackDenylist: [/version\.json/], maximumFileSizeToCacheInBytes: 5 * 1024 * 1024 },
+      workbox: { skipWaiting: true, clientsClaim: true, cleanupOutdatedCaches: true, globPatterns: ['**/*.{js,css,html,woff2,svg,png,webp,json}'], globIgnores: ['version.json'], navigateFallbackDenylist: [/version\.json/, /\/builder/], maximumFileSizeToCacheInBytes: 5 * 1024 * 1024 },
     }),
   ],
 });
