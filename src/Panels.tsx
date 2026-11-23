@@ -216,7 +216,7 @@ export function SpellPicker() {
 const CLS_RU: Record<string, string> = { artificer: 'изобретатель', bard: 'бард', cleric: 'жрец', druid: 'друид', paladin: 'паладин', ranger: 'следопыт', sorcerer: 'чародей', warlock: 'колдун', wizard: 'волшебник' };
 /** Предпросмотр заклинания в списке выбора: всё, что будет на карточке книги заклинаний. */
 function SpellPreview({ s, on, onToggle }: { s: SpellData; on: boolean; onToggle: () => void }) {
-  const comps = [s.v && 'В', s.s && 'С', s.m && `М (${s.rm ?? s.m})`].filter(Boolean).join(', ');
+  const comps = [s.v && 'В', s.s && 'С', s.m && (s.m === 'материальный компонент' ? 'М' : `М (${s.rm ?? s.m})`)].filter(Boolean).join(', ');
   const dur = s.rd ?? s.dur;
   const text = (s.rtext ?? s.text ?? '').replace(/\*\*\*?|_/g, '');
   return (

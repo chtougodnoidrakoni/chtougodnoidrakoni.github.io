@@ -66,7 +66,9 @@ function persist(s: Sheet) {
 
 let baseSpells: SpellData[] = [];
 const mergeSpells = (user: SpellData[]) => {
-  const spells = [...baseSpells, ...user];
+  // то, что уже есть в общей базе клуба, второй раз не показываем
+  const known = new Set(baseSpells.map((s) => s.id));
+  const spells = [...baseSpells, ...user.filter((s) => !known.has(s.id.replace(/^user:/, 'club:')))];
   return { spells, spellMap: new Map(spells.map((s) => [s.id, s])) };
 };
 

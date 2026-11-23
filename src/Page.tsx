@@ -195,7 +195,7 @@ export function LayoutPage({ page, pageIndex, sheet, scale, num }: { page: Page;
 
 function SpellCard({ d, scale }: { d: SpellData; scale: number }) {
   const lvl = d.lvl === 0 ? `заговор, ${SCHOOLS[d.school]?.toLowerCase() ?? d.school}` : `${d.lvl} круг, ${SCHOOLS[d.school]?.toLowerCase() ?? d.school}`;
-  const comps = [d.v && 'В', d.s && 'С', d.m && `М (${d.rm ?? d.m})`].filter(Boolean).join(', ');
+  const comps = [d.v && 'В', d.s && 'С', d.m && (d.m === 'материальный компонент' ? 'М' : `М (${d.rm ?? d.m})`)].filter(Boolean).join(', ');
   const dur = d.rd ?? d.dur;
   const text = d.rtext ?? d.text;
   return (
