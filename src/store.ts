@@ -95,8 +95,9 @@ export const useStore = create<State>((set, get) => ({
       const res = await fetch(`${import.meta.env.BASE_URL}spells.json`);
       baseSpells = await res.json();
     } catch { /* без сети и кэша — работаем без базы */ }
-    const userSpells: SpellData[] = (await idbGet('userSpells').catch(() => undefined)) ?? [];
-    set({ userSpells, ...mergeSpells(userSpells) });
+    // заклинания «списком» перенесены в общую базу клуба; локальная копия больше не нужна
+    idbDel('userSpells').catch(() => {});
+    set(mergeSpells([]));
   },
   addUserSpells(list) {
     const ids = new Set(list.map((s) => s.id));
