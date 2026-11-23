@@ -82,7 +82,7 @@ test('лист: заполнение в окне, редактор страни�
   await page.getByPlaceholder('Название (по-английски или по-русски)').fill('огненный шар');
   await page.getByRole('button', { name: 'Добавить: Огненный шар' }).first().click();
   await page.getByPlaceholder('Название (по-английски или по-русски)').fill('щит');
-  await page.getByRole('button', { name: /^Щит 1 круг/ }).click();
+  await page.getByRole('button', { name: 'Добавить: Щит', exact: true }).click();
   await page.getByRole('button', { name: 'Своё заклинание' }).click();
   await page.locator('label:has-text("Название") input').last().fill('Удар грома клуба');
   await page.locator('textarea').last().fill('Своё описание заклинания для проверки чарника.');
