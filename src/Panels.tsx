@@ -1,7 +1,7 @@
 /** Панели: свойства блока, выбор заклинаний, своё заклинание, настройки листа, шаблоны страниц. */
 import { useMemo, useState, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { X, Plus, Trash2, Copy, Search, Check } from 'lucide-react';
+import { X, Plus, Trash2, Copy, Search, Check, ChevronDown } from 'lucide-react';
 import { BLOCK_NAMES, FONT_SETS, THEMES, sheetFonts, sheetName, sheetTheme, SCHOOLS, makeBlock, uid, type Block, type BlockType, type Frame, type SpellData } from './model';
 import { findFree, removeAndFill, setSize, split } from './layout';
 import { Columns2, Rows2 } from 'lucide-react';
@@ -154,6 +154,7 @@ export function SpellPicker() {
   const [lvl, setLvl] = useState<number | 'all'>('all');
   const [cls, setCls] = useState('');
   const [custom, setCustom] = useState(false);
+  const [peek, setPeek] = useState<string | null>(null);
   const chosen = new Set(sheet?.spells.map((s) => s.ref).filter(Boolean));
   const list = useMemo(() => {
     if (!picker) return [];
@@ -179,16 +180,50 @@ export function SpellPicker() {
         </div>
         {!spells.length && <div className="text-sm text-cream/60 py-6 text-center">База заклинаний не загрузилась. Проверьте интернет и откройте лист заново.</div>}
         <div className="grid gap-1.5">
-          {list.map((s) => (
-            <button key={s.id} onClick={() => { toggle(s); if (!chosen.has(s.id)) say(`Добавлено: ${s.ru ?? s.name}`); }} className={cx('flex items-center gap-3 text-left p-3 rounded-xl border', chosen.has(s.id) ? 'border-sand bg-sand/15' : 'border-moss-light bg-moss-deep/50')}>
-              <span className={cx('w-6 h-6 rounded-lg border grid place-items-center shrink-0', chosen.has(s.id) ? 'bg-sand border-sand text-moss-deep' : 'border-moss-light')}>{chosen.has(s.id) && <Check size={15} />}</span>
-              <span className="flex-1 min-w-0"><span className="block truncate">{s.ru ?? s.name}</span><span className="text-xs text-cream/55">{s.lvl === 0 ? 'заговор' : `${s.lvl} круг`} · {SCHOOLS[s.school] ?? s.school}{s.c ? ' · конц.' : ''}{s.r ? ' · ритуал' : ''}</span></span>
-            </button>
-          ))}
+          {list.map((s) => {
+            const on = chosen.has(s.id); const open = peek === s.id;
+            return (
+              <div key={s.id} className={cx('rounded-xl border', on ? 'border-sand bg-sand/15' : 'border-moss-light bg-moss-deep/50')}>
+                <div className="flex items-center gap-1">
+                  <button aria-label={on ? `Убрать: ${s.ru ?? s.name}` : `Добавить: ${s.ru ?? s.name}`} onClick={() => { toggle(s); if (!on) say(`Добавлено: ${s.ru ?? s.name}`); }} className="p-3 pr-1 shrink-0">
+                    <span className={cx('w-7 h-7 rounded-lg border grid place-items-center', on ? 'bg-sand border-sand text-moss-deep' : 'border-moss-light')}>{on && <Check size={16} />}</span>
+                  </button>
+                  <button onClick={() => setPeek(open ? null : s.id)} className="flex-1 min-w-0 flex items-center gap-2 text-left py-3 pr-3">
+                    <span className="flex-1 min-w-0"><span className="block truncate">{s.ru ?? s.name}</span><span className="text-xs text-cream/55">{s.lvl === 0 ? 'заговор' : `${s.lvl} круг`} · {SCHOOLS[s.school] ?? s.school}{s.c ? ' · конц.' : ''}{s.r ? ' · ритуал' : ''}</span></span>
+                    <ChevronDown size={18} className={cx('shrink-0 text-cream/50 transition-transform', open && 'rotate-180')} />
+                  </button>
+                </div>
+                {open && <SpellPreview s={s} on={on} onToggle={() => { toggle(s); if (!on) say(`Добавлено: ${s.ru ?? s.name}`); }} />}
+              </div>
+            );
+          })}
         </div>
       </Sheet>
       <CustomSpell open={!!picker && custom} onClose={() => setCustom(false)} />
     </>
+  );
+}
+
+const CLS_RU: Record<string, string> = { bard: 'бард', cleric: 'жрец', druid: 'друид', paladin: 'паладин', ranger: 'следопыт', sorcerer: 'чародей', warlock: 'колдун', wizard: 'волшебник' };
+/** Предпросмотр заклинания в списке выбора: всё, что будет на карточке книги заклинаний. */
+function SpellPreview({ s, on, onToggle }: { s: SpellData; on: boolean; onToggle: () => void }) {
+  const comps = [s.v && 'В', s.s && 'С', s.m && `М (${s.rm ?? s.m})`].filter(Boolean).join(', ');
+  const dur = s.rd ?? s.dur;
+  const text = (s.rtext ?? s.text ?? '').replace(/\*\*\*?|_/g, '');
+  return (
+    <div className="px-3 pb-3 border-t border-moss-light/60">
+      {s.ru && <div className="text-xs text-cream/50 mt-2">{s.name}</div>}
+      <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-sm mt-2">
+        <b className="text-sand-light font-medium">Время</b><span>{s.rt ?? s.time}</span>
+        <b className="text-sand-light font-medium">Дистанция</b><span>{s.rr ?? s.range}</span>
+        <b className="text-sand-light font-medium">Компоненты</b><span>{comps || '—'}</span>
+        <b className="text-sand-light font-medium">Длительность</b><span>{s.c && !/^Концентрация/.test(dur) ? 'Концентрация, ' : ''}{dur}</span>
+        {s.cls?.length > 0 && <><b className="text-sand-light font-medium">Классы</b><span>{s.cls.map((c) => CLS_RU[c] ?? c).join(', ')}</span></>}
+      </div>
+      <div className="text-sm text-cream/85 leading-relaxed mt-2 grid gap-1.5 max-h-72 overflow-y-auto pr-1">{(text || 'Описания нет.').split(/\n{2,}/).map((p, i) => <p key={i}>{p}</p>)}</div>
+      <div className="text-[11px] text-cream/45 mt-1.5">{s.src}{s.rtext ? ' · перевод клуба' : ''}</div>
+      <Btn tone={on ? 'base' : 'gold'} className="w-full mt-2" onClick={onToggle}>{on ? 'Убрать из листа' : <><Plus size={17} />Добавить в лист</>}</Btn>
+    </div>
   );
 }
 
