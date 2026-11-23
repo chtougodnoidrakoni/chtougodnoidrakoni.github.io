@@ -165,6 +165,7 @@ export const oldLabel = (s: { theme?: SheetTheme; system?: GameSystem; oldLabels
 
 /** стиль листа по умолчанию для каждой игры */
 export const SYSTEM_THEME: Record<GameSystem, SheetTheme> = { dnd: 'club', coc: 'eldritch', bitd: 'noir', cpr: 'cyber' };
+export const sheetSystem = (s: { system?: GameSystem }): GameSystem => s.system ?? 'dnd';
 export const sheetTheme = (s: { theme?: SheetTheme; system?: GameSystem }): SheetTheme => s.theme ?? SYSTEM_THEME[s.system ?? 'dnd'];
 export const sheetFonts = (s: { theme?: SheetTheme; system?: GameSystem; fonts?: FontSet }): FontSet => s.fonts ?? THEMES.find((t) => t.id === sheetTheme(s))!.fonts;
 

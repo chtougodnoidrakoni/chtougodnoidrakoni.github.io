@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Undo2, Redo2, Settings2, Printer, Download, Plus, Pencil, Check, Trash2, Copy, ChevronUp, ChevronDown, Upload, FilePlus2, MoreHorizontal, LayoutTemplate, BookOpen, Wand2 } from 'lucide-react';
+import { ArrowLeft, Undo2, Redo2, Settings2, Printer, Download, Plus, Pencil, Check, Trash2, Copy, ChevronUp, ChevronDown, Upload, FilePlus2, MoreHorizontal, LayoutTemplate, BookOpen, Wand2, Dices } from 'lucide-react';
 import { Help } from './Help';
 import { Dragon } from './Dragon';
 import { NavFab } from './NavFab';
@@ -7,6 +7,7 @@ import { InstallButtons } from './Install';
 import { Feedback } from './Feedback';
 import { PromptButton } from './PromptMaker';
 import { AiPaste } from './AiPaste';
+import { PlayPanel } from './PlayPanel';
 import { useStore } from './store';
 import { makeBlock, PAGE_TEMPLATES, relayoutFromTemplate, sheetName, uid, type BlockType, type Sheet } from './model';
 import { LayoutPage, SpellbookPages } from './Page';
@@ -153,6 +154,7 @@ function Editor() {
   const [menu, setMenu] = useState(false);
   const [settings, setSettings] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
+  const [play, setPlay] = useState(false);
   const [pdf, setPdf] = useState<{ done: number; total: number; bytes?: Uint8Array } | null>(null);
   const makePdf = async () => {
     if (pdf && !pdf.bytes) return;
@@ -226,9 +228,10 @@ function Editor() {
       {!selected && (
         <div className="fixed bottom-0 inset-x-0 z-30 no-print safe-bottom bg-gradient-to-t from-moss-deep via-moss-deep/90 to-transparent pt-6">
           <div className="max-w-xl mx-auto px-4 flex gap-2">
-            <Btn className="flex-1" onClick={() => setAddPage(true)}><Plus size={18} />Страница</Btn>
-            <Btn className="flex-1" onClick={() => setAddBlock(true)}><LayoutTemplate size={18} />Блок</Btn>
-            <Btn tone="gold" className="flex-1" onClick={makePdf}><Printer size={18} />PDF</Btn>
+            <Btn className="flex-1 !px-2" onClick={() => setAddPage(true)}><Plus size={18} />Страница</Btn>
+            <Btn className="flex-1 !px-2" onClick={() => setAddBlock(true)}><LayoutTemplate size={18} />Блок</Btn>
+            <Btn className="flex-1 !px-2 !border-sand/70 !text-sand-light" onClick={() => setPlay(true)}><Dices size={18} />Игра</Btn>
+            <Btn tone="gold" className="flex-1 !px-2" onClick={makePdf}><Printer size={18} />PDF</Btn>
           </div>
         </div>
       )}
@@ -238,6 +241,7 @@ function Editor() {
       <SpellPicker />
       <SettingsPanel open={settings} onClose={() => setSettings(false)} />
       <AiPaste open={aiOpen} onClose={() => setAiOpen(false)} />
+      <PlayPanel open={play} onClose={() => setPlay(false)} />
       {pdf && (
         <div className="fixed inset-0 z-[60] no-print bg-black/60 grid place-items-center p-6" onClick={() => pdf.bytes && setPdf(null)}>
           <div className="w-full max-w-sm rounded-2xl bg-moss-dark border border-moss-light p-5 text-center" onClick={(e) => e.stopPropagation()}>
