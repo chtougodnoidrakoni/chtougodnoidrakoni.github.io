@@ -346,7 +346,7 @@ input, select, textarea { font-size: 16px; }
 .pct-parts span { display: inline-block; min-width: 1.8em; height: 1.35em; line-height: 1.35em; text-align: center; border: max(1px, calc(var(--u) * .25)) solid var(--color-sand); border-radius: calc(var(--u) * .8); }
 .pct-parts i { font-style: normal; color: var(--color-sand-dark); font-size: .85em; }
 /* списки навыков в % и «характеристика + уровень» */
-.pl-head, .pl-row { display: grid; grid-template-columns: .9em minmax(0,1fr) 2em 1.6em 1.6em; align-items: center; gap: .35em; }
+.pl-head, .pl-row { display: grid; grid-template-columns: .9em minmax(0,1fr) 2.1em 2.1em 2.1em; align-items: center; gap: .35em; }
 .blk-slist .pl-head, .blk-slist .pl-row { grid-template-columns: minmax(0,1fr) 2em 2.2em; }
 .pl-head { font-family: var(--f-label); font-size: .72em; color: var(--color-sand-dark); text-align: center; letter-spacing: .04em; }
 .pl-rows { flex: 1; display: flex; flex-direction: column; justify-content: space-around; min-height: 0; }
@@ -511,3 +511,5 @@ input, select, textarea { font-size: 16px; }
 body:has(.z-50) .nav-fab, body:has(.z-\[60\]) .nav-fab { display: none; }
 
 .pl-name.occ { font-weight: 700; text-decoration: underline; text-decoration-thickness: max(1px, calc(var(--u) * .15)); text-underline-offset: .15em; }
+
+.pl-head-coc span { font-size: .95em; letter-spacing: 0 !important; white-space: nowrap; text-transform: none; }

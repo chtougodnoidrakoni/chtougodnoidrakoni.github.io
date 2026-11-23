@@ -71,3 +71,21 @@ describe('Ктулху: очки навыков', () => {
     expect(c.vals['coc:persTotal']).toBe(120);
   });
 });
+
+import { applyMC, planMC, mcSlots, prereqProblems } from '../src/levelup';
+describe('мультикласс', () => {
+  test('паладин 4 + колдун 1', () => {
+    const s = applyAi(templateFor('dnd'), { 'Класс': 'Паладин', 'Уровень': 4, 'Сила': { значение: 15 }, 'Харизма': { значение: 16 }, 'Телосложение': { значение: 14 }, 'Максимум хитов': '36' }, []).sheet;
+    expect(prereqProblems(s, ['paladin', 'warlock'])).toEqual([]);
+    const p = planMC(s, 'warlock', 5); expect(p.total).toBe(5); expect(p.newClass).toBe(true);
+    const r = applyMC(s, p, true); const b = r.pages.flatMap((x) => x.blocks);
+    expect(b.find((x) => x.label === 'Класс')!.value).toBe('Паладин 4 / Колдун 1');
+    expect(b.find((x) => x.label === 'Кости хитов')!.value).toBe('4к10 + 1к8');
+    expect(b.find((x) => x.label === 'Уровень')!.value).toBe('5');
+    expect(r.dnd!.classes).toEqual([{ id: 'paladin', level: 4 }, { id: 'warlock', level: 1 }]);
+  });
+  test('ячейки мультикласса', () => {
+    expect(mcSlots([{ id: 'wizard', level: 3 }, { id: 'paladin', level: 4 }]).slots).toEqual([4, 3, 2]);
+    expect(mcSlots([{ id: 'fighter', level: 5 }]).slots).toBeUndefined();
+  });
+});

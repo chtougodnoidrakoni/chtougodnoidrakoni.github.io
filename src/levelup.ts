@@ -82,3 +82,75 @@ export function applyLevel(s: Sheet, p: LevelPlan, writeFeats: boolean): Sheet {
 }
 export const avgText = (hd: number, con: number) => `${hd / 2 + 1}${con ? (con > 0 ? ` + ${con}` : ` − ${-con}`) : ''}`;
 export { abilityMod };
+
+/* ---------------- мультикласс (правила 2014) ---------------- */
+export const PREREQ: Record<string, { all?: string[]; any?: string[] }> = {
+  barbarian: { all: ['СИЛ'] }, bard: { all: ['ХАР'] }, cleric: { all: ['МДР'] }, druid: { all: ['МДР'] }, fighter: { any: ['СИЛ', 'ЛВК'] }, monk: { all: ['ЛВК', 'МДР'] },
+  paladin: { all: ['СИЛ', 'ХАР'] }, ranger: { all: ['ЛВК', 'МДР'] }, rogue: { all: ['ЛВК'] }, sorcerer: { all: ['ХАР'] }, warlock: { all: ['ХАР'] }, wizard: { all: ['ИНТ'] },
+};
+export const MC_PROF: Record<string, string> = {
+  barbarian: 'щиты, простое и воинское оружие', bard: 'лёгкие доспехи, один навык на выбор, один музыкальный инструмент', cleric: 'лёгкие и средние доспехи, щиты',
+  druid: 'лёгкие и средние доспехи, щиты (друиды не носят металлические)', fighter: 'лёгкие и средние доспехи, щиты, простое и воинское оружие', monk: 'простое оружие, короткие мечи',
+  paladin: 'лёгкие и средние доспехи, щиты, простое и воинское оружие', ranger: 'лёгкие и средние доспехи, щиты, простое и воинское оружие, один навык из списка следопыта',
+  rogue: 'лёгкие доспехи, один навык из списка плута, воровские инструменты', sorcerer: 'новых владений нет', warlock: 'лёгкие доспехи, простое оружие', wizard: 'новых владений нет',
+};
+export const CLASS_RU: Record<string, string> = { barbarian: 'Варвар', bard: 'Бард', cleric: 'Жрец', druid: 'Друид', fighter: 'Воин', monk: 'Монах', paladin: 'Паладин', ranger: 'Следопыт', rogue: 'Плут', sorcerer: 'Чародей', warlock: 'Колдун', wizard: 'Волшебник' };
+const ABBR: Record<string, string> = { СИЛ: 'Сила', ЛВК: 'Ловкость', ТЕЛ: 'Телосложение', ИНТ: 'Интеллект', МДР: 'Мудрость', ХАР: 'Харизма' };
+
+export type ClassLv = { id: string; level: number };
+export function getClasses(s: Sheet): ClassLv[] {
+  if (s.dnd?.classes?.length) return s.dnd.classes;
+  const c = findClass(s); const l = currentLevel(s);
+  return c && l ? [{ id: c.id, level: l }] : [];
+}
+function score(s: Sheet, ab: string): number | undefined { const b = all(s).find((x) => x.type === 'abilityx' && x.label === ABBR[ab]); const v = parseInt(b?.score ?? '', 10); return Number.isNaN(v) ? undefined : v; }
+/** Проверка условий мультикласса: 13 в нужной характеристике у старого и у нового класса. */
+export function prereqProblems(s: Sheet, ids: string[]): string[] {
+  const out: string[] = [];
+  for (const id of ids) {
+    const p = PREREQ[id]!; const ok = p.all ? p.all.every((a) => (score(s, a) ?? 0) >= 13) : p.any!.some((a) => (score(s, a) ?? 0) >= 13);
+    if (!ok) out.push(`${CLASS_RU[id]}: нужно ${p.all ? p.all.join(' и ') : p.any!.join(' или ')} не меньше 13`);
+  }
+  return out;
+}
+export function mcSlots(classes: ClassLv[]): { slots?: number[]; pact?: string } {
+  const casters = classes.filter((c) => { const k = CLASSES.find((x) => x.id === c.id)!; return k.caster === 'full' || (k.caster === 'half' && c.level >= 2); });
+  const lock = classes.find((c) => c.id === 'warlock');
+  const pactSlots = lock ? slotsFor(CLASSES.find((x) => x.id === 'warlock')!, lock.level) : undefined;
+  const pact = lock && pactSlots ? `ячейки договора колдуна отдельно: ${pactSlots[pactSlots.length - 1]} × ${pactSlots.length} круг` : undefined;
+  if (!casters.length) return lock && classes.length === 1 ? { slots: pactSlots } : { slots: classes.some((c) => CLASSES.find((x) => x.id === c.id)!.caster) ? [] : undefined, pact };
+  if (casters.length === 1 && !lock) { const c = casters[0]!; return { slots: slotsFor(CLASSES.find((x) => x.id === c.id)!, c.level) }; }
+  const lvl = casters.reduce((a, c) => a + (CLASSES.find((x) => x.id === c.id)!.caster === 'full' ? c.level : Math.floor(c.level / 2)), 0);
+  return { slots: lvl ? FULL[Math.min(20, lvl) - 1] : [], pact };
+}
+export interface MCPlan { cls: Cls; classLevel: number; total: number; hpGain: number; feats: string[]; asi: boolean; slots?: number[]; pact?: string; newClass: boolean; classes: ClassLv[] }
+export function planMC(s: Sheet, clsId: string, hpDie: number): MCPlan {
+  const cls = CLASSES.find((c) => c.id === clsId)!; const cur = getClasses(s);
+  const had = cur.find((c) => c.id === clsId); const classes = had ? cur.map((c) => (c.id === clsId ? { ...c, level: c.level + 1 } : c)) : [...cur, { id: clsId, level: 1 }];
+  const classLevel = had ? had.level + 1 : 1; const total = classes.reduce((a, c) => a + c.level, 0);
+  const con = calcSheet(s).mods['ТЕЛ'] ?? 0; const sl = mcSlots(classes);
+  return { cls, classLevel, total, hpGain: Math.max(1, hpDie + con), feats: cls.feat[classLevel] ?? [], asi: cls.asi.includes(classLevel), slots: sl.slots, pact: sl.pact, newClass: !had && cur.length > 0, classes };
+}
+export function applyMC(s: Sheet, p: MCPlan, writeFeats: boolean): Sheet {
+  const base: LevelPlan = { cls: p.cls, from: p.total - 1, to: p.total, hpGain: p.hpGain, feats: [], asi: false, slots: p.slots };
+  let r = applyLevel(s, base, false);
+  const upd = (pred: (b: Block) => boolean, fn: (b: Block) => Block) => { r = { ...r, pages: r.pages.map((pg) => ({ ...pg, blocks: pg.blocks.map((b) => (pred(b) ? fn(b) : b)) })) }; };
+  // классы и кости хитов по каждому классу
+  if (p.classes.length > 1) {
+    upd((b) => b.label === 'Класс', (b) => ({ ...b, value: p.classes.map((c) => `${CLASS_RU[c.id]} ${c.level}`).join(' / ') }));
+    const byDie = new Map<number, number>(); for (const c of p.classes) { const d = CLASSES.find((x) => x.id === c.id)!.hd; byDie.set(d, (byDie.get(d) ?? 0) + c.level); }
+    upd((b) => b.label === 'Кости хитов', (b) => ({ ...b, value: [...byDie.entries()].sort((a, b2) => b2[0] - a[0]).map(([d, n]) => `${n}к${d}`).join(' + ') }));
+  }
+  if (writeFeats && (p.feats.length || p.asi || p.newClass)) {
+    const items = [...p.feats, ...(p.asi ? ['Увеличение характеристик или черта'] : []), ...(p.newClass ? [`владения: ${MC_PROF[p.cls.id]}`] : [])];
+    const line = `${CLASS_RU[p.cls.id]} ${p.classLevel} ур.: ${items.join('; ')}`;
+    upd((b) => b.label === 'Способности класса и подкласса', (b) => (b.parts?.length ? { ...b, values: [(b.values?.[0] ? b.values[0] + '\n' : '') + line, ...(b.values ?? []).slice(1)] } : { ...b, value: (b.value ? b.value + '\n' : '') + line }));
+  }
+  const ch = p.cls.charge; const cnt = ch?.at(p.classLevel);
+  if (ch && cnt !== undefined) {
+    const list = [...(r.play?.charges ?? [])]; const i = list.findIndex((c) => c.name.toLowerCase() === ch.name.toLowerCase()); const m = Math.min(cnt, 20);
+    if (i >= 0) list[i] = { ...list[i]!, max: m, used: Math.min(list[i]!.used, m) }; else list.push({ id: uid(), name: ch.name, max: m, used: 0, reset: ch.reset });
+    r = { ...r, play: { ...r.play, charges: list } };
+  }
+  return { ...r, dnd: { ...r.dnd, classes: p.classes } };
+}
