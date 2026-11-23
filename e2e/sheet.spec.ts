@@ -87,12 +87,20 @@ test('лист: заполнение в окне, редактор страни�
   await page.locator('label:has-text("Название") input').last().fill('Удар грома клуба');
   await page.locator('textarea').last().fill('Своё описание заклинания для проверки чарника.');
   await page.getByRole('button', { name: 'Добавить', exact: true }).click();
+  // список заклинаний одним текстом
+  await page.getByRole('button', { name: 'Добавить списком' }).click();
+  await page.getByRole('button', { name: 'Вставить пример' }).click();
+  await expect(page.getByText('Нашёл заклинаний: 2')).toBeVisible();
+  await page.screenshot({ path: 'e2e/shots/04b-bulk.png' }); await noOverflow(page, 'bulk');
+  await page.getByRole('button', { name: 'Добавить 2 в список выбора' }).click();
+  await page.getByRole('button', { name: 'Добавить: Искристая пыль' }).click();
   await page.getByRole('button', { name: 'Готово' }).last().click();
   await save();
   await expect(page.locator('.sp-name', { hasText: 'Огненный шар' })).toBeVisible();
   await page.locator('.sb-col .sp-card').first().scrollIntoViewIfNeeded();
   await page.screenshot({ path: 'e2e/shots/04-spellbook.png' }); await noOverflow(page, 'spellbook');
-  await expect(page.locator('.sb-col .sp-card')).toHaveCount(4);
+  await expect(page.locator('.sb-col .sp-card')).toHaveCount(5);
+  await expect(page.locator('.sb-col .sp-card', { hasText: 'Искристая пыль' }).getByText('куб 10 футов')).toBeVisible();
   // кружки спасбросков от смерти
   await blk('Спасброски от смерти').scrollIntoViewIfNeeded(); await blk('Спасброски от смерти').click();
   await page.getByRole('button', { name: 'Успехи 1' }).click();

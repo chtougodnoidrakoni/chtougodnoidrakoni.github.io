@@ -21,6 +21,10 @@ interface State {
   future: Sheet[];
   spells: SpellData[];
   spellMap: Map<string, SpellData>;
+  /** заклинания, добавленные списком на этом устройстве */
+  userSpells: SpellData[];
+  addUserSpells(list: SpellData[]): void;
+  removeUserSpell(id: string): void;
   toast?: string;
   picker?: { min: number; max: number };
   boot(): Promise<void>;
@@ -60,11 +64,17 @@ function persist(s: Sheet) {
   }, 400);
 }
 
+let baseSpells: SpellData[] = [];
+const mergeSpells = (user: SpellData[]) => {
+  const spells = [...baseSpells, ...user];
+  return { spells, spellMap: new Map(spells.map((s) => [s.id, s])) };
+};
+
 export const useStore = create<State>((set, get) => ({
   fillMode: (() => { try { return localStorage.getItem('fill-mode') === 'modal' ? 'modal' : 'inline'; } catch { return 'inline'; } })(),
   setFillMode(m) { try { localStorage.setItem('fill-mode', m); } catch { /* приватный режим */ } set({ fillMode: m }); },
   checkpoint() { const cur = get().sheet; if (cur) set({ past: [...get().past.slice(-60), cur], future: [] }); },
-  ready: false, index: [], pageIdx: 0, past: [], future: [], spells: [], spellMap: new Map(),
+  ready: false, index: [], pageIdx: 0, past: [], future: [], spells: [], spellMap: new Map(), userSpells: [],
 
   async boot() {
     let index: SheetMeta[] = (await idbGet('index').catch(() => undefined)) ?? [];
@@ -81,9 +91,21 @@ export const useStore = create<State>((set, get) => ({
     set({ index, ready: true });
     try {
       const res = await fetch(`${import.meta.env.BASE_URL}spells.json`);
-      const spells: SpellData[] = await res.json();
-      set({ spells, spellMap: new Map(spells.map((s) => [s.id, s])) });
+      baseSpells = await res.json();
     } catch { /* без сети и кэша — работаем без базы */ }
+    const userSpells: SpellData[] = (await idbGet('userSpells').catch(() => undefined)) ?? [];
+    set({ userSpells, ...mergeSpells(userSpells) });
+  },
+  addUserSpells(list) {
+    const ids = new Set(list.map((s) => s.id));
+    const userSpells = [...get().userSpells.filter((s) => !ids.has(s.id)), ...list];
+    idbSet('userSpells', userSpells).catch(() => {});
+    set({ userSpells, ...mergeSpells(userSpells) });
+  },
+  removeUserSpell(id) {
+    const userSpells = get().userSpells.filter((s) => s.id !== id);
+    idbSet('userSpells', userSpells).catch(() => {});
+    set({ userSpells, ...mergeSpells(userSpells) });
   },
   async open(id) {
     const raw: Sheet | undefined = await idbGet(`sheet:${id}`);

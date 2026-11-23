@@ -60,6 +60,8 @@ export interface SpellData {
   lvl: number; school: string; time: string; range: string; v: number; s: number; m?: string; dur: string; c: number; r: number; cls: string[]; text: string;
   /** русский перевод: время, дистанция, длительность, материалы, описание */
   rt?: string; rr?: string; rd?: string; rm?: string; rtext?: string;
+  /** заклинания, добавленные списком: цель, площадь, атака или спасбросок */
+  target?: string; area?: string; effect?: string;
 }
 export interface CocSetup { job?: string; formula?: string; bonus?: number; free?: boolean }
 export interface Charge { id: string; name: string; max: number; used: number; reset: 'short' | 'long' }

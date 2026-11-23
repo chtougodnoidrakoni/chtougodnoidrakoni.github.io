@@ -207,7 +207,10 @@ function SpellCard({ d, scale }: { d: SpellData; scale: number }) {
         <b>Время</b><span>{d.rt ?? d.time}</span>
         <b>Дистанция</b><span>{d.rr ?? d.range}</span>
         <b>Компоненты</b><span>{comps}</span>
-        <b>Длительность</b><span>{d.c && !/^Концентрация/.test(dur) ? 'Концентрация, ' : ''}{dur}</span>
+        <b>Длительность</b><span>{d.c && !/^Концентрация/i.test(dur) ? 'Концентрация, ' : ''}{dur}</span>
+        {d.target && <><b>Цель</b><span>{d.target}</span></>}
+        {d.area && <><b>Площадь</b><span>{d.area}</span></>}
+        {d.effect && <><b>Атака/спас</b><span>{d.effect}</span></>}
       </div>
       <div className="sp-text">{(text || '—').split(/\n{2,}/).map((p, i) => <p key={i}>{p.replace(/\*\*\*?|_/g, '')}</p>)}</div>
       <div className="sp-src">Источник: {d.src}{d.rtext ? ' (перевод клуба)' : ''}</div>

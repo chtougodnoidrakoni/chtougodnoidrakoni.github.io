@@ -1,12 +1,13 @@
 /** Панели: свойства блока, выбор заклинаний, своё заклинание, настройки листа, шаблоны страниц. */
 import { useMemo, useState, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { X, Plus, Trash2, Copy, Search, Check, ChevronDown } from 'lucide-react';
+import { X, Plus, Trash2, Copy, Search, Check, ChevronDown, ListPlus } from 'lucide-react';
 import { BLOCK_NAMES, FONT_SETS, THEMES, sheetFonts, sheetName, sheetTheme, SCHOOLS, makeBlock, uid, type Block, type BlockType, type Frame, type SpellData } from './model';
 import { findFree, removeAndFill, setSize, split } from './layout';
 import { Columns2, Rows2 } from 'lucide-react';
 import { useStore } from './store';
 import { downscale } from './blocks';
+import { parseSpells, SPELL_TEMPLATE } from './spellImport';
 
 const cx = (...c: (string | false | undefined)[]) => c.filter(Boolean).join(' ');
 
@@ -148,7 +149,9 @@ export function AddBlockPanel({ open, onClose, onAdd }: { open: boolean; onClose
 }
 
 export function SpellPicker() {
-  const { picker, spells, sheet, edit, say } = useStore();
+  const { picker, spells, sheet, edit, say, userSpells } = useStore();
+  const [bulk, setBulk] = useState(false);
+  const [mine, setMine] = useState(false);
   const [q, setQ] = useState('');
   const [ed, setEd] = useState<'2014' | '2024'>('2014');
   const [lvl, setLvl] = useState<number | 'all'>('all');
@@ -159,15 +162,15 @@ export function SpellPicker() {
   const list = useMemo(() => {
     if (!picker) return [];
     const n = q.trim().toLowerCase();
-    return spells.filter((s) => s.ed === ed && s.lvl >= picker.min && s.lvl <= picker.max && (lvl === 'all' || s.lvl === lvl) && (!cls || s.cls.includes(cls)) && (!n || s.name.toLowerCase().includes(n) || (s.ru ?? '').toLowerCase().includes(n)))
+    return spells.filter((s) => s.ed === ed && s.lvl >= picker.min && s.lvl <= picker.max && (lvl === 'all' || s.lvl === lvl) && (!mine || s.id.startsWith('user:')) && (!cls || s.cls.includes(cls)) && (!n || s.name.toLowerCase().includes(n) || (s.ru ?? '').toLowerCase().includes(n)))
       .sort((a, b) => a.lvl - b.lvl || a.name.localeCompare(b.name)).slice(0, 200);
-  }, [picker, spells, ed, lvl, cls, q]);
+  }, [picker, spells, ed, lvl, cls, q, mine]);
   const close = () => useStore.setState({ picker: undefined } as never);
-  const toggle = (s: SpellData) => edit((sh) => (sh.spells.some((x) => x.ref === s.id) ? { ...sh, spells: sh.spells.filter((x) => x.ref !== s.id) } : { ...sh, spells: [...sh.spells, { key: uid(), ref: s.id, prepared: false }] }));
+  const toggle = (s: SpellData) => edit((sh) => (sh.spells.some((x) => x.ref === s.id) ? { ...sh, spells: sh.spells.filter((x) => x.ref !== s.id) } : { ...sh, spells: [...sh.spells, { key: uid(), ref: s.id, custom: s.id.startsWith('user:') ? s : undefined, prepared: false }] }));
   const CLASSES = [['', 'Все классы'], ['bard', 'Бард'], ['cleric', 'Жрец'], ['druid', 'Друид'], ['paladin', 'Паладин'], ['ranger', 'Следопыт'], ['sorcerer', 'Чародей'], ['warlock', 'Колдун'], ['wizard', 'Волшебник']];
   return (
     <>
-      <Sheet open={!!picker && !custom} onClose={close} title="Заклинания" footer={<div className="flex gap-2 pb-1"><Btn className="flex-1" onClick={() => setCustom(true)}><Plus size={17} />Своё заклинание</Btn><Btn tone="gold" className="flex-1" onClick={close}>Готово</Btn></div>}>
+      <Sheet open={!!picker && !custom && !bulk} onClose={close} title="Заклинания" footer={<div className="flex gap-2 pb-1"><Btn className="flex-1" onClick={() => setCustom(true)}><Plus size={17} />Своё заклинание</Btn><Btn tone="gold" className="flex-1" onClick={close}>Готово</Btn></div>}>
         <div className="grid gap-2 mb-3">
           <div className="grid grid-cols-2 gap-2">{(['2014', '2024'] as const).map((e) => <Btn key={e} tone={ed === e ? 'gold' : 'base'} onClick={() => setEd(e)}>{e === '2014' ? 'SRD 5.1 · 2014' : 'SRD 5.2 · 2024'}</Btn>)}</div>
           <div className="relative"><Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-cream/50" /><TextIn className="pl-10" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Название (по-английски или по-русски)" /></div>
@@ -177,7 +180,12 @@ export function SpellPicker() {
               <option value="all">Любой круг</option>{Array.from({ length: (picker?.max ?? 9) - (picker?.min ?? 0) + 1 }, (_, i) => (picker?.min ?? 0) + i).map((l) => <option key={l} value={l}>{l === 0 ? 'Заговоры' : `${l} круг`}</option>)}
             </select>
           </div>
+          <div className="grid grid-cols-2 gap-2">
+            <Btn onClick={() => setBulk(true)}><ListPlus size={17} />Добавить списком</Btn>
+            <Btn tone={mine ? 'gold' : 'base'} onClick={() => setMine(!mine)}>Добавленные ({userSpells.length})</Btn>
+          </div>
         </div>
+        {mine && !list.length && <div className="text-sm text-cream/60 py-4 text-center">Здесь появятся заклинания, которые вы добавите списком{userSpells.length ? ' (проверьте редакцию и круг вверху)' : ''}.</div>}
         {!spells.length && <div className="text-sm text-cream/60 py-6 text-center">База заклинаний не загрузилась. Проверьте интернет и откройте лист заново.</div>}
         <div className="grid gap-1.5">
           {list.map((s) => {
@@ -200,11 +208,12 @@ export function SpellPicker() {
         </div>
       </Sheet>
       <CustomSpell open={!!picker && custom} onClose={() => setCustom(false)} />
+      <BulkSpells open={!!picker && bulk} ed={ed} onClose={(n) => { setBulk(false); if (n) { setMine(true); setQ(''); setLvl('all'); setCls(''); } }} />
     </>
   );
 }
 
-const CLS_RU: Record<string, string> = { bard: 'бард', cleric: 'жрец', druid: 'друид', paladin: 'паладин', ranger: 'следопыт', sorcerer: 'чародей', warlock: 'колдун', wizard: 'волшебник' };
+const CLS_RU: Record<string, string> = { artificer: 'изобретатель', bard: 'бард', cleric: 'жрец', druid: 'друид', paladin: 'паладин', ranger: 'следопыт', sorcerer: 'чародей', warlock: 'колдун', wizard: 'волшебник' };
 /** Предпросмотр заклинания в списке выбора: всё, что будет на карточке книги заклинаний. */
 function SpellPreview({ s, on, onToggle }: { s: SpellData; on: boolean; onToggle: () => void }) {
   const comps = [s.v && 'В', s.s && 'С', s.m && `М (${s.rm ?? s.m})`].filter(Boolean).join(', ');
@@ -217,13 +226,57 @@ function SpellPreview({ s, on, onToggle }: { s: SpellData; on: boolean; onToggle
         <b className="text-sand-light font-medium">Время</b><span>{s.rt ?? s.time}</span>
         <b className="text-sand-light font-medium">Дистанция</b><span>{s.rr ?? s.range}</span>
         <b className="text-sand-light font-medium">Компоненты</b><span>{comps || '—'}</span>
-        <b className="text-sand-light font-medium">Длительность</b><span>{s.c && !/^Концентрация/.test(dur) ? 'Концентрация, ' : ''}{dur}</span>
+        <b className="text-sand-light font-medium">Длительность</b><span>{s.c && !/^Концентрация/i.test(dur) ? 'Концентрация, ' : ''}{dur}</span>
+        {s.target && <><b className="text-sand-light font-medium">Цель</b><span>{s.target}</span></>}
+        {s.area && <><b className="text-sand-light font-medium">Площадь</b><span>{s.area}</span></>}
+        {s.effect && <><b className="text-sand-light font-medium">Атака/спас</b><span>{s.effect}</span></>}
         {s.cls?.length > 0 && <><b className="text-sand-light font-medium">Классы</b><span>{s.cls.map((c) => CLS_RU[c] ?? c).join(', ')}</span></>}
       </div>
       <div className="text-sm text-cream/85 leading-relaxed mt-2 grid gap-1.5 max-h-72 overflow-y-auto pr-1">{(text || 'Описания нет.').split(/\n{2,}/).map((p, i) => <p key={i}>{p}</p>)}</div>
       <div className="text-[11px] text-cream/45 mt-1.5">{s.src}{s.rtext ? ' · перевод клуба' : ''}</div>
+      {s.id.startsWith('user:') && <button className="text-xs text-red-300 underline mt-1" onClick={() => { useStore.getState().removeUserSpell(s.id); useStore.getState().say('Убрано из списка выбора'); }}>Убрать из списка выбора на этом телефоне</button>}
       <Btn tone={on ? 'base' : 'gold'} className="w-full mt-2" onClick={onToggle}>{on ? 'Убрать из листа' : <><Plus size={17} />Добавить в лист</>}</Btn>
     </div>
+  );
+}
+
+function BulkSpells({ open, ed, onClose }: { open: boolean; ed: '2014' | '2024'; onClose: (added: number) => void }) {
+  const { addUserSpells, say } = useStore();
+  const [text, setText] = useState('');
+  const [edition, setEdition] = useState(ed);
+  const parsed = useMemo(() => parseSpells(text, edition), [text, edition]);
+  const add = () => {
+    addUserSpells(parsed.map((p) => p.spell));
+    say(`Добавлено в список выбора: ${parsed.length}`);
+    setText('');
+    onClose(parsed.length);
+  };
+  const copyTpl = () => { navigator.clipboard?.writeText(SPELL_TEMPLATE).then(() => say('Шаблон скопирован'), () => setText(SPELL_TEMPLATE)); };
+  return (
+    <Sheet open={open} onClose={() => onClose(0)} title="Добавить заклинания списком" footer={<Btn tone="gold" className="w-full mb-1" disabled={!parsed.length} onClick={add}><ListPlus size={17} />{parsed.length ? `Добавить ${parsed.length} в список выбора` : 'Вставьте список'}</Btn>}>
+      <div className="grid gap-2 pb-2">
+        <p className="text-sm text-cream/75 leading-snug">Каждое поле с новой строки: «Название: …», «Круг: …» и так далее. Заклинания разделяйте строкой «---» или просто начинайте следующее с «Название:». Описание может быть в несколько абзацев. Подходит и JSON.</p>
+        <div className="grid grid-cols-2 gap-2">
+          <Btn className="text-sm" onClick={copyTpl}><Copy size={16} />Копировать шаблон</Btn>
+          <Btn className="text-sm" onClick={() => setText(SPELL_TEMPLATE)}>Вставить пример</Btn>
+        </div>
+        <div className="grid grid-cols-2 gap-2">{(['2014', '2024'] as const).map((e) => <Btn key={e} tone={edition === e ? 'gold' : 'base'} onClick={() => setEdition(e)}>Редакция {e}</Btn>)}</div>
+        <textarea aria-label="Список заклинаний" value={text} onChange={(e) => setText(e.target.value)} placeholder={'Название: …\nКруг: …\nШкола: …\nВремя: 1 действие / бонусное действие\nДистанция: …\nКомпоненты: В, С, М (…)\nДлительность: …\nЦель: …\nПлощадь: …\nАтака/спасбросок: …\nКлассы: …\nИсточник: …\nОписание: …'} className="w-full min-h-56 p-3 rounded-xl bg-moss-deep border border-moss-light outline-none text-sm" />
+        <p className="text-xs text-cream/55">Поля: название, оригинал (англ.), круг, школа, время (действие, бонусное действие, реакция), дистанция, компоненты, длительность, цель, площадь, атака/спасбросок, классы, источник, описание. Заклинания сохраняются на этом телефоне и появляются в выборе для всех листов.</p>
+        {parsed.length > 0 && (
+          <div className="grid gap-1.5">
+            <div className="text-sm text-sand-light">Нашёл заклинаний: {parsed.length}</div>
+            {parsed.map((p, i) => (
+              <div key={i} className="rounded-xl border border-moss-light bg-moss-deep/50 px-3 py-2">
+                <div className="truncate">{p.spell.ru ?? p.spell.name}{p.spell.ru && <span className="text-cream/50 text-xs"> · {p.spell.name}</span>}</div>
+                <div className="text-xs text-cream/55">{p.spell.lvl === 0 ? 'заговор' : `${p.spell.lvl} круг`} · {SCHOOLS[p.spell.school]} · {p.spell.time} · {p.spell.range}{p.spell.cls.length ? ` · ${p.spell.cls.map((c) => CLS_RU[c] ?? c).join(', ')}` : ''}</div>
+                {p.warn.length > 0 && <div className="text-xs text-amber-300 mt-0.5">{p.warn.join('; ')}</div>}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </Sheet>
   );
 }
 
