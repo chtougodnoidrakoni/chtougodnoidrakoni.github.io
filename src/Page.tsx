@@ -151,10 +151,11 @@ export function LayoutPage({ page, pageIndex, sheet, scale, num }: { page: Page;
   }, []);
 
   const fillMode = useStore((st) => st.fillMode);
-  const live = (b: Block) => !layout && fillMode === 'inline' && INLINE.has(b.type) && !(b.type === 'circles' && /ячейк/i.test(b.label));
+  const live = (b: Block) => !layout && !b.readonly && fillMode === 'inline' && INLINE.has(b.type) && !(b.type === 'circles' && /ячейк/i.test(b.label));
   const tap = (b: Block) => {
     setPage(pageIndex);
     if (live(b)) return;
+    if (!layout && b.readonly) { useStore.getState().say('Памятка не редактируется. Свои записи — в «Заметки»'); return; }
     if (layout) { if (locked(b)) { useStore.getState().say(b.type === 'qr' ? 'QR-коды клуба не редактируются' : (sheet.system ?? 'dnd') !== 'dnd' ? 'Разметка этого листа закреплена, чтобы у всех за столом был одинаковый лист. Можно заполнять и добавлять свои страницы' : 'Этот блок закреплён: его место и размер менять нельзя'); return; } select(b.id); return; }
     if (b.type === 'emblem' || b.type === 'ornament' || b.type === 'qr') return;
     fill(b.id);

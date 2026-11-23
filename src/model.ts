@@ -7,11 +7,13 @@ export const PAGE_W = 210, PAGE_H = 297, MARGIN = 12;
 export type Frame = 'frame' | 'line' | 'none';
 export type BlockType = 'title' | 'field' | 'text' | 'image' | 'ability' | 'stat' | 'checklist' | 'circles' | 'table' | 'spells' | 'emblem' | 'ornament' | 'qr' | 'abilityx' | 'pctstat' | 'pctlist' | 'sumlist' | 'track';
 
-export interface CheckItem { name: string; sub?: string; checked?: boolean; value?: string }
+export interface CheckItem { name: string; sub?: string; checked?: boolean; value?: string; /** Зов Ктулху: навык рода занятий */ occ?: boolean }
 export interface CircleRow { name: string; count: number; filled: number }
 
 export interface Block {
   id: string;
+  /** только для чтения (памятка) */
+  readonly?: boolean;
   /** шкала чисел: до какого числа (ПЗ 20, рассудок 99) */
   count?: number;
   /** картинка-украшение из папки art */
@@ -59,6 +61,7 @@ export interface SpellData {
   /** русский перевод: время, дистанция, длительность, материалы, описание */
   rt?: string; rr?: string; rd?: string; rm?: string; rtext?: string;
 }
+export interface CocSetup { job?: string; formula?: string; bonus?: number; free?: boolean }
 export interface Charge { id: string; name: string; max: number; used: number; reset: 'short' | 'long' }
 export interface PlayState { charges?: Charge[]; conditions?: string[]; cur?: Record<string, number> }
 export interface SheetSpell { key: string; ref?: string; custom?: SpellData; prepared: boolean; note?: string }
@@ -81,6 +84,8 @@ export interface Sheet {
   oldLabels?: boolean;
   /** игровой режим: заряды способностей, состояния, текущие значения, которых нет на листе */
   play?: PlayState;
+  /** Зов Ктулху: род занятий, формула очков, очки от хранителя, ограничение распределения */
+  coc?: CocSetup;
   /** версия разметки листа (для однократных обновлений старых листов) */
   ver?: number;
   pages: Page[];
@@ -389,16 +394,49 @@ export function calcSheet(sheet: Sheet): Calc {
   const perc = all.find((b) => (b.type === 'checklist' || b.type === 'abilityx') && b.items?.some((i) => i.name === 'Внимательность'))?.items?.find((i) => i.name === 'Внимательность');
   const perception = perc ? parseMod(perc.value) ?? autoItem(perc, mods, prof) : undefined;
   // Зов Ктулху: сколько очков вложено в навыки сверх базы и значение «Мифов Ктулху»
-  let spent = 0, any = false;
+  let sp = 0, sl = 0;
   for (const b of all) if (b.type === 'pctlist') for (const it of b.items ?? []) {
-    if (!it.sub || it.sub === '#') continue;
+    if (it.sub === '#' || !it.name) continue;
     const v = parseInt(it.value ?? '', 10); if (Number.isNaN(v)) continue;
-    any = true; spent += Math.max(0, v - (cocBase(it.sub, vals) ?? 0));
-    if (it.name.startsWith('Мифы Ктулху')) vals['coc:mythos'] = v;
+    if (it.name.startsWith('Мифы Ктулху')) { vals['coc:mythos'] = v; continue; }
+    const add = Math.max(0, v - (cocBase(it.sub, vals) ?? 0));
+    if (it.occ) sp += add; else sl += add;
   }
-  if (any) vals['coc:spent'] = spent;
+  if (sheet.system === 'coc') {
+    const pools = cocPools(sheet, vals);
+    vals['coc:profSpent'] = sp; vals['coc:persSpent'] = sl; vals['coc:profTotal'] = pools.prof; vals['coc:persTotal'] = pools.pers;
+  }
   return { mods, prof, perception, vals };
 }
+/** Формулы профессиональных очков: [характеристики на выбор (берётся большая), множитель] */
+export const COC_FORMULAS: { id: string; label: string; terms: [string[], number][] }[] = [
+  { id: 'E4', label: 'ОБР×4', terms: [[['EDU'], 4]] },
+  { id: 'E2D2', label: 'ОБР×2 + ЛВК×2', terms: [[['EDU'], 2], [['DEX'], 2]] },
+  { id: 'E2S2', label: 'ОБР×2 + СИЛ×2', terms: [[['EDU'], 2], [['STR'], 2]] },
+  { id: 'E2A2', label: 'ОБР×2 + НАР×2', terms: [[['EDU'], 2], [['APP'], 2]] },
+  { id: 'E2P2', label: 'ОБР×2 + МОЩ×2', terms: [[['EDU'], 2], [['POW'], 2]] },
+  { id: 'E2DS2', label: 'ОБР×2 + (ЛВК или СИЛ)×2', terms: [[['EDU'], 2], [['DEX', 'STR'], 2]] },
+  { id: 'E2AP2', label: 'ОБР×2 + (НАР или МОЩ)×2', terms: [[['EDU'], 2], [['APP', 'POW'], 2]] },
+  { id: 'E2DP2', label: 'ОБР×2 + (ЛВК или МОЩ)×2', terms: [[['EDU'], 2], [['DEX', 'POW'], 2]] },
+  { id: 'E2ADS2', label: 'ОБР×2 + (НАР, ЛВК или СИЛ)×2', terms: [[['EDU'], 2], [['APP', 'DEX', 'STR'], 2]] },
+];
+/** Распространённые рода занятий и их формулы. Навыки профессии отмечаются на листе по книге или по указанию хранителя. */
+export const COC_JOBS: [string, string][] = [
+  ['Антиквар', 'E4'], ['Археолог', 'E4'], ['Артист', 'E2A2'], ['Библиотекарь', 'E4'], ['Бродяга', 'E2ADS2'], ['Водитель', 'E2D2'], ['Врач', 'E4'],
+  ['Дилетант (богач)', 'E2A2'], ['Журналист', 'E4'], ['Инженер', 'E4'], ['Медсестра', 'E4'], ['Миссионер', 'E4'], ['Моряк', 'E2DS2'], ['Музыкант', 'E2DP2'],
+  ['Оккультист', 'E4'], ['Парапсихолог', 'E4'], ['Пилот', 'E2D2'], ['Писатель', 'E4'], ['Полицейский', 'E2DS2'], ['Полицейский детектив', 'E2DS2'],
+  ['Преступник', 'E2DS2'], ['Продавец', 'E2A2'], ['Профессор', 'E4'], ['Психиатр', 'E4'], ['Психолог', 'E4'], ['Священник', 'E4'], ['Солдат', 'E2DS2'],
+  ['Спортсмен', 'E2DS2'], ['Учёный', 'E4'], ['Фермер', 'E2DS2'], ['Фотограф', 'E4'], ['Частный детектив', 'E2DS2'], ['Юрист', 'E4'],
+];
+export function cocPools(s: Sheet, vals: Record<string, number | undefined>) {
+  const f = COC_FORMULAS.find((x) => x.id === (s.coc?.formula ?? COC_JOBS.find(([j]) => j === s.coc?.job)?.[1]));
+  const g = (k: string) => vals[`coc:${k}`];
+  const profBase = f && f.terms.every(([ks]) => ks.some((k) => g(k) !== undefined)) ? f.terms.reduce((a, [ks, m]) => a + Math.max(...ks.map((k) => g(k) ?? 0)) * m, 0) : undefined;
+  const prof = profBase !== undefined ? profBase + (s.coc?.bonus ?? 0) : undefined;
+  const pers = g('INT') !== undefined ? g('INT')! * 2 : undefined;
+  return { formula: f, prof, pers };
+}
+
 /** База навыка Зова Ктулху: число («25») или формула («ЛВК/2», «ОБР»). */
 export function cocBase(sub: string | undefined, vals: Record<string, number | undefined>): number | undefined {
   if (!sub || sub === '#') return undefined;
@@ -438,8 +476,8 @@ export function autoStat(b: Block, c: Calc): string {
     return String(m);
   }
   if (k === 'coc:sanmax') return String(99 - (v('coc:mythos') ?? 0));
-  if (k === 'coc:pts' && has('coc:EDU', 'coc:INT')) return String(v('coc:EDU')! * 4 + v('coc:INT')! * 2);
-  if (k === 'coc:spent' && v('coc:spent') !== undefined) return String(v('coc:spent'));
+  if (k === 'coc:profLeft') return v('coc:profTotal') !== undefined ? `${v('coc:profTotal')! - (v('coc:profSpent') ?? 0)} из ${v('coc:profTotal')}` : '';
+  if (k === 'coc:persLeft') return v('coc:persTotal') !== undefined ? `${v('coc:persTotal')! - (v('coc:persSpent') ?? 0)} из ${v('coc:persTotal')}` : '';
   if (k === 'coc:mp' && has('coc:POW')) return String(Math.floor(v('coc:POW')! / 5));
   if (k === 'coc:san' && has('coc:POW')) return String(v('coc:POW'));
   // Киберпанк RED

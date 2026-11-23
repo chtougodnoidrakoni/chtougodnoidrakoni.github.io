@@ -140,7 +140,7 @@ export function BlockView({ b: b0, sheet, fill }: { b: Block; sheet: Sheet; fill
               return (
                 <div key={i} className="pl-row">
                   <span className={`dot ${it.checked ? 'on' : ''}`} />
-                  <span className="pl-name">{it.name}{bt && <i className="pl-base-t"> ({bt})</i>}</span>
+                  <span className={`pl-name ${it.occ ? 'occ' : ''}`}>{it.name}{bt && <i className="pl-base-t"> ({bt})</i>}</span>
                   <span className={`pl-val ${Number.isNaN(own) && ok ? 'auto' : ''}`}>{ok ? n : ''}</span>
                   <span className="pl-sub">{ok ? Math.floor(n / 2) : ''}</span>
                   <span className="pl-sub">{ok ? Math.floor(n / 5) : ''}</span>

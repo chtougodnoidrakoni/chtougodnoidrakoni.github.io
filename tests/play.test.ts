@@ -57,3 +57,17 @@ describe('новый уровень', () => {
     const k = CLASSES.find((c) => c.id === 'warlock')!; expect(slotsFor(k, 5)).toEqual([0, 0, 2]);
   });
 });
+
+import { calcSheet, cocPools } from '../src/model';
+describe('Ктулху: очки навыков', () => {
+  test('профессия + хранитель, личные отдельно', () => {
+    let s = applyAi(templateFor('coc'), { 'ОБР · образование': 70, 'ИНТ · интеллект, идея': 60, 'ЛВК · ловкость': 50, 'СИЛ · сила': 65 }, []).sheet;
+    s = { ...s, coc: { job: 'Частный детектив', bonus: 20 } };
+    s = { ...s, pages: s.pages.map((p) => ({ ...p, blocks: p.blocks.map((b) => b.type !== 'pctlist' ? b : { ...b, items: b.items!.map((it) => it.name === 'Внимание' ? { ...it, value: '65', occ: true } : it.name === 'Слух' ? { ...it, value: '40' } : it) }) })) };
+    const c = calcSheet(s);
+    expect(cocPools(s, c.vals).prof).toBe(70 * 2 + 65 * 2 + 20);
+    expect(c.vals['coc:profSpent']).toBe(40);
+    expect(c.vals['coc:persSpent']).toBe(20);
+    expect(c.vals['coc:persTotal']).toBe(120);
+  });
+});

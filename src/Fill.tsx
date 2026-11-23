@@ -6,7 +6,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Plus, Trash2, ImagePlus } from 'lucide-react';
 import { useStore } from './store';
-import { abilityMod, autoItem, autoStat, calcSheet, cocBase, signed, spellOf, BLOCK_NAMES, type Block } from './model';
+import { abilityMod, autoItem, autoStat, calcSheet, cocBase, COC_FORMULAS, COC_JOBS, cocPools, signed, spellOf, BLOCK_NAMES, type Block } from './model';
 import { CPR_KEY, downscale } from './blocks';
 
 const base = 'px-3 rounded-xl bg-moss-deep border border-moss-light text-cream outline-none focus:border-sand';
@@ -107,8 +107,36 @@ export function FillModal() {
       }
       case 'pctlist': case 'sumlist': {
         const sum = b.type === 'sumlist';
+        const coc = !sum && (sheet.system ?? 'dnd') === 'coc';
+        const cs = sheet.coc ?? {};
+        const setCoc = (patch: Partial<NonNullable<typeof sheet.coc>>) => useStore.getState().commit((x) => ({ ...x, coc: { ...x.coc, ...patch } }));
+        const pools = coc ? cocPools(sheet, calc!.vals) : undefined;
+        const spentP = calc!.vals['coc:profSpent'] ?? 0, spentL = calc!.vals['coc:persSpent'] ?? 0;
+        const cap = coc && !cs.free;
         return (
           <div className="grid gap-1">
+            {coc && (
+              <div className="rounded-xl border border-sand/40 bg-moss-deep p-3 mb-2 grid gap-2">
+                <div className="text-sm text-sand-light">Очки навыков</div>
+                <label className="block"><div className="text-xs text-cream/60 mb-1">Род занятий</div>
+                  <input list="coc-jobs" className={`${base} w-full h-10`} value={cs.job ?? ''} placeholder="Выберите или впишите" onChange={(e) => { const job = e.target.value; const f = COC_JOBS.find(([j]) => j === job)?.[1]; setCoc({ job, ...(f ? { formula: f } : {}) }); useStore.getState().commit((x) => ({ ...x, pages: x.pages.map((pg) => ({ ...pg, blocks: pg.blocks.map((bb) => (bb.key === 'coc:job' ? { ...bb, value: job } : bb)) })) })); }} />
+                  <datalist id="coc-jobs">{COC_JOBS.map(([j]) => <option key={j} value={j} />)}</datalist>
+                </label>
+                <label className="block"><div className="text-xs text-cream/60 mb-1">Формула профессиональных очков</div>
+                  <select className={`${base} w-full h-10`} value={pools?.formula?.id ?? ''} onChange={(e) => setCoc({ formula: e.target.value })}><option value="">— выберите —</option>{COC_FORMULAS.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}</select>
+                </label>
+                <label className="flex items-center gap-2"><span className="text-xs text-cream/60 flex-1">Дополнительные очки от хранителя</span>
+                  <input inputMode="numeric" className={`${base} w-20 h-10 text-center`} value={cs.bonus ? String(cs.bonus) : ''} placeholder="0" onChange={(e) => setCoc({ bonus: parseInt(e.target.value.replace(/\D/g, '') || '0', 10) || undefined })} />
+                </label>
+                <div className="grid grid-cols-2 gap-2 text-center">
+                  <div className="rounded-lg bg-moss-dark p-2"><div className="text-[11px] text-cream/55">Профессия</div><div className={`text-lg ${pools?.prof !== undefined && spentP > pools.prof ? 'text-[#e39a8f]' : 'text-cream'}`}>{pools?.prof !== undefined ? `${pools.prof - spentP} из ${pools.prof}` : '—'}</div></div>
+                  <div className="rounded-lg bg-moss-dark p-2"><div className="text-[11px] text-cream/55">Личные интересы (ИНТ×2)</div><div className={`text-lg ${pools?.pers !== undefined && spentL > pools.pers ? 'text-[#e39a8f]' : 'text-cream'}`}>{pools?.pers !== undefined ? `${pools.pers - spentL} из ${pools.pers}` : '—'}</div></div>
+                </div>
+                {(pools?.prof === undefined || pools?.pers === undefined) && <p className="text-xs text-cream/55">Чтобы считались очки, впишите на листе характеристики и выберите род занятий.</p>}
+                <p className="text-xs text-cream/55">Кнопка «П» у навыка — навык профессии: вложенное в него идёт из очков профессии, остальное — из личных интересов. «Мифы Ктулху» за очки не покупаются.</p>
+                <label className="flex items-center gap-2 text-xs text-cream/70"><input type="checkbox" className="w-5 h-5 accent-[#aa9173]" checked={!!cs.free} onChange={(e) => setCoc({ free: e.target.checked })} />Создание закончено — снять ограничение (для развития навыков)</label>
+              </div>
+            )}
             <div className="text-xs text-cream/60 px-1">{sum ? 'Впишите уровень навыка. База = характеристика + уровень, считается сама.' : 'Серым показана база навыка — она уже стоит на листе. Впишите итоговый процент, если вкладывали очки; половина и пятая часть посчитаются сами. Кружок — отметка успешного применения для развития.'}</div>
             {(b.items ?? []).map((it, i) => {
               const up = (patch: Partial<typeof it>) => set({ items: b.items!.map((x, j) => (j === i ? { ...x, ...patch } : x)) });
@@ -120,9 +148,22 @@ export function FillModal() {
               return (
                 <div key={i} className="flex items-center gap-2 py-1.5 border-b border-moss-light/30">
                   {!sum && <Ring on={!!it.checked} onClick={() => up({ checked: !it.checked })} label={`Отметка: ${it.name}`} />}
+                  {coc && !it.name.startsWith('Мифы') && <button aria-label={`Навык профессии: ${it.name}`} onClick={() => up({ occ: !it.occ })} className={`w-8 h-8 shrink-0 rounded-lg border text-xs font-bold ${it.occ ? 'bg-sand text-moss-deep border-sand' : 'border-moss-light text-cream/50'}`}>П</button>}
                   <input className={`${base} flex-1 min-w-0 h-10`} value={it.name} onChange={(e) => up({ name: e.target.value })} aria-label="Навык" />
                   {sum && <span className="text-cream/50 text-sm w-12 text-center">{it.sub}</span>}
-                  <input inputMode="numeric" className={`${base} flex-none h-10 text-center`} style={{ width: 56 }} value={it.value ?? ''} placeholder={sum ? 'ур.' : cb !== undefined ? String(cb) : '%'} onChange={(e) => up({ value: e.target.value.replace(/[^\d]/g, '').slice(0, 3) })} />
+                  <input inputMode="numeric" className={`${base} flex-none h-10 text-center`} style={{ width: 56 }} value={it.value ?? ''} placeholder={sum ? 'ур.' : cb !== undefined ? String(cb) : '%'} onChange={(e) => {
+                    let v = e.target.value.replace(/[^\d]/g, '').slice(0, 3);
+                    if (cap && v && !it.name.startsWith('Мифы')) {
+                      const total = it.occ ? pools?.prof : pools?.pers;
+                      if (total !== undefined) {
+                        const spent = it.occ ? spentP : spentL; const bse = cb ?? 0;
+                        const mine = Math.max(0, (Number.isNaN(n0) ? bse : n0) - bse);
+                        const maxV = Math.min(99, bse + (total - (spent - mine)));
+                        if (parseInt(v, 10) > maxV) { v = String(Math.max(bse, maxV)); useStore.getState().say(`Больше нельзя: в навык помещается максимум ${maxV}% — очков ${it.occ ? 'профессии' : 'личных интересов'} не хватает`); }
+                      }
+                    }
+                    up({ value: v });
+                  }} />
                   <span className="text-xs text-cream/60 w-14 text-right">{sum ? (stat !== undefined ? `= ${stat + (Number.isNaN(n) ? 0 : n)}` : '') : Number.isNaN(n) ? '' : `${Math.floor(n / 2)} / ${Math.floor(n / 5)}`}</span>
                 </div>
               );
