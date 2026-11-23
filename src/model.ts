@@ -59,6 +59,8 @@ export interface SpellData {
   /** русский перевод: время, дистанция, длительность, материалы, описание */
   rt?: string; rr?: string; rd?: string; rm?: string; rtext?: string;
 }
+export interface Charge { id: string; name: string; max: number; used: number; reset: 'short' | 'long' }
+export interface PlayState { charges?: Charge[]; conditions?: string[]; cur?: Record<string, number> }
 export interface SheetSpell { key: string; ref?: string; custom?: SpellData; prepared: boolean; note?: string }
 
 export interface Sheet {
@@ -77,6 +79,8 @@ export interface Sheet {
   system?: GameSystem;
   /** «Былина»: старинные подписи (по умолчанию включены) */
   oldLabels?: boolean;
+  /** игровой режим: заряды способностей, состояния, текущие значения, которых нет на листе */
+  play?: PlayState;
   /** версия разметки листа (для однократных обновлений старых листов) */
   ver?: number;
   pages: Page[];

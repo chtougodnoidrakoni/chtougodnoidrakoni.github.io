@@ -264,7 +264,7 @@ function Editor() {
           <div className="max-w-xl mx-auto px-4 flex gap-2">
             <Btn className="flex-1 !px-2" onClick={() => setAddPage(true)}><Plus size={18} />Страница</Btn>
             <Btn className="flex-1 !px-2" onClick={() => setAddBlock(true)}><LayoutTemplate size={18} />Блок</Btn>
-            <Btn className="flex-1 !px-2 !border-sand/70 !text-sand-light" onClick={() => setPlay(true)}><Dices size={18} />Игра</Btn>
+            <Btn className="flex-1 !px-2 !border-sand/70 !text-sand-light" onClick={() => setPlay(true)}><Dices size={18} />Играть</Btn>
             <Btn tone="gold" className="flex-1 !px-2" onClick={makePdf}><Printer size={18} />PDF</Btn>
           </div>
         </div>

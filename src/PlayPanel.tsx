@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
-import { BedDouble, Dices, Tent } from 'lucide-react';
-import { Btn, Sheet } from './Panels';
+import { BedDouble, Dices, Shield, Tent, X } from 'lucide-react';
+import { HeroCard } from './HeroCard';
+import { Btn } from './Panels';
 import { useStore } from './store';
-import { doRoll, hitDie, longRest, rollables, rollDice, type Edge, type Rollable, type RollResult } from './play';
+import { doRoll, hitDie, longRest, shortRest, rollables, rollDice, type Edge, type Rollable, type RollResult } from './play';
 import { sheetSystem, signed } from './model';
 
 const TONE: Record<string, string> = { crit: 'text-[#f3d27a]', good: 'text-[#9fd59a]', mid: 'text-[#e8c07a]', bad: 'text-[#e39a8f]', fumble: 'text-[#ff7b6b]' };
@@ -13,10 +14,10 @@ export function PlayPanel({ open, onClose }: { open: boolean; onClose: () => voi
   const [edge, setEdge] = useState<Edge>('none');
   const [coc, setCoc] = useState(0);
   const [hist, setHist] = useState<RollResult[]>([]);
-  const [tab, setTab] = useState<'roll' | 'rest'>('roll');
+  const [tab, setTab] = useState<'hero' | 'roll' | 'rest'>('hero');
   const [q, setQ] = useState('');
   const list = useMemo(() => (sheet && open ? rollables(sheet) : []), [sheet, open]);
-  if (!sheet) return null;
+  if (!sheet || !open) return null;
   const sys = sheetSystem(sheet);
   const push = (r: RollResult) => { setHist((h) => [r, ...h].slice(0, 30)); if (navigator.vibrate) navigator.vibrate(18); };
   const roll = (r: Rollable) => {
@@ -30,14 +31,20 @@ export function PlayPanel({ open, onClose }: { open: boolean; onClose: () => voi
   const chip = (on: boolean) => `h-9 px-3 rounded-full border text-sm ${on ? 'border-sand bg-sand/20 text-sand-light' : 'border-moss-light text-cream/75'}`;
 
   return (
-    <Sheet open={open} onClose={onClose} title="Игра">
-      <div className="grid gap-3">
-        {sys === 'dnd' && (
-          <div className="grid grid-cols-2 gap-2">
+    <div className="fixed inset-0 z-50 bg-moss-dark no-print flex flex-col">
+      <div className="safe-top border-b border-moss-light/60 bg-moss-deep/95">
+        <div className="max-w-xl mx-auto px-3 pt-2 pb-2 flex items-center gap-2">
+          <div className={`flex-1 grid ${sys === 'dnd' ? 'grid-cols-3' : 'grid-cols-2'} gap-1.5`}>
+            <button className={chip(tab === 'hero')} onClick={() => setTab('hero')}><Shield size={15} className="inline -mt-0.5 mr-1" />Герой</button>
             <button className={chip(tab === 'roll')} onClick={() => setTab('roll')}><Dices size={15} className="inline -mt-0.5 mr-1" />Броски</button>
-            <button className={chip(tab === 'rest')} onClick={() => setTab('rest')}><Tent size={15} className="inline -mt-0.5 mr-1" />Отдых</button>
+            {sys === 'dnd' && <button className={chip(tab === 'rest')} onClick={() => setTab('rest')}><Tent size={15} className="inline -mt-0.5 mr-1" />Отдых</button>}
           </div>
-        )}
+          <button onClick={onClose} aria-label="Закрыть игру" className="w-10 h-10 grid place-items-center text-cream/70"><X /></button>
+        </div>
+      </div>
+      <div className="flex-1 overflow-y-auto overscroll-contain">
+      <div className="max-w-xl mx-auto px-4 py-3 pb-10 grid gap-3">
+        {tab === 'hero' && <HeroCard />}
 
         {last && tab === 'roll' && (
           <div className="sticky top-0 z-10 rounded-2xl border border-sand/50 bg-moss-deep px-4 py-3 text-center shadow-[0_8px_20px_rgba(0,0,0,.5)]">
@@ -88,18 +95,20 @@ export function PlayPanel({ open, onClose }: { open: boolean; onClose: () => voi
           <div className="grid gap-3">
             <div className="rounded-2xl border border-moss-light bg-moss-deep p-4 grid gap-2">
               <div className="font-display-sc text-xl text-sand-light">Короткий отдых</div>
-              <p className="text-sm text-cream/70">Час передышки. Можно потратить кости хитов: каждая лечит бросок кости + модификатор Телосложения. Берётся размер кости из поля «Кости хитов» (например, 5к10).</p>
+              <p className="text-sm text-cream/70">Час передышки. Восстанавливаются заряды способностей «после короткого отдыха». Можно потратить кости хитов: каждая лечит бросок кости + модификатор Телосложения. Берётся размер кости из поля «Кости хитов» (например, 5к10).</p>
+              <Btn tone="gold" onClick={() => { commit(shortRest); say('Короткий отдых: заряды восстановлены'); }}><Tent size={18} />Отдохнуть (восстановить заряды)</Btn>
               <Btn onClick={() => { const r = hitDie(sheet); if (!r) { say('Впишите на листе «Кости хитов», например 5к10'); return; } commit(() => r.sheet); push({ title: 'Кость хитов', total: 0, detail: r.text, at: Date.now() }); say(r.text); }}><Dices size={18} />Потратить кость хитов</Btn>
             </div>
             <div className="rounded-2xl border border-moss-light bg-moss-deep p-4 grid gap-2">
               <div className="font-display-sc text-xl text-sand-light">Долгий отдых</div>
-              <p className="text-sm text-cream/70">Восемь часов сна. Текущие хиты станут равны максимуму, временные хиты и спасброски от смерти сбросятся, все ячейки заклинаний восстановятся.</p>
+              <p className="text-sm text-cream/70">Восемь часов сна. Текущие хиты станут равны максимуму, временные хиты и спасброски от смерти сбросятся, все ячейки заклинаний и все заряды способностей восстановятся.</p>
               <Btn tone="gold" onClick={() => { commit(longRest); say('Долгий отдых: хиты и ячейки восстановлены'); }}><BedDouble size={18} />Отдохнуть</Btn>
             </div>
             <p className="text-xs text-cream/50">Ошиблись — стрелка «отменить» вверху вернёт всё как было.</p>
           </div>
         )}
       </div>
-    </Sheet>
+      </div>
+    </div>
   );
 }
