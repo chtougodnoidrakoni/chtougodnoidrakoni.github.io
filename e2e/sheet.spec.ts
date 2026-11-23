@@ -74,13 +74,13 @@ test('лист: заполнение в окне, редактор страни�
   await blk('Заговоры').scrollIntoViewIfNeeded(); await blk('Заговоры').click();
   await page.getByRole('button', { name: 'Добавить заклинания' }).click();
   await page.getByPlaceholder('Название (по-английски или по-русски)').fill('огненный');
-  await page.getByText('Огненный снаряд').click();
+  await page.getByRole('button', { name: 'Добавить: Огненный снаряд' }).click();
   await page.getByRole('button', { name: 'Готово' }).last().click();
   await save();
   await blk('Заклинания').scrollIntoViewIfNeeded(); await blk('Заклинания').click();
   await page.getByRole('button', { name: 'Добавить заклинания' }).click();
   await page.getByPlaceholder('Название (по-английски или по-русски)').fill('огненный шар');
-  await page.getByText('Огненный шар').first().click();
+  await page.getByRole('button', { name: 'Добавить: Огненный шар' }).first().click();
   await page.getByPlaceholder('Название (по-английски или по-русски)').fill('щит');
   await page.getByRole('button', { name: /^Щит 1 круг/ }).click();
   await page.getByRole('button', { name: 'Своё заклинание' }).click();
