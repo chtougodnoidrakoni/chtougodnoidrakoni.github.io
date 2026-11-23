@@ -4,7 +4,7 @@
  * всё проверяется валидатором и превращается во внутренние структуры сборщика.
  */
 import { get as idbGet, set as idbSet } from 'idb-keyval';
-import { ABS, CLASSES, type Ab, type ClassDef, type Ed } from './data';
+import { ABS, CLASSES, RACES, type Ab, type ClassDef, type Ed, type Race, type Sub } from './data';
 
 export const FORMAT = 'dnd-content-pack';
 export const FORMAT_VERSION = 1;
@@ -23,6 +23,7 @@ export type Effect =
   | { type: 'skill_proficiency'; value: string[] }
   | { type: 'save_proficiency'; value: string[] }
   | { type: 'expertise'; count: number }
+  | { type: 'darkvision'; value: number }
   | { type: 'note'; text: string };
 export interface FeatureIn {
   id: string; name: string; name_en?: string; level: number; description?: string; effect?: string;
@@ -50,10 +51,18 @@ export interface ClassIn {
   spellcasting?: SpellcastingIn; progression?: { level: number; notes?: string }[];
   features: FeatureIn[]; subclasses?: SubclassIn[];
 }
+export interface TraitIn { id: string; name: string; name_en?: string; description: string; effects?: Effect[] }
+export interface SubraceIn { id: string; name: string; name_en: string; source: string; summary?: string; description?: string; ability_score_increase?: Record<string, number>; speed?: number; proficiencies?: { skills?: string[]; weapons?: string[]; armor?: string[] }; traits: TraitIn[] }
+export interface RaceIn {
+  id: string; name: string; name_en?: string; source?: string; summary?: string; description?: string;
+  size: 'Tiny' | 'Small' | 'Medium' | 'Large'; speed: number; ability_score_increase?: Record<string, number>;
+  age?: { adulthood?: number; lifespan?: number }; alignment?: string; languages?: string[];
+  proficiencies?: { skills?: string[]; weapons?: string[]; armor?: string[] }; traits: TraitIn[]; subraces?: SubraceIn[]; subrace_title?: string;
+}
 export interface PackIn {
   format: string; format_version: number; ruleset: Ruleset; pack_id: string; pack_name: string; pack_version?: number;
   language?: string; author?: string; description?: string; sources?: { id: string; name: string }[];
-  classes?: ClassIn[]; subclasses?: SubclassIn[];
+  classes?: ClassIn[]; subclasses?: SubclassIn[]; races?: RaceIn[];
 }
 
 // ------------------------------------------------------------------ хранилище
@@ -62,6 +71,7 @@ export interface LogEntry { at: number; file: string; pack: string; result: stri
 const KEY = 'content-packs', PREV = 'content-packs-prev', LOG = 'content-log';
 
 const ID = /^[a-z0-9][a-z0-9_-]{1,63}$/;
+const EFFECTS = ['hp_per_level', 'unarmored_ac', 'speed', 'armor_proficiency', 'weapon_proficiency', 'skill_proficiency', 'save_proficiency', 'expertise', 'darkvision', 'note'];
 const AB_EN: Record<string, Ab> = { strength: 'str', dexterity: 'dex', constitution: 'con', intelligence: 'int', wisdom: 'wis', charisma: 'cha', str: 'str', dex: 'dex', con: 'con', int: 'int', wis: 'wis', cha: 'cha', сила: 'str', ловкость: 'dex', телосложение: 'con', интеллект: 'int', мудрость: 'wis', харизма: 'cha' };
 export const abOf = (s: string | undefined): Ab | undefined => (s ? AB_EN[s.toLowerCase().trim()] : undefined);
 const AB_NAME: Record<Ab, string> = { str: 'Сила', dex: 'Ловкость', con: 'Телосложение', int: 'Интеллект', wis: 'Мудрость', cha: 'Харизма' };
@@ -69,7 +79,7 @@ const AB_NAME: Record<Ab, string> = { str: 'Сила', dex: 'Ловкость', 
 // ------------------------------------------------------------------ проверка
 export interface Report {
   ok: boolean; pack?: PackIn; errors: string[]; warnings: string[];
-  stats: { classes: number; subclasses: number; features: number; newClasses: string[]; newSubclasses: string[]; updated: string[]; duplicates: string[] };
+  stats: { classes: number; subclasses: number; features: number; races: number; subraces: number; newClasses: string[]; newSubclasses: string[]; newRaces: string[]; newSubraces: string[]; updated: string[]; duplicates: string[] };
   mode?: 'new' | 'update' | 'same' | 'older';
 }
 const arr = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
@@ -96,7 +106,7 @@ function checkFeature(f: unknown, where: string, e: string[], w: string[], ids: 
   if (x.action && !['action', 'bonus', 'reaction', 'passive', 'other'].includes(x.action)) e.push(`${where} › ${x.id}: action может быть action, bonus, reaction, passive или other`);
   for (const ef of arr(x.effects)) {
     const t = (ef as Effect)?.type;
-    if (!['hp_per_level', 'unarmored_ac', 'speed', 'armor_proficiency', 'weapon_proficiency', 'skill_proficiency', 'save_proficiency', 'expertise', 'note'].includes(t)) e.push(`${where} › ${x.id}: неизвестный эффект «${t}»`);
+    if (!EFFECTS.includes(t)) e.push(`${where} › ${x.id}: неизвестный эффект «${t}»`);
     if (t === 'unarmored_ac' && arr((ef as { abilities: unknown }).abilities).some((a) => !abOf(String(a)))) e.push(`${where} › ${x.id}: unarmored_ac — неизвестная характеристика`);
   }
   return 1;
@@ -108,7 +118,7 @@ function table20(v: unknown, name: string, where: string, e: string[]) {
 
 export function validate(raw: unknown, existing: StoredPack[] = []): Report {
   const errors: string[] = [], warnings: string[] = [];
-  const stats: Report['stats'] = { classes: 0, subclasses: 0, features: 0, newClasses: [], newSubclasses: [], updated: [], duplicates: [] };
+  const stats: Report['stats'] = { classes: 0, subclasses: 0, features: 0, races: 0, subraces: 0, newClasses: [], newSubclasses: [], newRaces: [], newSubraces: [], updated: [], duplicates: [] };
   const p = raw as PackIn;
   const fail = (m: string) => ({ ok: false, errors: [m], warnings, stats });
   if (!p || typeof p !== 'object' || Array.isArray(p)) return fail('Корень файла должен быть объектом { … }');
@@ -176,7 +186,57 @@ export function validate(raw: unknown, existing: StoredPack[] = []): Report {
     if (otherSubs.has(s.id)) warnings.push(`${where}: уже есть в пакете «${otherSubs.get(s.id)}»`);
     else stats.newSubclasses.push(s.name);
   }
-  if (!stats.classes && !stats.subclasses) errors.push('В пакете нет ни классов, ни подклассов');
+  // ---- виды и подрасы
+  const raceIds = new Set<string>();
+  const otherRaces = new Map<string, string>(); for (const s of others) for (const r of s.pack.races ?? []) otherRaces.set(r.id, s.pack.pack_name);
+  const builtRaces = new Map(RACES[ed].map((r) => [r.id, r.name]));
+  const asiCheck = (v: unknown, where: string) => {
+    if (v === undefined) return;
+    if (!v || typeof v !== 'object' || Array.isArray(v)) { errors.push(`${where}: ability_score_increase должен быть объектом { "dexterity": 2 }`); return; }
+    for (const [k, n] of Object.entries(v)) { if (!abOf(k)) errors.push(`${where}: неизвестная характеристика «${k}» в ability_score_increase`); if (!Number.isInteger(n) || (n as number) < -5 || (n as number) > 5) errors.push(`${where}: бонус «${k}» должен быть целым числом`); }
+  };
+  const traits = (list: unknown, where: string) => {
+    if (!Array.isArray(list)) { errors.push(`${where}: отсутствует поле traits`); return; }
+    for (const t of list as TraitIn[]) {
+      if (!t || typeof t !== 'object') { errors.push(`${where}: черта должна быть объектом`); continue; }
+      stats.features++;
+      if (!t.id || !ID.test(t.id)) errors.push(`${where}: у черты «${t.name ?? '?'}» неверный или пустой id`);
+      else if (featIds.has(t.id)) errors.push(`${where}: id черты «${t.id}» повторяется`); else featIds.add(t.id);
+      if (!t.name?.trim()) errors.push(`${where} › ${t.id ?? '?'}: у черты нет name`);
+      if (!t.description?.trim()) errors.push(`${where} › ${t.name ?? t.id ?? '?'}: у черты нет description`);
+      for (const ef of arr(t.effects)) if (!EFFECTS.includes((ef as Effect)?.type)) errors.push(`${where} › ${t.id}: неизвестный эффект «${(ef as Effect)?.type}»`);
+    }
+  };
+  for (const r of arr(p.races) as RaceIn[]) {
+    const where = `В виде ${r?.name ?? r?.id ?? '?'}`;
+    if (!r || typeof r !== 'object') { errors.push('Вид должен быть объектом'); continue; }
+    stats.races++;
+    if (!r.id || !ID.test(r.id)) errors.push(`${where}: неверный id «${r.id ?? ''}»`);
+    else if (raceIds.has(r.id) || classIds.has(r.id)) { errors.push(`id вида «${r.id}» повторяется`); stats.duplicates.push(r.id); }
+    else raceIds.add(r.id);
+    if (!r.name?.trim()) errors.push(`${where}: отсутствует поле name`);
+    if (!['Tiny', 'Small', 'Medium', 'Large'].includes(r.size)) errors.push(`${where}: size должен быть Tiny, Small, Medium или Large`);
+    if (!Number.isInteger(r.speed) || r.speed <= 0) errors.push(`${where}: speed — целое число больше 0`);
+    asiCheck(r.ability_score_increase, where);
+    traits(r.traits, where);
+    for (const sr of arr(r.subraces) as SubraceIn[]) {
+      const w2 = `В подрасе ${sr?.name ?? sr?.id ?? '?'} (${r.name ?? r.id})`;
+      if (!sr || typeof sr !== 'object') { errors.push(`${where}: подраса должна быть объектом`); continue; }
+      stats.subraces++;
+      if (!sr.id || !ID.test(sr.id)) errors.push(`${w2}: неверный id «${sr.id ?? ''}»`);
+      else if (raceIds.has(sr.id)) { errors.push(`id подрасы «${sr.id}» повторяется`); stats.duplicates.push(sr.id); }
+      else raceIds.add(sr.id);
+      for (const k of ['name', 'name_en', 'source'] as const) if (!sr[k]?.trim?.()) errors.push(`${w2}: отсутствует поле ${k}`);
+      if (sr.speed !== undefined && (!Number.isInteger(sr.speed) || sr.speed <= 0)) errors.push(`${w2}: speed — целое число больше 0`);
+      asiCheck(sr.ability_score_increase, w2);
+      traits(sr.traits, w2);
+      stats.newSubraces.push(sr.name);
+    }
+    if (builtRaces.has(r.id)) warnings.push(`${where}: заменит встроенный вид «${builtRaces.get(r.id)}», пока пакет включён`);
+    if (otherRaces.has(r.id)) warnings.push(`${where}: такой вид уже есть в пакете «${otherRaces.get(r.id)}»`);
+    else stats.newRaces.push(r.name);
+  }
+  if (!stats.classes && !stats.subclasses && !stats.races) errors.push('В пакете нет ни классов, ни подклассов, ни видов');
   const old = existing.find((s) => s.pack.pack_id === p.pack_id);
   let mode: Report['mode'] = 'new';
   if (old) {
@@ -185,10 +245,12 @@ export function validate(raw: unknown, existing: StoredPack[] = []): Report {
     else if (nv > ov) { mode = 'update'; stats.updated.push(`${p.pack_name}: версия ${ov} → ${nv}`); }
     else if (nv === ov) { mode = 'update'; warnings.push(`Пакет той же версии ${nv}, но содержимое отличается — записи с теми же id обновятся`); stats.updated.push(p.pack_name); }
     else { mode = 'older'; warnings.push(`В приложении версия ${ov}, а в файле старее — ${nv}`); }
-    const oldIds = new Set([...(old.pack.classes ?? []).map((c) => c.id), ...allSubs(old.pack).map((s) => s.id)]);
+    const oldIds = new Set([...(old.pack.classes ?? []).map((c) => c.id), ...allSubs(old.pack).map((s) => s.id), ...(old.pack.races ?? []).flatMap((r) => [r.id, ...(r.subraces ?? []).map((x) => x.id)])]);
+    stats.newRaces = (p.races ?? []).filter((r) => !oldIds.has(r.id)).map((r) => r.name);
+    stats.newSubraces = (p.races ?? []).flatMap((r) => r.subraces ?? []).filter((x) => !oldIds.has(x.id)).map((x) => x.name);
     stats.newClasses = (p.classes ?? []).filter((c) => !oldIds.has(c.id)).map((c) => c.name);
     stats.newSubclasses = allSubs(p).filter((s) => !oldIds.has(s.id)).map((s) => s.name);
-    stats.updated.push(...[...(p.classes ?? []), ...allSubs(p)].filter((x) => oldIds.has(x.id)).map((x) => x.name));
+    stats.updated.push(...[...(p.classes ?? []), ...allSubs(p), ...(p.races ?? []), ...(p.races ?? []).flatMap((r) => r.subraces ?? [])].filter((x) => oldIds.has(x.id)).map((x) => x.name));
   }
   return { ok: errors.length === 0, pack: p, errors, warnings, stats, mode };
 }
@@ -210,7 +272,7 @@ export async function importPack(p: PackIn, file: string): Promise<StoredPack[]>
   if (!rep.ok) throw new Error(rep.errors[0]);
   const next = [...list.filter((s) => s.pack.pack_id !== p.pack_id), { pack: p, enabled: true, importedAt: Date.now(), file, origin: 'local' as const }];
   await commit(next);
-  await log({ at: Date.now(), file, pack: `${p.pack_name} (${p.pack_id} v${p.pack_version ?? 1})`, result: `${rep.mode === 'new' ? 'добавлен' : 'обновлён'}: классов ${rep.stats.classes}, подклассов ${rep.stats.subclasses}, способностей ${rep.stats.features}`, who: 'это устройство' });
+  await log({ at: Date.now(), file, pack: `${p.pack_name} (${p.pack_id} v${p.pack_version ?? 1})`, result: `${rep.mode === 'new' ? 'добавлен' : 'обновлён'}: классов ${rep.stats.classes}, подклассов ${rep.stats.subclasses}, видов ${rep.stats.races}, подрас ${rep.stats.subraces}, способностей ${rep.stats.features}`, who: 'это устройство' });
   return next;
 }
 export async function setEnabled(id: string, enabled: boolean) { const l = await loadLocal(); const n = l.map((s) => (s.pack.pack_id === id ? { ...s, enabled } : s)); await commit(n); return n; }
@@ -236,7 +298,7 @@ export interface SubDef { id: string; classId: string; name: string; source: str
 export interface SpellDef { ability: Ab; kind: 'known' | 'prepared' | 'book'; progression: SpellcastingIn['progression']; slots?: number[][]; cantrips?: number[]; known?: number[]; prepared?: SpellcastingIn['prepared']; preparedTable?: number[]; list: string }
 
 let active: StoredPack[] = [];
-let cache: { classes: Record<Ed, ClassDef[]>; subs: Record<Ed, SubDef[]> } | undefined;
+let cache: { classes: Record<Ed, ClassDef[]>; subs: Record<Ed, SubDef[]>; races: Record<Ed, Race[]> } | undefined;
 export function setActive(packs: StoredPack[]) { active = packs; cache = undefined; }
 export const activePacks = () => active;
 
@@ -270,9 +332,28 @@ function toClass(c: ClassIn, p: PackIn, ed: Ed): ClassDef {
   };
 }
 
+const SIZE_RU: Record<string, string> = { Tiny: 'Крошечный', Small: 'Маленький', Medium: 'Средний', Large: 'Большой' };
+const asiOf = (v?: Record<string, number>) => { const o: Partial<Record<Ab, number>> = {}; for (const [k, n] of Object.entries(v ?? {})) { const a = abOf(k); if (a) o[a] = (o[a] ?? 0) + n; } return Object.keys(o).length ? o : undefined; };
+const profEffects = (p?: RaceIn['proficiencies']): Effect[] => [
+  ...(p?.weapons?.length ? [{ type: 'weapon_proficiency' as const, value: p.weapons }] : []),
+  ...(p?.armor?.length ? [{ type: 'armor_proficiency' as const, value: p.armor.map((x) => ({ лёгкие: 'light', легкие: 'light', средние: 'medium', тяжёлые: 'heavy', тяжелые: 'heavy', щиты: 'shields' } as Record<string, string>)[x.toLowerCase()] ?? x.toLowerCase()) as ('light' | 'medium' | 'heavy' | 'shields')[] }] : []),
+];
+function toRace(r: RaceIn, p: PackIn): Race {
+  const src = r.source ?? p.pack_name;
+  const tr = (t: TraitIn) => ({ name: t.name, text: t.description });
+  return {
+    id: r.id, name: r.name, speed: r.speed, size: SIZE_RU[r.size] ?? r.size, asi: asiOf(r.ability_score_increase), langs: (r.languages ?? []).join(', ') || '—',
+    traits: r.traits.map(tr), skills: r.proficiencies?.skills, source: src, pack: p.pack_name, summary: r.summary,
+    effects: [...r.traits.flatMap((t) => t.effects ?? []), ...profEffects(r.proficiencies)],
+    subTitle: r.subrace_title ?? 'Подраса',
+    subs: r.subraces?.length ? r.subraces.map((x): Sub => ({ id: x.id, name: x.name, asi: asiOf(x.ability_score_increase), speed: x.speed, skills: x.proficiencies?.skills, traits: x.traits.map(tr), effects: [...x.traits.flatMap((t) => t.effects ?? []), ...profEffects(x.proficiencies)], source: x.source })) : undefined,
+  };
+}
+
 function build() {
   const classes: Record<Ed, ClassDef[]> = { '2014': [...CLASSES], '2024': [...CLASSES] };
   const subs: Record<Ed, SubDef[]> = { '2014': [], '2024': [] };
+  const races: Record<Ed, Race[]> = { '2014': [...RACES['2014']], '2024': [...RACES['2024']] };
   for (const s of active) {
     if (!s.enabled) continue;
     const ed: Ed = s.pack.ruleset === '5e-2014' ? '2014' : '2024';
@@ -286,9 +367,15 @@ function build() {
       const d: SubDef = { id: `${s.pack.pack_id}:${sc.id}`, classId: sc.class_id, name: sc.name, source: src, pack: s.pack.pack_name, level: sc.level, features: sc.features.map((f) => toFeature(f, src)), spells: sc.spells ?? [], summary: sc.summary };
       subs[ed] = [...subs[ed].filter((x) => x.id !== d.id), d];
     }
+    for (const r of s.pack.races ?? []) {
+      const def = toRace(r, s.pack);
+      const i = races[ed].findIndex((x) => x.id === r.id);
+      if (i >= 0) races[ed][i] = def; else races[ed].push(def);
+    }
   }
-  return { classes, subs };
+  return { classes, subs, races };
 }
+export function racesFor(ed: Ed): Race[] { return (cache ??= build()).races[ed]; }
 export function classesFor(ed: Ed): ClassDef[] { return (cache ??= build()).classes[ed]; }
 export function subsFor(ed: Ed, classId: string): SubDef[] { return (cache ??= build()).subs[ed].filter((s) => s.classId === classId); }
 export function findSub(ed: Ed, id?: string): SubDef | undefined { return id ? (cache ??= build()).subs[ed].find((s) => s.id === id) : undefined; }

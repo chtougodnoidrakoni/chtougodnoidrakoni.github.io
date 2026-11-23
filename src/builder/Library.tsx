@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, Download, FileUp, History, Power, Trash2, Undo2, Upload, KeyRound } from 'lucide-react';
+import { ArrowLeft, Download, FileUp, History, Power, Trash2, Undo2, Upload, KeyRound, VenetianMask } from 'lucide-react';
 import { Btn, TextIn } from '../Panels';
 import { allSubs, exportBuiltIn, importPack, loadLog, packText, readPack, removePack, setEnabled, undoLast, validate, type LogEntry, type PackIn, type Report, type StoredPack } from './content';
 import { publish, tokenOk } from './publish';
@@ -42,7 +42,7 @@ export function Library({ local, club, onChange, onBack }: { local: StoredPack[]
   };
   const confirm = async () => {
     if (!rep?.pack) return;
-    try { const n = await importPack(rep.pack, rep.file); onChange(n); setDone(`Готово: «${rep.pack.pack_name}» — классов ${rep.stats.classes}, подклассов ${rep.stats.subclasses}, способностей ${rep.stats.features}. Уже доступно в сборке.`); setRep(undefined); setPaste(''); }
+    try { const n = await importPack(rep.pack, rep.file); onChange(n); setDone(`Готово: «${rep.pack.pack_name}» — классов ${rep.stats.classes}, подклассов ${rep.stats.subclasses}, видов ${rep.stats.races}, подрас ${rep.stats.subraces}. Уже доступно в сборке.`); setRep(undefined); setPaste(''); }
     catch (e) { setErr(`Импорт не выполнен, ничего не изменилось: ${(e as Error).message}`); }
   };
   const doPublish = async (p: PackIn) => {
@@ -59,7 +59,7 @@ export function Library({ local, club, onChange, onBack }: { local: StoredPack[]
           <div className="flex-1 min-w-0">
             <div className="text-cream">{s.pack.pack_name}</div>
             <div className="text-xs text-cream/55">{s.pack.ruleset === '5e-2014' ? '2014' : '2024'} · v{s.pack.pack_version ?? 1} · {s.origin === 'club' ? 'общий для всех' : 'на этом телефоне'}{s.file ? ` · ${s.file}` : ''}</div>
-            <div className="text-xs text-cream/70 mt-1">{(s.pack.classes ?? []).length ? `Классы: ${(s.pack.classes ?? []).map((c) => c.name).join(', ')}. ` : ''}{subs.length ? `Подклассы: ${subs.map((x) => x.name).join(', ')}.` : ''}</div>
+            <div className="text-xs text-cream/70 mt-1">{(s.pack.classes ?? []).length ? `Классы: ${(s.pack.classes ?? []).map((c) => c.name).join(', ')}. ` : ''}{subs.length ? `Подклассы: ${subs.map((x) => x.name).join(', ')}. ` : ''}{(s.pack.races ?? []).length ? `Виды: ${(s.pack.races ?? []).map((r) => r.name).join(', ')}.` : ''}</div>
           </div>
           {s.origin === 'local' && <button aria-label={`${s.enabled ? 'Выключить' : 'Включить'}: ${s.pack.pack_name}`} onClick={async () => onChange(await setEnabled(s.pack.pack_id, !s.enabled))} className={cx('p-2 rounded-lg', s.enabled ? 'text-sand-light' : 'text-cream/40')}><Power size={18} /></button>}
         </div>
@@ -80,9 +80,13 @@ export function Library({ local, club, onChange, onBack }: { local: StoredPack[]
         <div className="font-display-sc text-2xl text-sand-light leading-tight">Библиотека контента D&D</div>
       </header>
       <main className="max-w-xl mx-auto px-4 mt-4">
-        <p className="text-sm text-cream/70 leading-snug mb-3">Здесь добавляются новые классы и подклассы из файла-пакета. Пакет — это .txt с JSON внутри; формат описан в шаблоне. Новые записи сразу появляются в сборке персонажа.</p>
+        <p className="text-sm text-cream/70 leading-snug mb-3">Здесь добавляются новые классы, подклассы и виды из файла-пакета. Пакет — это .txt с JSON внутри; формат описан в шаблоне. Новые записи сразу появляются в сборке персонажа.</p>
         <input ref={input} type="file" accept=".txt,.json,text/plain,application/json" className="hidden" onChange={(e) => { void onFile(e.target.files?.[0]); e.target.value = ''; }} />
-        <Btn tone="gold" className="w-full" onClick={() => input.current?.click()}><FileUp size={18} />+ Импорт классов и подклассов</Btn>
+        <div className="grid gap-2">
+          <Btn tone="gold" className="w-full" onClick={() => input.current?.click()}><FileUp size={18} />+ Импорт классов и подклассов</Btn>
+          <Btn tone="gold" className="w-full" onClick={() => input.current?.click()}><VenetianMask size={18} />+ Импорт видов (Races)</Btn>
+        </div>
+        <div className="text-xs text-cream/50 mt-1">Обе кнопки принимают один формат: в одном файле могут быть и классы, и виды.</div>
         <details className="mt-2"><summary className="text-sm text-cream/70">Или вставить текст пакета</summary>
           <textarea aria-label="Текст пакета" value={paste} onChange={(e) => setPaste(e.target.value)} className="w-full min-h-32 p-3 mt-2 rounded-xl bg-moss-deep border border-moss-light outline-none text-xs font-mono" placeholder='{ "format": "dnd-content-pack", … }' />
           <Btn className="mt-2" disabled={!paste.trim()} onClick={() => check(paste, 'вставка.txt')}>Проверить</Btn>
@@ -99,9 +103,11 @@ export function Library({ local, club, onChange, onBack }: { local: StoredPack[]
           <div className="mt-4 rounded-2xl border border-sand/60 bg-moss-dark p-3">
             <div className="font-display-sc text-xl text-sand-light">Предпросмотр: {rep.pack?.pack_name ?? rep.file}</div>
             <div className="grid grid-cols-3 gap-2 my-2 text-center">
-              {[['Новых классов', rep.stats.newClasses.length], ['Новых подклассов', rep.stats.newSubclasses.length], ['Обновится', rep.stats.updated.length]].map(([l, v]) => <div key={l} className="rounded-xl bg-moss-deep border border-moss-light py-2"><div className="text-xl text-cream">{v}</div><div className="text-[11px] text-cream/60 leading-tight">{l}</div></div>)}
+              {[['Новых классов', rep.stats.newClasses.length], ['Новых подклассов', rep.stats.newSubclasses.length], ['Новых видов', rep.stats.newRaces.length], ['Новых подрас', rep.stats.newSubraces.length], ['Обновится', rep.stats.updated.length], ['Способностей и черт', rep.stats.features]].map(([l, v]) => <div key={l} className="rounded-xl bg-moss-deep border border-moss-light py-2"><div className="text-xl text-cream">{v}</div><div className="text-[11px] text-cream/60 leading-tight">{l}</div></div>)}
             </div>
-            <div className="text-xs text-cream/70">Всего в файле: классов {rep.stats.classes}, подклассов {rep.stats.subclasses}, способностей {rep.stats.features}.</div>
+            <div className="text-xs text-cream/70">Всего в файле: классов {rep.stats.classes}, подклассов {rep.stats.subclasses}, видов {rep.stats.races}, подрас {rep.stats.subraces}.</div>
+            {rep.stats.newRaces.length > 0 && <div className="text-xs text-cream/80 mt-1">Новые виды: {rep.stats.newRaces.join(', ')}</div>}
+            {rep.stats.newSubraces.length > 0 && <div className="text-xs text-cream/80 mt-1">Новые подрасы: {rep.stats.newSubraces.join(', ')}</div>}
             {rep.stats.newClasses.length > 0 && <div className="text-xs text-cream/80 mt-1">Новые классы: {rep.stats.newClasses.join(', ')}</div>}
             {rep.stats.newSubclasses.length > 0 && <div className="text-xs text-cream/80 mt-1">Новые подклассы: {rep.stats.newSubclasses.join(', ')}</div>}
             {rep.stats.updated.length > 0 && <div className="text-xs text-cream/80 mt-1">Обновятся: {rep.stats.updated.join(', ')}</div>}

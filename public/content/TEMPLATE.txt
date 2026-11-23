@@ -51,9 +51,20 @@
   { "type": "skill_proficiency", "value": ["Магия"] }; { "type": "save_proficiency", "value": ["wisdom"] };
   { "type": "expertise", "count": 2 } — компетентность в навыках; { "type": "note", "text": "…" } — просто пометка.
 
+ВИД (races[]) — кнопка «+ Импорт видов (Races)», формат тот же
+• id, name, name_en, source, summary, description.
+• size — Tiny, Small, Medium или Large. speed — целое число больше 0.
+• ability_score_increase — { "dexterity": 2, "wisdom": 1 }. Применяется и в 2014, и в 2024 (если вид из пакета даёт бонусы).
+• age { adulthood, lifespan }, alignment, languages ["Общий", …].
+• proficiencies { skills: [навыки], weapons: [оружие или "martial"/"simple"], armor: [лёгкие, средние, тяжёлые, щиты] } — сайт применяет сам.
+• traits — черты: у каждой обязательны id, name, description; по желанию effects (те же эффекты, что у способностей, плюс { "type": "darkvision", "value": 60 }).
+• subraces — подрасы: обязательны id, name, name_en, source, traits; по желанию ability_score_increase, speed (заменяет скорость вида), proficiencies.
+• subrace_title — как называть подрасу в сборке (Подраса, Наследие, Происхождение…).
+• Вид с id встроенного вида (например elf) заменит встроенный, пока пакет включён.
+
 ЧТО ПРОВЕРЯЕТСЯ ПРИ ИМПОРТЕ
 Формат и версия, обязательные поля, id и их повторы, уровни 1–20, кости хитов, характеристики, таблицы по 20 значений,
-существование класса у подкласса, ссылки подкласса на подкласс. Пока есть ошибки, кнопка «Импортировать» не нажимается.
+существование класса у подкласса, ссылки подкласса на подкласс; у видов — размер, скорость, бонусы характеристик, обязательные поля черт и подрас. Пока есть ошибки, кнопка «Импортировать» не нажимается.
 Импорт добавляет и обновляет, но ничего не удаляет. Повторный импорт того же файла ничего не меняет.
 
 {
@@ -282,6 +293,92 @@
             "proficiency": true
           },
           "recharge": "long"
+        }
+      ]
+    }
+  ],
+  "races": [
+    {
+      "id": "my_race",
+      "name": "Название вида",
+      "name_en": "Race Name",
+      "source": "Название книги",
+      "summary": "Коротко",
+      "description": "Подробно своими словами",
+      "size": "Medium",
+      "speed": 30,
+      "ability_score_increase": {
+        "dexterity": 2
+      },
+      "age": {
+        "adulthood": 20,
+        "lifespan": 100
+      },
+      "alignment": "Склонности",
+      "languages": [
+        "Общий",
+        "Свой язык"
+      ],
+      "proficiencies": {
+        "skills": [
+          "Внимательность"
+        ],
+        "weapons": [
+          "Длинный меч"
+        ],
+        "armor": []
+      },
+      "subrace_title": "Подраса",
+      "traits": [
+        {
+          "id": "my_race_darkvision",
+          "name": "Тёмное зрение",
+          "name_en": "Darkvision",
+          "description": "Видит в темноте на 60 футов.",
+          "effects": [
+            {
+              "type": "darkvision",
+              "value": 60
+            }
+          ]
+        },
+        {
+          "id": "my_race_fast",
+          "name": "Быстрые ноги",
+          "description": "Скорость больше на 5 футов.",
+          "effects": [
+            {
+              "type": "speed",
+              "value": 5
+            }
+          ]
+        }
+      ],
+      "subraces": [
+        {
+          "id": "my_subrace",
+          "name": "Название подрасы",
+          "name_en": "Subrace Name",
+          "source": "Название книги",
+          "summary": "Коротко",
+          "ability_score_increase": {
+            "wisdom": 1
+          },
+          "traits": [
+            {
+              "id": "my_subrace_trait",
+              "name": "Черта подрасы",
+              "description": "Что даёт.",
+              "effects": [
+                {
+                  "type": "skill_proficiency",
+                  "value": [
+                    "Выживание"
+                  ]
+                }
+              ]
+            }
+          ]
         }
       ]
     }

@@ -1,7 +1,7 @@
 import { describe, expect, it, beforeEach } from 'vitest';
 import { readFileSync } from 'fs';
 import { readPack, validate, setActive, classesFor, subsFor, usesAt, exportBuiltIn, type PackIn, type StoredPack } from '../src/builder/content';
-import { emptyBuild, maxHp, armorClass, features, armorProf, subSpells, rule, problems, type Build } from '../src/builder/engine';
+import { emptyBuild, maxHp, armorClass, features, armorProf, subSpells, rule, problems, scores, speed, allSkills, type Build } from '../src/builder/engine';
 import { toSheet } from '../src/builder/toSheet';
 
 const file = (p: string) => readPack(readFileSync(p, 'utf8')).data as PackIn;
@@ -85,5 +85,38 @@ describe('библиотека контента: в сборке', () => {
     expect(classesFor('2014').map((c) => c.id)).not.toContain('tester');
     const t = mk({ level: 5, cls: 'tester', base });
     expect(maxHp(t)).toBe(0); expect(problems(t).class).toEqual(['Выберите класс']);
+  });
+});
+
+describe('библиотека контента: виды', () => {
+  const racePack: PackIn = {
+    format: 'dnd-content-pack', format_version: 1, ruleset: '5e-2014', pack_id: 'races_test', pack_name: 'Виды для проверки', pack_version: 1,
+    races: [{ id: 'sylph', name: 'Сильф', name_en: 'Sylph', source: 'Тест', size: 'Medium', speed: 30, ability_score_increase: { dexterity: 2, wisdom: 1 }, languages: ['Общий', 'Ауран'],
+      proficiencies: { skills: ['Акробатика'], weapons: ['Длинный меч'] },
+      traits: [{ id: 'sylph_dv', name: 'Тёмное зрение', description: '60 футов.', effects: [{ type: 'darkvision', value: 60 }] }, { id: 'sylph_fast', name: 'Лёгкий шаг', description: '+5 футов.', effects: [{ type: 'speed', value: 5 }] }],
+      subraces: [{ id: 'sylph_storm', name: 'Грозовой сильф', name_en: 'Storm Sylph', source: 'Тест', ability_score_increase: { constitution: 1 }, traits: [{ id: 'storm_t', name: 'Гроза', description: 'x', effects: [{ type: 'skill_proficiency', value: ['Выживание'] }] }] }] }],
+  };
+  it('шаблон с видом проходит проверку', () => { const r = validate(template); expect(r.errors).toEqual([]); expect(r.stats.races).toBe(1); expect(r.stats.subraces).toBe(1); });
+  it('ошибки видов понятные', () => {
+    const bad = JSON.parse(JSON.stringify(racePack)) as PackIn;
+    const r0 = bad.races![0]!; (r0 as { size: string }).size = 'Huge'; r0.speed = 0; r0.ability_score_increase = { luck: 2 };
+    r0.traits.push({ id: 'sylph_dv', name: 'Дубль', description: '' });
+    r0.subraces!.push({ id: 'sylph_storm', name: 'Дубль', traits: undefined } as never);
+    const e = validate(bad).errors.join('\n');
+    expect(e).toMatch(/size должен быть/); expect(e).toMatch(/speed — целое/); expect(e).toMatch(/неизвестная характеристика «luck»/);
+    expect(e).toMatch(/id черты «sylph_dv» повторяется/); expect(e).toMatch(/нет description/); expect(e).toMatch(/id подрасы «sylph_storm» повторяется/);
+    expect(e).toMatch(/отсутствует поле traits/); expect(e).toMatch(/отсутствует поле name_en/);
+    const noTraits = JSON.parse(JSON.stringify(racePack)) as PackIn; delete (noTraits.races![0] as Partial<typeof r0>).traits;
+    expect(validate(noTraits).errors.join('\n')).toMatch(/В виде Сильф: отсутствует поле traits/);
+  });
+  it('вид из пакета применяется в сборке, повторный импорт не дублирует', () => {
+    setActive([st(racePack), st(testClass)]);
+    const b = mk({ ed: '2014', level: 3, cls: 'fighter', race: 'sylph', sub: 'sylph_storm', base, weapons: ['Длинный меч'] });
+    const s = scores(b); expect(s.dex).toBe(16); expect(s.wis).toBe(16); expect(s.con).toBe(15);
+    expect(speed(b)).toBe(35);
+    expect(allSkills(b)).toEqual(expect.arrayContaining(['Акробатика', 'Выживание']));
+    expect(validate(racePack, [st(racePack)]).mode).toBe('same');
+    const both = { ...racePack, pack_id: 'mixed', classes: testClass.classes };
+    const r = validate(both); expect(r.ok).toBe(true); expect(r.stats.classes).toBe(1); expect(r.stats.races).toBe(1);
   });
 });

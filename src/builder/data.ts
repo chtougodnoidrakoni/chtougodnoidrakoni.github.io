@@ -1,7 +1,7 @@
 // Данные сборщика персонажа: открытые правила SRD 5.1 (2014) и SRD 5.2 (2024).
 // Только названия и механика; описания умений — короткие, своими словами.
 
-import type { FeatureDef, SpellDef } from './content';
+import type { Effect, FeatureDef, SpellDef } from './content';
 export type Ed = '2014' | '2024';
 export type Ab = 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha';
 export const ABS: Ab[] = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
@@ -130,11 +130,13 @@ export const CLASSES: ClassDef[] = [
 
 // ---------------------------------------------------------------- виды и расы
 export interface Trait { name: string; text: string }
-export interface Sub { id: string; name: string; asi?: Partial<Record<Ab, number>>; traits: Trait[]; spells?: [string, number][]; hpPerLevel?: number; speed?: number; skills?: string[] }
+export interface Sub { id: string; name: string; asi?: Partial<Record<Ab, number>>; traits: Trait[]; spells?: [string, number][]; hpPerLevel?: number; speed?: number; skills?: string[]; effects?: Effect[]; source?: string }
 export interface Race {
   id: string; name: string; speed: number; size: string; asi?: Partial<Record<Ab, number>>; asiChoice?: { n: number; v: number; except?: Ab[] };
   traits: Trait[]; skills?: string[]; skillPick?: { n: number; from: string[] | 'any' }; langs: string; subs?: Sub[]; subTitle?: string;
   spells?: [string, number][]; hpPerLevel?: number; dragon?: boolean; originFeat?: boolean;
+  /** только у видов из пакетов контента */
+  effects?: Effect[]; source?: string; pack?: string; summary?: string;
 }
 const DV = { name: 'Тёмное зрение', text: 'Видит в темноте на 60 футов как при тусклом свете.' };
 const DV120 = { name: 'Тёмное зрение', text: 'Видит в темноте на 120 футов.' };

@@ -3,10 +3,10 @@ import { ArrowLeft, ArrowRight, BookOpen, Check, ChevronDown, Dices, RotateCcw, 
 import { set as idbSet, get as idbGet } from 'idb-keyval';
 import { Btn, Field, TextIn } from '../Panels';
 import { SCHOOLS, sheetName, type SpellData } from '../model';
-import { ABS, AB_RU, AB_SHORT, ALIGNMENTS, ALL_SKILLS, ARMORS, BACKGROUNDS, DRAGONS, ORIGIN_FEATS, RACES, SKILLS, STYLES, WEAPONS, slots, type Ab, type Ed } from './data';
+import { ABS, AB_RU, AB_SHORT, ALIGNMENTS, ALL_SKILLS, ARMORS, BACKGROUNDS, DRAGONS, ORIGIN_FEATS, SKILLS, STYLES, WEAPONS, slots, type Ab, type Ed } from './data';
 import { POINT_COST, STANDARD, allSkills, armorClass, armorProf, featureTexts, packSub, saves, subSpells, asiLevels, attacks, bgOf, classOf, emptyBuild, expertiseCount, feats, features, fixedSkills, maxHp, mod, originBonus, pb, problems, proficientWeapon, raceOf, rule, scores, sgn, speed, subAt, subName, subOf, type AsiPick, type Build } from './engine';
 import { racialSpells, toSheet } from './toSheet';
-import { classesFor, loadClub, loadLocal, setActive, subsFor, type StoredPack } from './content';
+import { classesFor, racesFor, loadClub, loadLocal, setActive, subsFor, type StoredPack } from './content';
 import { Library } from './Library';
 
 const cx = (...c: (string | false | undefined)[]) => c.filter(Boolean).join(' ');
@@ -206,16 +206,17 @@ function StepRace({ b, up }: P) {
     <>
       <Note>{b.ed === '2014' ? 'Раса даёт бонусы к характеристикам, скорость и особенности.' : 'Вид даёт скорость и особенности. Бонусы к характеристикам в 2024 даёт предыстория.'}</Note>
       <div className="grid grid-cols-2 gap-2">
-        {RACES[b.ed].map((x) => (
+        {racesFor(b.ed).map((x) => (
           <Card key={x.id} on={b.race === x.id} onClick={() => pick(x.id)}>
             <div className="font-display-sc text-xl text-sand-light leading-tight">{x.name}</div>
-            <div className="text-xs text-cream/60">{x.speed} фт. {b.ed === '2014' && x.asi && <>· <Bonus asi={x.asi.str === 1 && x.asi.dex === 1 ? undefined : x.asi} />{x.id === 'human' && 'все +1'}</>}</div>
+            <div className="text-xs text-cream/60">{x.speed} фт. {(b.ed === '2014' || x.pack) && x.asi && <>· <Bonus asi={x.asi.str === 1 && x.asi.dex === 1 && !x.pack ? undefined : x.asi} />{x.id === 'human' && !x.pack && 'все +1'}</>}</div>
+            {x.source && <div className="text-[11px] text-cream/45">{x.source}</div>}
           </Card>
         ))}
       </div>
       {r && (
         <>
-          {r.subs && <><H>{r.subTitle}</H><div className="grid gap-2">{r.subs.map((s) => <Card key={s.id} on={b.sub === s.id} onClick={() => up({ sub: s.id })}><div className="text-cream">{s.name} {s.asi && <span className="text-xs text-cream/55">(<Bonus asi={s.asi} />)</span>}</div><div className="text-xs text-cream/60">{s.traits.map((t) => t.name).join(', ')}</div></Card>)}</div></>}
+          {r.subs && <><H>{r.subTitle}</H><div className="grid gap-2">{r.subs.map((s) => <Card key={s.id} on={b.sub === s.id} onClick={() => up({ sub: s.id })}><div className="text-cream">{s.name} {s.asi && <span className="text-xs text-cream/55">(<Bonus asi={s.asi} />)</span>}</div><div className="text-xs text-cream/60">{s.traits.map((t) => t.name).join(', ')}{s.source ? ` · ${s.source}` : ''}</div></Card>)}</div></>}
           {r.dragon && <><H>Драконий предок</H><div className="flex flex-wrap gap-2">{DRAGONS.map(([n, t]) => <Chip key={n} on={b.dragon === n} onClick={() => up({ dragon: n })}>{n} · {t}</Chip>)}</div></>}
           {r.asiChoice && <><H>+1 к двум характеристикам на выбор</H><div className="flex flex-wrap gap-2">{ABS.filter((a) => !r.asiChoice!.except?.includes(a)).map((a) => { const on = b.raceAsi.includes(a); return <Chip key={a} on={on} disabled={!on && b.raceAsi.length >= r.asiChoice!.n} onClick={() => up({ raceAsi: on ? b.raceAsi.filter((x) => x !== a) : [...b.raceAsi, a] })}>{AB_RU[a]}</Chip>; })}</div></>}
           {r.skillPick && <><H>Навык{r.skillPick.n > 1 ? 'и' : ''} вида: {r.skillPick.n}</H><div className="flex flex-wrap gap-2">{(r.skillPick.from === 'any' ? ALL_SKILLS : r.skillPick.from).map((s) => { const on = b.raceSkills.includes(s); const taken = fixed.includes(s); return <Chip key={s} on={on} disabled={taken || (!on && b.raceSkills.length >= r.skillPick!.n)} onClick={() => up({ raceSkills: on ? b.raceSkills.filter((x) => x !== s) : [...b.raceSkills, s], skills: b.skills.filter((x) => x !== s) })}>{s}</Chip>; })}</div></>}

@@ -1,6 +1,6 @@
 // Расчёт персонажа из выборов игрока. Чистые функции — их же проверяют тесты.
-import { abOf, classesFor, findSub, type Effect, type SubDef } from './content';
-import { ABS, AB_RU, ARMORS, BACKGROUNDS, DRAGONS, RACES, SKILLS, WEAPONS, slots, spellRule, type Ab, type ClassDef, type Ed, type Race, type Sub, type Background, type SpellRule } from './data';
+import { abOf, classesFor, findSub, racesFor, type Effect, type SubDef } from './content';
+import { ABS, AB_RU, ARMORS, BACKGROUNDS, DRAGONS, SKILLS, WEAPONS, slots, spellRule, type Ab, type ClassDef, type Ed, type Race, type Sub, type Background, type SpellRule } from './data';
 
 export type Method = 'standard' | 'pointbuy' | 'roll' | 'manual';
 export interface AsiPick { mode: 'two' | 'one' | 'feat'; a?: Ab; b?: Ab; feat?: string }
@@ -32,7 +32,7 @@ export const POINT_COST: Record<number, number> = { 8: 0, 9: 1, 10: 2, 11: 3, 12
 export const classOf = (b: Build): ClassDef | undefined => classesFor(b.ed).find((c) => c.id === b.cls);
 /** Подкласс из пакета контента, если выбран он. */
 export const packSub = (b: Build): SubDef | undefined => (b.subclass && b.subclass !== 'srd' && b.subclass !== 'custom' ? findSub(b.ed, b.subclass) : undefined);
-export const raceOf = (b: Build): Race | undefined => RACES[b.ed].find((r) => r.id === b.race);
+export const raceOf = (b: Build): Race | undefined => racesFor(b.ed).find((r) => r.id === b.race);
 export const subOf = (b: Build): Sub | undefined => raceOf(b)?.subs?.find((s) => s.id === b.sub);
 export const bgOf = (b: Build): Background | undefined => BACKGROUNDS[b.ed].find((x) => x.id === b.bg);
 export const subAt = (c: ClassDef, ed: Ed, s?: SubDef) => s?.level ?? (ed === '2014' ? c.sub.at14 : c.sub.at24);
@@ -43,7 +43,7 @@ export const subName = (b: Build) => {
 };
 /** Механические эффекты способностей из пакетов, открытых к текущему уровню. */
 export function effects(b: Build): Effect[] {
-  const c = classOf(b); const ps = packSub(b); const out: Effect[] = [];
+  const c = classOf(b); const ps = packSub(b); const out: Effect[] = [...(raceOf(b)?.effects ?? []), ...(subOf(b)?.effects ?? [])];
   for (const f of c?.fdefs ?? []) if (f.level <= b.level) out.push(...f.effects);
   if (ps && c && b.level >= subAt(c, b.ed, ps)) for (const f of ps.features) if (f.level <= b.level) out.push(...f.effects);
   return out;
@@ -60,6 +60,8 @@ export function originBonus(b: Build): Record<Ab, number> {
     for (const [a, v] of Object.entries(subOf(b)?.asi ?? {})) o[a as Ab] += v!;
     if (r?.asiChoice) b.raceAsi.slice(0, r.asiChoice.n).forEach((a) => (o[a] += r.asiChoice!.v));
   } else {
+    for (const [a, v] of Object.entries(raceOf(b)?.asi ?? {})) o[a as Ab] += v!;
+    for (const [a, v] of Object.entries(subOf(b)?.asi ?? {})) o[a as Ab] += v!;
     if (b.bgMode === '21') { if (b.bgPlus2) o[b.bgPlus2] += 2; if (b.bgPlus1 && b.bgPlus1 !== b.bgPlus2) o[b.bgPlus1] += 1; }
     else b.bgAbs.slice(0, 3).forEach((a) => (o[a] += 1));
   }

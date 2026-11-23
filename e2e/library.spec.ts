@@ -32,3 +32,23 @@ test('библиотека: импорт пакета и новый класс �
   await page.screenshot({ path: 'e2e/shots/l2-class.png' });
   expect(errors).toEqual([]);
 });
+
+test('библиотека: импорт вида и выбор в сборке', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.goto('./builder/#library');
+  await expect(page.getByRole('button', { name: '+ Импорт видов (Races)' })).toBeVisible();
+  await page.locator('input[type=file]').setInputFiles('e2e/fixtures/race_pack.txt');
+  await expect(page.getByText('Новые виды: Сильф')).toBeVisible();
+  await expect(page.getByText('Новые подрасы: Грозовой сильф')).toBeVisible();
+  await page.screenshot({ path: 'e2e/shots/l3-races.png' });
+  await page.getByRole('button', { name: 'Импортировать', exact: true }).click();
+  await expect(page.getByText(/видов 1, подрас 1/)).toBeVisible();
+  await page.getByRole('button', { name: 'Назад к сборке' }).click();
+  await page.getByText('Классическая пятая редакция').click();
+  await page.getByRole('button', { name: '4. Вид' }).click();
+  await page.getByRole('button', { name: /^Сильф/ }).click();
+  await page.getByText('Грозовой сильф').click();
+  await expect(page.getByText('Лёгкий шаг.')).toBeVisible();
+  expect(errors).toEqual([]);
+});
