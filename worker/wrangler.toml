@@ -1,6 +1,7 @@
 # Сервер записей клуба. database_id подставляет GitHub Actions при выкладке.
 name = "chd-games"
 main = "src/index.ts"
+account_id = "ea02390c0a20b131134814fbd0121c16"
 compatibility_date = "2024-11-01"
 
 [triggers]
