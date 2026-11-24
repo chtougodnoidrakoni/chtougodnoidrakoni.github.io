@@ -6,7 +6,7 @@ import { confirmBox, haptic, openLink, setupTelegram, tg } from './tg';
 
 const cx = (...c: (string | false | undefined | null)[]) => c.filter(Boolean).join(' ');
 const ROOT = import.meta.env.BASE_URL.replace(/app\/?$/, '');
-const SITES = { builder: `${location.origin}${ROOT}builder/`, sheet: `${location.origin}${ROOT}` };
+const SITES = { builder: `${location.origin}${ROOT}builder/?tg=1`, sheet: `${location.origin}${ROOT}?tg=1` };
 const LINKS = [
   { t: 'Telegram-канал', u: 'https://t.me/chto_ugodno_i_drakon' },
   { t: 'Чат клуба', u: 'https://t.me/+a1t_Jic-Wpc1ZDIy' },

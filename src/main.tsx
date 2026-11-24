@@ -1,7 +1,9 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { setupTgBack } from './tgBack';
 import './styles.css';
 import { App } from './App';
+setupTgBack();
 createRoot(document.getElementById('root')!).render(<StrictMode><App /></StrictMode>);
 
 // новая версия сайта подхватывается сама: проверяем при открытии и когда возвращаемся во вкладку
