@@ -1,0 +1,2353 @@
+{
+  "format": "dnd-content-pack",
+  "format_version": 1,
+  "ruleset": "5e-2014",
+  "pack_id": "dnd_2014_feats_master",
+  "pack_name": "D&D 5e (2014) — Все черты из всех книг",
+  "pack_version": 1,
+  "language": "ru",
+  "author": "Авторский структурированный справочник механик",
+  "description": "Полный пакет всех черт для правил 2014 года из PHB, Xanathar's, Tasha's, Fizban's, Bigby, Dragonlance, Eberron и Planescape.",
+  "feats": [
+    {
+      "id": "actor",
+      "name": "Актёр",
+      "name_en": "Actor",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Улучшает Харизму и мастерство подражания голосам, манерам и поведению; полезна для обмана, перевоплощения и социальных сцен.",
+      "benefits": [
+        {
+          "type": "other",
+          "description": "Преимущество на Обман и Выступление при маскировке. Мимикрия голоса."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "charisma"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "alert",
+      "name": "Бдительный",
+      "name_en": "Alert",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Повышает инициативу и помогает не быть застигнутым врасплох; особенно полезна персонажам, которым важно действовать первыми.",
+      "benefits": [
+        {
+          "type": "initiative",
+          "description": "+5 к инициативе. Вас нельзя застать врасплох. Скрытые враги не получают преимущества."
+        }
+      ],
+      "effects": [
+        {
+          "type": "initiative",
+          "value": 5
+        }
+      ],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "athlete",
+      "name": "Атлет",
+      "name_en": "Athlete",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Развивает Силу или Ловкость и улучшает лазание, прыжки и вставание из положения ничком.",
+      "benefits": [
+        {
+          "type": "movement",
+          "description": "Вставание стоит 5 футов. Лазание не замедляет. Разбег для прыжка — 5 футов."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "strength",
+          "dexterity"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "charger",
+      "name": "Атакующий с разбега",
+      "name_en": "Charger",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Усиливает атаку или толчок после разгона; подходит бойцам, строящим тактику на рывке.",
+      "benefits": [
+        {
+          "type": "attack_modifier",
+          "description": "После Рывка — бонусная атака или толчок. При разбеге 10 футов — +5 к урону или толчок на 10 футов."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "crossbow_expert",
+      "name": "Эксперт по арбалетам",
+      "name_en": "Crossbow Expert",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Облегчает применение арбалетов, в том числе в ближнем бою, и снимает часть ограничений на стрельбу.",
+      "benefits": [
+        {
+          "type": "attack_modifier",
+          "description": "Игнорирование перезарядки. Нет помехи в ближнем бою. Бонусная атака ручным арбалетом."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "defensive_duelist",
+      "name": "Оборонительный дуэлянт",
+      "name_en": "Defensive Duelist",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": "Ловкость 13 или выше",
+      "prerequisites": [
+        {
+          "type": "ability",
+          "ability": "dexterity",
+          "min": 13
+        }
+      ],
+      "description": "Позволяет ловкому бойцу парировать атаку оружием со свойством «фехтовальное».",
+      "benefits": [
+        {
+          "type": "defense",
+          "description": "Реакция: +бонус мастерства к КД против одной рукопашной атаки."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "dual_wielder",
+      "name": "Боец двумя оружиями",
+      "name_en": "Dual Wielder",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Улучшает сражение двумя оружиями и обращение с ними.",
+      "benefits": [
+        {
+          "type": "defense",
+          "description": "+1 к КД при бое двумя оружиями. Можно использовать нелёгкое оружие. Достать/убрать два оружия одним действием."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "dungeon_delver",
+      "name": "Исследователь подземелий",
+      "name_en": "Dungeon Delver",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Помогает обнаруживать и переживать ловушки и скрытые проходы в подземельях.",
+      "benefits": [
+        {
+          "type": "other",
+          "description": "Преимущество на поиск секретных дверей. Преимущество на спасброски от ловушек. Сопротивление урону от ловушек."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "durable",
+      "name": "Выносливый",
+      "name_en": "Durable",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Повышает Телосложение и эффективность восстановления здоровья при коротком отдыхе.",
+      "benefits": [
+        {
+          "type": "other",
+          "description": "Минимум лечения = 2 × ТЕЛ."
+        }
+      ],
+      "effects": [
+        {
+          "type": "hp_per_level",
+          "value": 1
+        }
+      ],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "constitution"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "elemental_adept",
+      "name": "Адепт стихий",
+      "name_en": "Elemental Adept",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": "Умение накладывать хотя бы одно заклинание",
+      "prerequisites": [
+        {
+          "type": "spellcasting"
+        }
+      ],
+      "description": "Специализация на выбранном типе стихийного урона; помогает преодолевать сопротивление этому урону.",
+      "benefits": [
+        {
+          "type": "spell",
+          "description": "Игнорирование сопротивления выбранной стихии. 1 на костях урона считается как 2."
+        }
+      ],
+      "effects": [],
+      "repeatable": true,
+      "asi_included": false
+    },
+    {
+      "id": "grappler",
+      "name": "Борец",
+      "name_en": "Grappler",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": "Сила 13 или выше",
+      "prerequisites": [
+        {
+          "type": "ability",
+          "ability": "strength",
+          "min": 13
+        }
+      ],
+      "description": "Усиливает захваты и борьбу в ближнем бою.",
+      "benefits": [
+        {
+          "type": "attack_modifier",
+          "description": "Преимущество на атаки по схваченным. Действие для сковать существо."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "great_weapon_master",
+      "name": "Мастер тяжёлого оружия",
+      "name_en": "Great Weapon Master",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Поощряет применение тяжёлого оружия и позволяет превращать удачные попадания/победы над противником в дополнительное давление.",
+      "benefits": [
+        {
+          "type": "attack_modifier",
+          "description": "Бонусная атака при крите/убийстве. -5 к атаке, +10 к урону."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "heavily_armored",
+      "name": "Тяжело бронированный",
+      "name_en": "Heavily Armored",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": "Владение средними доспехами",
+      "prerequisites": [
+        {
+          "type": "proficiency",
+          "value": "medium"
+        }
+      ],
+      "description": "Даёт обучение тяжёлым доспехам и повышает Силу.",
+      "benefits": [
+        {
+          "type": "proficiency",
+          "description": "Владение тяжёлыми доспехами."
+        }
+      ],
+      "effects": [
+        {
+          "type": "armor_proficiency",
+          "value": [
+            "heavy"
+          ]
+        }
+      ],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "strength"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "heavy_armor_master",
+      "name": "Мастер тяжёлых доспехов",
+      "name_en": "Heavy Armor Master",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": "Владение тяжёлыми доспехами",
+      "prerequisites": [
+        {
+          "type": "proficiency",
+          "value": "heavy"
+        }
+      ],
+      "description": "Снижает часть физического урона, получаемого в тяжёлых доспехах, и повышает Силу.",
+      "benefits": [
+        {
+          "type": "defense",
+          "description": "Уменьшение немагического урона на 3 в тяжёлой броне."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "strength"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "inspiring_leader",
+      "name": "Вдохновляющий лидер",
+      "name_en": "Inspiring Leader",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": "Харизма 13 или выше",
+      "prerequisites": [
+        {
+          "type": "ability",
+          "ability": "charisma",
+          "min": 13
+        }
+      ],
+      "description": "После воодушевляющей речи даёт союзникам временные хиты.",
+      "benefits": [
+        {
+          "type": "other",
+          "description": "До 6 союзников получают временные хиты = уровень + ХАР."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "keen_mind",
+      "name": "Острый ум",
+      "name_en": "Keen Mind",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Улучшает Интеллект и память/ориентацию во времени и пространстве.",
+      "benefits": [
+        {
+          "type": "other",
+          "description": "Знание севера и времени. Точная память за месяц."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "intelligence"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "lightly_armored",
+      "name": "Легко бронированный",
+      "name_en": "Lightly Armored",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Даёт обучение лёгким доспехам и повышает Силу или Ловкость.",
+      "benefits": [
+        {
+          "type": "proficiency",
+          "description": "Владение лёгкими доспехами."
+        }
+      ],
+      "effects": [
+        {
+          "type": "armor_proficiency",
+          "value": [
+            "light"
+          ]
+        }
+      ],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "strength",
+          "dexterity"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "linguist",
+      "name": "Лингвист",
+      "name_en": "Linguist",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Повышает Интеллект, даёт языки и возможность создавать письменные шифры.",
+      "benefits": [
+        {
+          "type": "other",
+          "description": "Три языка. Создание шифров."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "intelligence"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "lucky",
+      "name": "Везунчик",
+      "name_en": "Lucky",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Позволяет влиять на результаты отдельных бросков, меняя ход критически важных событий.",
+      "benefits": [
+        {
+          "type": "other",
+          "description": "3 очка удачи: переброс d20 или помеха атакующему."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "mage_slayer",
+      "name": "Истребитель магов",
+      "name_en": "Mage Slayer",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Помогает давить на заклинателей в ближнем бою и противостоять их магии.",
+      "benefits": [
+        {
+          "type": "attack_modifier",
+          "description": "Реакционная атака по заклинателю. Помеха на концентрацию. Преимущество на спасброски от заклинаний."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "magic_initiate",
+      "name": "Посвящённый в магию",
+      "name_en": "Magic Initiate",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Даёт ограниченный набор заклинаний выбранного класса.",
+      "benefits": [
+        {
+          "type": "spell",
+          "description": "Два заговора и одно заклинание 1-го уровня из списка класса."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "martial_adept",
+      "name": "Боевой адепт",
+      "name_en": "Martial Adept",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Предоставляет боевые приёмы и ресурс для их применения.",
+      "benefits": [
+        {
+          "type": "other",
+          "description": "Два манёвра и одна кость превосходства (d6)."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "medium_armor_master",
+      "name": "Мастер средних доспехов",
+      "name_en": "Medium Armor Master",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": "Владение средними доспехами",
+      "prerequisites": [
+        {
+          "type": "proficiency",
+          "value": "medium"
+        }
+      ],
+      "description": "Улучшает защиту в средних доспехах без обычных ограничений Ловкости.",
+      "benefits": [
+        {
+          "type": "defense",
+          "description": "Нет помехи на Скрытность. Макс. бонус Ловкости к КД +3."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "mobile",
+      "name": "Подвижный",
+      "name_en": "Mobile",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Повышает скорость и облегчает перемещение в бою, включая отход от противников.",
+      "benefits": [
+        {
+          "type": "movement",
+          "description": "+10 футов скорости. Рывок по труднопроходимой местности. Без провокации от атакованного."
+        }
+      ],
+      "effects": [
+        {
+          "type": "speed",
+          "value": 10
+        }
+      ],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "moderately_armored",
+      "name": "Умеренно бронированный",
+      "name_en": "Moderately Armored",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": "Владение лёгкими доспехами",
+      "prerequisites": [
+        {
+          "type": "proficiency",
+          "value": "light"
+        }
+      ],
+      "description": "Даёт обучение средним доспехам и щитам, а также повышает Силу или Ловкость.",
+      "benefits": [
+        {
+          "type": "proficiency",
+          "description": "Владение средними доспехами и щитами."
+        }
+      ],
+      "effects": [
+        {
+          "type": "armor_proficiency",
+          "value": [
+            "medium",
+            "shields"
+          ]
+        }
+      ],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "strength",
+          "dexterity"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "mounted_combatant",
+      "name": "Всадник",
+      "name_en": "Mounted Combatant",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Улучшает бой верхом, защиту скакуна и атаки по противникам меньшего размера.",
+      "benefits": [
+        {
+          "type": "attack_modifier",
+          "description": "Преимущество на атаки по меньшим существам. Перенаправление атаки на себя. Уклонение скакуна."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "observant",
+      "name": "Наблюдательный",
+      "name_en": "Observant",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Повышает внимательность к деталям, чтению по губам и пассивному восприятию/расследованию.",
+      "benefits": [
+        {
+          "type": "other",
+          "description": "Чтение по губам. +5 к пассивной Внимательности и Анализу."
+        }
+      ],
+      "effects": [
+        {
+          "type": "passive_perception",
+          "value": 5
+        }
+      ],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "intelligence",
+          "wisdom"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "polearm_master",
+      "name": "Мастер древкового оружия",
+      "name_en": "Polearm Master",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Расширяет набор атак древковым оружием, включая удар древком и возможность атаковать при сближении врага.",
+      "benefits": [
+        {
+          "type": "attack_modifier",
+          "description": "Бонусная атака вторым концом. Провокация при входе в досягаемость."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "resilient",
+      "name": "Стойкий",
+      "name_en": "Resilient",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Повышает выбранную характеристику и даёт владение спасбросками этой характеристики.",
+      "benefits": [
+        {
+          "type": "proficiency",
+          "description": "Владение спасбросками выбранной характеристики."
+        }
+      ],
+      "effects": [
+        {
+          "type": "note",
+          "text": "Владение спасбросками (выбор)"
+        }
+      ],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "strength",
+          "dexterity",
+          "constitution",
+          "intelligence",
+          "wisdom",
+          "charisma"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "ritual_caster",
+      "name": "Ритуальный заклинатель",
+      "name_en": "Ritual Caster",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": "Интеллект или Мудрость 13 или выше",
+      "prerequisites": [
+        {
+          "type": "ability_any",
+          "abilities": [
+            "intelligence",
+            "wisdom"
+          ],
+          "min": 13
+        }
+      ],
+      "description": "Позволяет изучать и применять ритуальные заклинания выбранного класса.",
+      "benefits": [
+        {
+          "type": "spell",
+          "description": "Книга ритуалов и два ритуала 1-го уровня."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "savage_attacker",
+      "name": "Свирепый атакующий",
+      "name_en": "Savage Attacker",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Улучшает результат урона оружейных атак за счёт повторного броска костей урона.",
+      "benefits": [
+        {
+          "type": "damage_modifier",
+          "description": "Переброс костей урона (1 раз за ход)."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "sentinel",
+      "name": "Страж",
+      "name_en": "Sentinel",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Мешает врагам проходить мимо, уходить от бойца и безнаказанно атаковать его союзников.",
+      "benefits": [
+        {
+          "type": "attack_modifier",
+          "description": "Остановка движения при провокации. Реакционная атака при атаке союзника."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "sharpshooter",
+      "name": "Меткий стрелок",
+      "name_en": "Sharpshooter",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Улучшает дальние атаки, игнорирование укрытий и стрельбу на предельной дистанции.",
+      "benefits": [
+        {
+          "type": "attack_modifier",
+          "description": "Нет помехи на большой дистанции. Игнорирование укрытия. -5 к атаке, +10 к урону."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "shield_master",
+      "name": "Мастер щита",
+      "name_en": "Shield Master",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Добавляет тактические возможности при использовании щита: толчок и защиту от эффектов, требующих спасброска Ловкости.",
+      "benefits": [
+        {
+          "type": "attack_modifier",
+          "description": "Бонусный толчок щитом. +бонус щита к спасброскам Ловкости. 0 урона при успехе."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "skilled",
+      "name": "Умелец",
+      "name_en": "Skilled",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Даёт владение дополнительными навыками или инструментами.",
+      "benefits": [
+        {
+          "type": "proficiency",
+          "description": "Три навыка или инструмента."
+        }
+      ],
+      "effects": [],
+      "repeatable": true,
+      "asi_included": false
+    },
+    {
+      "id": "skulker",
+      "name": "Скрытный",
+      "name_en": "Skulker",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": "Ловкость 13 или выше",
+      "prerequisites": [
+        {
+          "type": "ability",
+          "ability": "dexterity",
+          "min": 13
+        }
+      ],
+      "description": "Помогает прятаться, действовать в условиях слабого освещения и оставаться незамеченным при промахах дальними атаками.",
+      "benefits": [
+        {
+          "type": "other",
+          "description": "Скрытность при слабом укрытии. Промах не раскрывает. Нет помехи в тусклом свете."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "spell_sniper",
+      "name": "Снайпер заклинаний",
+      "name_en": "Spell Sniper",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": "Умение накладывать хотя бы одно заклинание",
+      "prerequisites": [
+        {
+          "type": "spellcasting"
+        }
+      ],
+      "description": "Увеличивает эффективность дальнобойных атакующих заклинаний и помогает применять их сквозь укрытия.",
+      "benefits": [
+        {
+          "type": "spell",
+          "description": "Заговор с атакой. Удвоенная дистанция заклинаний. Игнорирование укрытия."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "tavern_brawler",
+      "name": "Забияка",
+      "name_en": "Tavern Brawler",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Улучшает безоружные атаки и использование подручных предметов как оружия.",
+      "benefits": [
+        {
+          "type": "attack_modifier",
+          "description": "Безоружный удар 1к4. Захват после попадания."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "strength",
+          "constitution"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "tough",
+      "name": "Крепкий",
+      "name_en": "Tough",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Существенно увеличивает максимум хитов персонажа.",
+      "benefits": [
+        {
+          "type": "defense",
+          "description": "+2 хита за уровень."
+        }
+      ],
+      "effects": [
+        {
+          "type": "hp_per_level",
+          "value": 2
+        }
+      ],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "war_caster",
+      "name": "Боевой заклинатель",
+      "name_en": "War Caster",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": "Умение накладывать хотя бы одно заклинание",
+      "prerequisites": [
+        {
+          "type": "spellcasting"
+        }
+      ],
+      "description": "Помогает поддерживать концентрацию и применять магию в бою.",
+      "benefits": [
+        {
+          "type": "spell",
+          "description": "Преимущество на концентрацию. Соматические компоненты с оружием/щитом. Заклинание вместо провоцированной атаки."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "weapon_master",
+      "name": "Мастер оружия",
+      "name_en": "Weapon Master",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Даёт владение дополнительными видами оружия.",
+      "benefits": [
+        {
+          "type": "proficiency",
+          "description": "Владение четырьмя видами оружия."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "strength",
+          "dexterity"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "bountiful_luck",
+      "name": "Щедрая удача",
+      "name_en": "Bountiful Luck",
+      "source": "Xanathar's Guide to Everything (2017)",
+      "prerequisite": "Полурослик",
+      "prerequisites": [
+        {
+          "type": "race",
+          "value": [
+            "halfling"
+          ]
+        }
+      ],
+      "description": "Позволяет халфлингу делиться удачей с союзниками.",
+      "benefits": [
+        {
+          "type": "other",
+          "description": "Реакция: союзник перебрасывает 1 на d20."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "dragon_fear",
+      "name": "Драконий страх",
+      "name_en": "Dragon Fear",
+      "source": "Xanathar's Guide to Everything (2017)",
+      "prerequisite": "Драконорождённый",
+      "prerequisites": [
+        {
+          "type": "race",
+          "value": [
+            "dragonborn"
+          ]
+        }
+      ],
+      "description": "Позволяет драконорождённому использовать драконье наследие, чтобы устрашать противников.",
+      "benefits": [
+        {
+          "type": "other",
+          "description": "Вместо дыхания — аура страха."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "strength",
+          "constitution",
+          "charisma"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "dragon_hide",
+      "name": "Драконья шкура",
+      "name_en": "Dragon Hide",
+      "source": "Xanathar's Guide to Everything (2017)",
+      "prerequisite": "Драконорождённый",
+      "prerequisites": [
+        {
+          "type": "race",
+          "value": [
+            "dragonborn"
+          ]
+        }
+      ],
+      "description": "Укрепляет защиту драконорождённого и усиливает его природные атаки.",
+      "benefits": [
+        {
+          "type": "defense",
+          "description": "КД 13 + ЛОВ. Когти 1к4."
+        }
+      ],
+      "effects": [
+        {
+          "type": "unarmored_ac",
+          "base": 13,
+          "abilities": [
+            "dexterity"
+          ]
+        }
+      ],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "strength",
+          "constitution",
+          "charisma"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "drow_high_magic",
+      "name": "Высшая магия дроу",
+      "name_en": "Drow High Magic",
+      "source": "Xanathar's Guide to Everything (2017)",
+      "prerequisite": "Эльф (дроу)",
+      "prerequisites": [
+        {
+          "type": "race",
+          "value": [
+            "elf"
+          ]
+        }
+      ],
+      "description": "Расширяет врождённые магические способности дроу.",
+      "benefits": [
+        {
+          "type": "spell",
+          "description": "Обнаружение магии, Левитация, Рассеивание магии."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "dwarven_fortitude",
+      "name": "Дварфийская стойкость",
+      "name_en": "Dwarven Fortitude",
+      "source": "Xanathar's Guide to Everything (2017)",
+      "prerequisite": "Дварф",
+      "prerequisites": [
+        {
+          "type": "race",
+          "value": [
+            "dwarf"
+          ]
+        }
+      ],
+      "description": "Усиливает живучесть дварфа и позволяет восстанавливать здоровье в оборонительной стойке.",
+      "benefits": [
+        {
+          "type": "other",
+          "description": "При Уклонении можно потратить кость хитов."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "constitution"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "elven_accuracy",
+      "name": "Эльфийская меткость",
+      "name_en": "Elven Accuracy",
+      "source": "Xanathar's Guide to Everything (2017)",
+      "prerequisite": "Эльф или полуэльф",
+      "prerequisites": [
+        {
+          "type": "race",
+          "value": [
+            "elf",
+            "half_elf"
+          ]
+        }
+      ],
+      "description": "Повышает точность отдельных атак при преимуществе; доступна персонажам с эльфийским наследием.",
+      "benefits": [
+        {
+          "type": "attack_modifier",
+          "description": "Переброс одной кости при преимуществе."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "dexterity",
+          "intelligence",
+          "wisdom",
+          "charisma"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "fade_away",
+      "name": "Исчезновение",
+      "name_en": "Fade Away",
+      "source": "Xanathar's Guide to Everything (2017)",
+      "prerequisite": "Гном",
+      "prerequisites": [
+        {
+          "type": "race",
+          "value": [
+            "gnome"
+          ]
+        }
+      ],
+      "description": "Гномья черта, позволяющая становиться невидимым после получения урона.",
+      "benefits": [
+        {
+          "type": "other",
+          "description": "Реакция: невидимость после урона."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "dexterity",
+          "intelligence"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "fey_teleportation",
+      "name": "Фейское перемещение",
+      "name_en": "Fey Teleportation",
+      "source": "Xanathar's Guide to Everything (2017)",
+      "prerequisite": "Эльф (высший)",
+      "prerequisites": [
+        {
+          "type": "race",
+          "value": [
+            "elf"
+          ]
+        }
+      ],
+      "description": "Усиливает магическое перемещение высшего эльфа.",
+      "benefits": [
+        {
+          "type": "spell",
+          "description": "Туманный шаг (1 раз в короткий отдых)."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "intelligence",
+          "charisma"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "flames_of_phlegethos",
+      "name": "Пламя Флегетоса",
+      "name_en": "Flames of Phlegethos",
+      "source": "Xanathar's Guide to Everything (2017)",
+      "prerequisite": "Тифлинг",
+      "prerequisites": [
+        {
+          "type": "race",
+          "value": [
+            "tiefling"
+          ]
+        }
+      ],
+      "description": "Усиливает огненную магию тифлинга и окружает его магическим пламенем.",
+      "benefits": [
+        {
+          "type": "spell",
+          "description": "Переброс 1 на огненном уроне. Пламя при ответе."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "intelligence",
+          "charisma"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "infernal_constitution",
+      "name": "Адская конституция",
+      "name_en": "Infernal Constitution",
+      "source": "Xanathar's Guide to Everything (2017)",
+      "prerequisite": "Тифлинг",
+      "prerequisites": [
+        {
+          "type": "race",
+          "value": [
+            "tiefling"
+          ]
+        }
+      ],
+      "description": "Повышает стойкость тифлинга к некоторым видам воздействия.",
+      "benefits": [
+        {
+          "type": "defense",
+          "description": "Сопротивление холоду и яду."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "constitution"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "orcish_fury",
+      "name": "Ярость орка",
+      "name_en": "Orcish Fury",
+      "source": "Xanathar's Guide to Everything (2017)",
+      "prerequisite": "Полуорк",
+      "prerequisites": [
+        {
+          "type": "race",
+          "value": [
+            "half_orc"
+          ]
+        }
+      ],
+      "description": "Усиливает атаки полуорка и помогает ответить ударом на полученное ранение.",
+      "benefits": [
+        {
+          "type": "damage_modifier",
+          "description": "Доп. кость урона. Ответная атака реакцией."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "strength",
+          "constitution"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "prodigy",
+      "name": "Одарённый",
+      "name_en": "Prodigy",
+      "source": "Xanathar's Guide to Everything (2017)",
+      "prerequisite": "Полуэльф, полуорк или человек",
+      "prerequisites": [
+        {
+          "type": "race",
+          "value": [
+            "half_elf",
+            "half_orc",
+            "human"
+          ]
+        }
+      ],
+      "description": "Даёт дополнительные навыки, владение инструментом, язык и экспертизу; связана с определёнными происхождениями.",
+      "benefits": [
+        {
+          "type": "proficiency",
+          "description": "Навык, инструмент, язык, экспертиза."
+        }
+      ],
+      "effects": [
+        {
+          "type": "expertise",
+          "count": 1
+        }
+      ],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "second_chance",
+      "name": "Второй шанс",
+      "name_en": "Second Chance",
+      "source": "Xanathar's Guide to Everything (2017)",
+      "prerequisite": "Полурослик",
+      "prerequisites": [
+        {
+          "type": "race",
+          "value": [
+            "halfling"
+          ]
+        }
+      ],
+      "description": "Позволяет халфлингу заставить противника перебросить успешную атаку.",
+      "benefits": [
+        {
+          "type": "defense",
+          "description": "Реакция: противник перебрасывает атаку."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "dexterity",
+          "constitution",
+          "charisma"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "squat_nimbleness",
+      "name": "Приземистая ловкость",
+      "name_en": "Squat Nimbleness",
+      "source": "Xanathar's Guide to Everything (2017)",
+      "prerequisite": "Дварф или полурослик",
+      "prerequisites": [
+        {
+          "type": "race",
+          "value": [
+            "dwarf",
+            "halfling"
+          ]
+        }
+      ],
+      "description": "Улучшает скорость и подвижность низкорослых народов.",
+      "benefits": [
+        {
+          "type": "movement",
+          "description": "+5 футов скорости. Владение Акробатикой или Атлетикой."
+        }
+      ],
+      "effects": [
+        {
+          "type": "speed",
+          "value": 5
+        }
+      ],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "strength",
+          "dexterity"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "wood_elf_magic",
+      "name": "Магия лесного эльфа",
+      "name_en": "Wood Elf Magic",
+      "source": "Xanathar's Guide to Everything (2017)",
+      "prerequisite": "Эльф (лесной)",
+      "prerequisites": [
+        {
+          "type": "race",
+          "value": [
+            "elf"
+          ]
+        }
+      ],
+      "description": "Даёт лесному эльфу природную магию и дополнительные заклинания.",
+      "benefits": [
+        {
+          "type": "spell",
+          "description": "Заговор друида, Длинный шаг, Проход без следа."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "artificer_initiate",
+      "name": "Посвящённый в изобретательство",
+      "name_en": "Artificer Initiate",
+      "source": "Tasha's Cauldron of Everything (2020)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Даёт базовую магию и ремесленную компетентность изобретателя.",
+      "benefits": [
+        {
+          "type": "spell",
+          "description": "Один заговор, одно заклинание 1-го уровня, владение инструментом."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "chef",
+      "name": "Повар",
+      "name_en": "Chef",
+      "source": "Tasha's Cauldron of Everything (2020)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Позволяет готовить пищу, улучшающую восстановление и боевой дух группы.",
+      "benefits": [
+        {
+          "type": "other",
+          "description": "Временные хиты от еды. Лечение при коротком отдыхе."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "constitution",
+          "wisdom"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "crusher",
+      "name": "Сокрушитель",
+      "name_en": "Crusher",
+      "source": "Tasha's Cauldron of Everything (2020)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Усиливает атаки дробящим уроном и позволяет смещать врагов.",
+      "benefits": [
+        {
+          "type": "attack_modifier",
+          "description": "Смещение врага на 5 футов. Преимущество при крите."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "strength",
+          "constitution"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "eldritch_adept",
+      "name": "Адепт потустороннего",
+      "name_en": "Eldritch Adept",
+      "source": "Tasha's Cauldron of Everything (2020)",
+      "prerequisite": "Умение накладывать хотя бы одно заклинание",
+      "prerequisites": [
+        {
+          "type": "spellcasting"
+        }
+      ],
+      "description": "Даёт одну мистическую инвокацию колдуна при соблюдении условий.",
+      "benefits": [
+        {
+          "type": "spell",
+          "description": "Одна инвокация колдуна."
+        }
+      ],
+      "effects": [],
+      "repeatable": true,
+      "asi_included": false
+    },
+    {
+      "id": "fey_touched",
+      "name": "Отмеченный феями",
+      "name_en": "Fey Touched",
+      "source": "Tasha's Cauldron of Everything (2020)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Повышает ментальную характеристику и даёт магию, связанную с фейским перемещением.",
+      "benefits": [
+        {
+          "type": "spell",
+          "description": "Туманный шаг и одно заклинание 1-го уровня (Очарование/Прорицание)."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "intelligence",
+          "wisdom",
+          "charisma"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "fighting_initiate",
+      "name": "Посвящённый в боевой стиль",
+      "name_en": "Fighting Initiate",
+      "source": "Tasha's Cauldron of Everything (2020)",
+      "prerequisite": "Владение воинским оружием",
+      "prerequisites": [
+        {
+          "type": "proficiency",
+          "value": "martial"
+        }
+      ],
+      "description": "Позволяет освоить боевой стиль при наличии владения воинским оружием.",
+      "benefits": [
+        {
+          "type": "proficiency",
+          "description": "Один боевой стиль."
+        }
+      ],
+      "effects": [],
+      "repeatable": true,
+      "asi_included": false
+    },
+    {
+      "id": "gunner",
+      "name": "Стрелок",
+      "name_en": "Gunner",
+      "source": "Tasha's Cauldron of Everything (2020)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Улучшает обращение с огнестрельным оружием и стрельбу вблизи.",
+      "benefits": [
+        {
+          "type": "attack_modifier",
+          "description": "Владение огнестрельным. Нет помехи в ближнем бою."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "dexterity"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "metamagic_adept",
+      "name": "Адепт метамагии",
+      "name_en": "Metamagic Adept",
+      "source": "Tasha's Cauldron of Everything (2020)",
+      "prerequisite": "Умение накладывать хотя бы одно заклинание",
+      "prerequisites": [
+        {
+          "type": "spellcasting"
+        }
+      ],
+      "description": "Даёт ограниченный доступ к метамагическим приёмам чародея.",
+      "benefits": [
+        {
+          "type": "spell",
+          "description": "Два варианта метамагии и 2 очка чародейства."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "piercer",
+      "name": "Колющий боец",
+      "name_en": "Piercer",
+      "source": "Tasha's Cauldron of Everything (2020)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Усиливает атаки колющим уроном и критические попадания.",
+      "benefits": [
+        {
+          "type": "damage_modifier",
+          "description": "Переброс кости урона. Доп. кость при крите."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "strength",
+          "dexterity"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "poisoner",
+      "name": "Отравитель",
+      "name_en": "Poisoner",
+      "source": "Tasha's Cauldron of Everything (2020)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Позволяет эффективнее создавать и применять яды.",
+      "benefits": [
+        {
+          "type": "other",
+          "description": "Игнорирование сопротивления яду. Создание яда."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "dexterity",
+          "intelligence"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "shadow_touched",
+      "name": "Отмеченный тенью",
+      "name_en": "Shadow Touched",
+      "source": "Tasha's Cauldron of Everything (2020)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Даёт магию невидимости и дополнительное заклинание школы иллюзий или некромантии.",
+      "benefits": [
+        {
+          "type": "spell",
+          "description": "Невидимость и одно заклинание 1-го уровня (Иллюзия/Некромантия)."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "intelligence",
+          "wisdom",
+          "charisma"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "skill_expert",
+      "name": "Эксперт навыка",
+      "name_en": "Skill Expert",
+      "source": "Tasha's Cauldron of Everything (2020)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Повышает характеристику, даёт владение навыком и экспертизу в одном навыке.",
+      "benefits": [
+        {
+          "type": "proficiency",
+          "description": "Один навык, одна экспертиза."
+        }
+      ],
+      "effects": [
+        {
+          "type": "expertise",
+          "count": 1
+        }
+      ],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "strength",
+          "dexterity",
+          "constitution",
+          "intelligence",
+          "wisdom",
+          "charisma"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "slasher",
+      "name": "Рубящий боец",
+      "name_en": "Slasher",
+      "source": "Tasha's Cauldron of Everything (2020)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Усиливает рубящие атаки и затрудняет противнику движение.",
+      "benefits": [
+        {
+          "type": "attack_modifier",
+          "description": "Замедление врага на 10 футов. Помеха при крите."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "strength",
+          "dexterity"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "telekinetic",
+      "name": "Телекинетик",
+      "name_en": "Telekinetic",
+      "source": "Tasha's Cauldron of Everything (2020)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Даёт телекинетический фокус и возможность перемещать существ силой мысли.",
+      "benefits": [
+        {
+          "type": "spell",
+          "description": "Невидимая Волшебная рука. Толчок бонусным действием."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "intelligence",
+          "wisdom",
+          "charisma"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "telepathic",
+      "name": "Телепат",
+      "name_en": "Telepathic",
+      "source": "Tasha's Cauldron of Everything (2020)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Даёт телепатическую связь и ограниченный доступ к чтению мыслей.",
+      "benefits": [
+        {
+          "type": "spell",
+          "description": "Телепатия 60 футов. Обнаружение мыслей."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "intelligence",
+          "wisdom",
+          "charisma"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "gift_chromatic_dragon",
+      "name": "Дар хроматического дракона",
+      "name_en": "Gift of the Chromatic Dragon",
+      "source": "Fizban's Treasury of Dragons (2021)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Позволяет усиливать оружие стихийной энергией и защищаться от соответствующего элемента.",
+      "benefits": [
+        {
+          "type": "damage_modifier",
+          "description": "+1к4 стихийного урона. Реакция: сопротивление стихии."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "gift_gem_dragon",
+      "name": "Дар самоцветного дракона",
+      "name_en": "Gift of the Gem Dragon",
+      "source": "Fizban's Treasury of Dragons (2021)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Даёт телекинетическую ответную силу и защитную ментальную энергию.",
+      "benefits": [
+        {
+          "type": "defense",
+          "description": "Реакция: психический урон и отталкивание."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "intelligence",
+          "wisdom",
+          "charisma"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "gift_metallic_dragon",
+      "name": "Дар металлического дракона",
+      "name_en": "Gift of the Metallic Dragon",
+      "source": "Fizban's Treasury of Dragons (2021)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Даёт целительную магию и возможность защищать союзников призрачными крыльями.",
+      "benefits": [
+        {
+          "type": "spell",
+          "description": "Лечение. Реакция: +бонус мастерства к КД союзника."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "intelligence",
+          "wisdom",
+          "charisma"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "ember_fire_giant",
+      "name": "Искра огненного великана",
+      "name_en": "Ember of the Fire Giant",
+      "source": "Bigby Presents: Glory of the Giants (2023)",
+      "prerequisite": "Черта «Удар великанов»",
+      "prerequisites": [
+        {
+          "type": "proficiency",
+          "value": "Strike of the Giants"
+        }
+      ],
+      "description": "Добавляет огненные возможности и усиливает атаки.",
+      "benefits": [
+        {
+          "type": "damage_modifier",
+          "description": "Слепота врагов. Сопротивление огню."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "strength",
+          "constitution",
+          "wisdom"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "fury_frost_giant",
+      "name": "Ярость ледяного великана",
+      "name_en": "Fury of the Frost Giant",
+      "source": "Bigby Presents: Glory of the Giants (2023)",
+      "prerequisite": "Черта «Удар великанов»",
+      "prerequisites": [
+        {
+          "type": "proficiency",
+          "value": "Strike of the Giants"
+        }
+      ],
+      "description": "Позволяет использовать холодную силу и сдерживать врагов.",
+      "benefits": [
+        {
+          "type": "defense",
+          "description": "Реакция: урон холодом и замедление."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "strength",
+          "constitution",
+          "wisdom"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "guile_cloud_giant",
+      "name": "Хитрость облачного великана",
+      "name_en": "Guile of the Cloud Giant",
+      "source": "Bigby Presents: Glory of the Giants (2023)",
+      "prerequisite": "Черта «Удар великанов»",
+      "prerequisites": [
+        {
+          "type": "proficiency",
+          "value": "Strike of the Giants"
+        }
+      ],
+      "description": "Улучшает защитные реакции и перемещение.",
+      "benefits": [
+        {
+          "type": "defense",
+          "description": "Реакция: туманный шаг или +КД."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "strength",
+          "constitution",
+          "wisdom"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "keenness_stone_giant",
+      "name": "Проницательность каменного великана",
+      "name_en": "Keenness of the Stone Giant",
+      "source": "Bigby Presents: Glory of the Giants (2023)",
+      "prerequisite": "Черта «Удар великанов»",
+      "prerequisites": [
+        {
+          "type": "proficiency",
+          "value": "Strike of the Giants"
+        }
+      ],
+      "description": "Усиливает физическую стойкость и каменные способности.",
+      "benefits": [
+        {
+          "type": "defense",
+          "description": "Слепое зрение. Бросок камня."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "strength",
+          "constitution",
+          "wisdom"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "soul_storm_giant",
+      "name": "Душа штормового великана",
+      "name_en": "Soul of the Storm Giant",
+      "source": "Bigby Presents: Glory of the Giants (2023)",
+      "prerequisite": "Черта «Удар великанов»",
+      "prerequisites": [
+        {
+          "type": "proficiency",
+          "value": "Strike of the Giants"
+        }
+      ],
+      "description": "Даёт защитные и контролирующие проявления штормовой мощи.",
+      "benefits": [
+        {
+          "type": "defense",
+          "description": "Аура помехи врагам."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "strength",
+          "constitution",
+          "wisdom"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "vigor_hill_giant",
+      "name": "Мощь холмового великана",
+      "name_en": "Vigor of the Hill Giant",
+      "source": "Bigby Presents: Glory of the Giants (2023)",
+      "prerequisite": "Черта «Удар великанов»",
+      "prerequisites": [
+        {
+          "type": "proficiency",
+          "value": "Strike of the Giants"
+        }
+      ],
+      "description": "Повышает выносливость и силу, связанные с наследием великанов.",
+      "benefits": [
+        {
+          "type": "defense",
+          "description": "Снятие состояний. Временные хиты."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "strength",
+          "constitution",
+          "wisdom"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "rune_shaper",
+      "name": "Создатель рун",
+      "name_en": "Rune Shaper",
+      "source": "Bigby Presents: Glory of the Giants (2023)",
+      "prerequisite": "Владение инструментами или навык Магия",
+      "prerequisites": [
+        {
+          "type": "proficiency",
+          "value": "Магия"
+        }
+      ],
+      "description": "Позволяет использовать магию рун великанов.",
+      "benefits": [
+        {
+          "type": "spell",
+          "description": "Руны на предметах (эффекты заклинаний)."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "intelligence",
+          "wisdom",
+          "charisma"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "divinely_favored",
+      "name": "Божественный избранник",
+      "name_en": "Divinely Favored",
+      "source": "Dragonlance: Shadow of the Dragon Queen (2022)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Даёт заклинания, соответствующие связи персонажа с божественными силами.",
+      "benefits": [
+        {
+          "type": "spell",
+          "description": "Заговор и заклинание 1-го уровня."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "initiate_high_sorcery",
+      "name": "Посвящённый в Высшее волшебство",
+      "name_en": "Initiate of High Sorcery",
+      "source": "Dragonlance: Shadow of the Dragon Queen (2022)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Отражает обучение магическим традициям башен Высшего волшебства.",
+      "benefits": [
+        {
+          "type": "spell",
+          "description": "Заговор и заклинание 1-го уровня."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "squire_solamnia",
+      "name": "Оруженосец Соламнии",
+      "name_en": "Squire of Solamnia",
+      "source": "Dragonlance: Shadow of the Dragon Queen (2022)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Даёт боевые преимущества, связанные с рыцарской подготовкой.",
+      "benefits": [
+        {
+          "type": "defense",
+          "description": "Преимущество при использовании Защиты."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "knight_crown",
+      "name": "Рыцарь Короны",
+      "name_en": "Knight of the Crown",
+      "source": "Dragonlance: Shadow of the Dragon Queen (2022)",
+      "prerequisite": "Оруженосец Соламнии",
+      "prerequisites": [
+        {
+          "type": "proficiency",
+          "value": "Squire of Solamnia"
+        }
+      ],
+      "description": "Командная тактика и поддержка союзников.",
+      "benefits": [
+        {
+          "type": "other",
+          "description": "Помощь союзникам без действия."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "strength",
+          "dexterity",
+          "wisdom"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "knight_rose",
+      "name": "Рыцарь Розы",
+      "name_en": "Knight of the Rose",
+      "source": "Dragonlance: Shadow of the Dragon Queen (2022)",
+      "prerequisite": "Оруженосец Соламнии",
+      "prerequisites": [
+        {
+          "type": "proficiency",
+          "value": "Squire of Solamnia"
+        }
+      ],
+      "description": "Укрепление союзников и лидерские способности.",
+      "benefits": [
+        {
+          "type": "other",
+          "description": "Вдохновение союзникам."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "strength",
+          "dexterity",
+          "wisdom"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "knight_sword",
+      "name": "Рыцарь Меча",
+      "name_en": "Knight of the Sword",
+      "source": "Dragonlance: Shadow of the Dragon Queen (2022)",
+      "prerequisite": "Оруженосец Соламнии",
+      "prerequisites": [
+        {
+          "type": "proficiency",
+          "value": "Squire of Solamnia"
+        }
+      ],
+      "description": "Тактическое давление и устрашение противников.",
+      "benefits": [
+        {
+          "type": "attack_modifier",
+          "description": "Дополнительный урон и устрашение."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "strength",
+          "dexterity",
+          "wisdom"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "agent_order",
+      "name": "Агент порядка",
+      "name_en": "Agent of Order",
+      "source": "Planescape: Adventures in the Multiverse (2023)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Связывает персонажа с силами порядка и позволяет сдерживать противников.",
+      "benefits": [
+        {
+          "type": "other",
+          "description": "Замедление врагов. Сопротивление урону."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "baleful_scion",
+      "name": "Зловещий отпрыск",
+      "name_en": "Baleful Scion",
+      "source": "Planescape: Adventures in the Multiverse (2023)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Черпает силу из космической связи со злом.",
+      "benefits": [
+        {
+          "type": "attack_modifier",
+          "description": "Дополнительный урон и лечение."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "righteous_heritor",
+      "name": "Праведный наследник",
+      "name_en": "Righteous Heritor",
+      "source": "Planescape: Adventures in the Multiverse (2023)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Использует силу добра для защиты и уменьшения вреда.",
+      "benefits": [
+        {
+          "type": "defense",
+          "description": "Реакция: уменьшение урона союзнику."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "scion_outer_planes",
+      "name": "Наследник Внешних планов",
+      "name_en": "Scion of the Outer Planes",
+      "source": "Planescape: Adventures in the Multiverse (2023)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Наделяет персонажа энергией выбранного Внешнего плана.",
+      "benefits": [
+        {
+          "type": "defense",
+          "description": "Сопротивление урону плана. Заклинание."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "intelligence",
+          "wisdom",
+          "charisma"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "revenant_blade",
+      "name": "Клинок-ревенант",
+      "name_en": "Revenant Blade",
+      "source": "Eberron: Rising from the Last War (2019)",
+      "prerequisite": "Эльф (валенар)",
+      "prerequisites": [
+        {
+          "type": "race",
+          "value": [
+            "elf"
+          ]
+        }
+      ],
+      "description": "Развивает мастерство владения двулезвийным оружием, связанным с эльфами валенара.",
+      "benefits": [
+        {
+          "type": "defense",
+          "description": "+1 к КД. Фехтовальное двулезвийное оружие."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "strength",
+          "dexterity"
+        ],
+        "value": 1
+      }
+    }
+  ],
+  "backgrounds": []
+}
