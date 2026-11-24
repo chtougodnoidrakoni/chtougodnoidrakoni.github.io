@@ -1,0 +1,956 @@
+{
+  "format": "dnd-content-pack",
+  "format_version": 1,
+  "ruleset": "5e-2014",
+  "pack_id": "dnd_2014_wizard_volume_01",
+  "pack_name": "D&D 5e (2014) — Волшебник и школы магии",
+  "pack_version": 1,
+  "language": "ru",
+  "author": "Авторский структурированный справочник механик",
+  "description": "Том контентной библиотеки: класс Волшебник и его официальные подклассы, опубликованные для правил 2014 года. Описания механик сформулированы своими словами; это не дословная копия книг.",
+  "sources": [
+    {
+      "id": "phb_2014",
+      "name": "Player's Handbook (2014)"
+    },
+    {
+      "id": "scag",
+      "name": "Sword Coast Adventurer's Guide"
+    },
+    {
+      "id": "xgte",
+      "name": "Xanathar's Guide to Everything"
+    },
+    {
+      "id": "egtw",
+      "name": "Explorer's Guide to Wildemount"
+    },
+    {
+      "id": "tce",
+      "name": "Tasha's Cauldron of Everything"
+    }
+  ],
+  "classes": [
+    {
+      "id": "wizard",
+      "name": "Волшебник",
+      "name_en": "Wizard",
+      "source": "Player's Handbook (2014)",
+      "summary": "Учёный-маг с самой большой книгой заклинаний и широчайшей универсальностью.",
+      "description": "Волшебник — мастер тайных знаний, черпающий силу из понимания устройства магии. Он записывает заклинания в книгу, готовит их и может изучать новые заклинания, найденные в древних руинах или купленные у других магов. Это самый универсальный заклинатель в игре.",
+      "role": "Заклинатель, контроль, нанесение урона, поддержка",
+      "primary_abilities": [
+        "intelligence"
+      ],
+      "hit_die": 6,
+      "saving_throws": [
+        "intelligence",
+        "wisdom"
+      ],
+      "armor_proficiencies": [],
+      "armor_text": "Нет",
+      "weapon_proficiencies": {
+        "simple": true,
+        "martial": false,
+        "list": [
+          "кинжал",
+          "дротик",
+          "праща",
+          "посох",
+          "лёгкий арбалет"
+        ]
+      },
+      "tool_proficiencies": null,
+      "skills": {
+        "choose": 2,
+        "from": [
+          "Аркана",
+          "История",
+          "Проницательность",
+          "Расследование",
+          "Медицина",
+          "Религия"
+        ]
+      },
+      "starting_equipment": [
+        "Посох или кинжал",
+        "Компонентный мешочек или магическая фокусировка",
+        "Набор учёного или исследователя подземелий",
+        "Книга заклинаний"
+      ],
+      "subclass_level": 2,
+      "subclass_title": "Тайное искусство",
+      "asi_levels": [
+        4,
+        8,
+        12,
+        16,
+        19
+      ],
+      "spellcasting": {
+        "ability": "intelligence",
+        "kind": "book",
+        "progression": "full",
+        "prepared": {
+          "base": "level",
+          "min": 1
+        },
+        "spell_list": "wizard"
+      },
+      "progression": [
+        {
+          "level": 1,
+          "notes": "Использование заклинаний; Восстановление чар."
+        },
+        {
+          "level": 2,
+          "notes": "Тайное искусство."
+        },
+        {
+          "level": 3,
+          "notes": "—"
+        },
+        {
+          "level": 4,
+          "notes": "Увеличение характеристик."
+        },
+        {
+          "level": 5,
+          "notes": "—"
+        },
+        {
+          "level": 6,
+          "notes": "Особенность школы."
+        },
+        {
+          "level": 7,
+          "notes": "—"
+        },
+        {
+          "level": 8,
+          "notes": "Увеличение характеристик."
+        },
+        {
+          "level": 9,
+          "notes": "—"
+        },
+        {
+          "level": 10,
+          "notes": "Особенность школы."
+        },
+        {
+          "level": 11,
+          "notes": "—"
+        },
+        {
+          "level": 12,
+          "notes": "Увеличение характеристик."
+        },
+        {
+          "level": 13,
+          "notes": "—"
+        },
+        {
+          "level": 14,
+          "notes": "Особенность школы."
+        },
+        {
+          "level": 15,
+          "notes": "—"
+        },
+        {
+          "level": 16,
+          "notes": "Увеличение характеристик."
+        },
+        {
+          "level": 17,
+          "notes": "—"
+        },
+        {
+          "level": 18,
+          "notes": "Мастерство заклинаний."
+        },
+        {
+          "level": 19,
+          "notes": "Увеличение характеристик."
+        },
+        {
+          "level": 20,
+          "notes": "Фирменные заклинания."
+        }
+      ],
+      "features": [
+        {
+          "id": "wizard_spellcasting",
+          "name": "Использование заклинаний",
+          "name_en": "Spellcasting",
+          "level": 1,
+          "description": "Интеллект — базовая характеристика заклинаний волшебника. Вы ведёте книгу заклинаний, куда записываете известные заклинания. Вы готовите заклинания после продолжительного отдыха: количество равно модификатору Интеллекта + уровень волшебника (минимум 1). Вы можете использовать магическую фокусировку (посох, жезл, кристалл и т.д.).",
+          "action": "passive",
+          "formula": "Подготовленные заклинания = модификатор Интеллекта + уровень волшебника (мин. 1)"
+        },
+        {
+          "id": "wizard_arcane_recovery",
+          "name": "Восстановление чар",
+          "name_en": "Arcane Recovery",
+          "level": 1,
+          "description": "Один раз между продолжительными отдыхами, во время короткого отдыха, вы можете восстановить потраченные ячейки заклинаний, суммарный уровень которых не превышает половину уровня волшебника (округление вверх). Ни одна ячейка не может быть выше 5-го уровня.",
+          "action": "other",
+          "recharge": "long"
+        },
+        {
+          "id": "wizard_arcane_tradition",
+          "name": "Тайное искусство",
+          "name_en": "Arcane Tradition",
+          "level": 2,
+          "description": "Вы выбираете тайное искусство — подкласс, определяющий вашу специализацию в одной из школ магии. Школа открывает особенности на 2, 6, 10 и 14 уровнях волшебника.",
+          "action": "other"
+        },
+        {
+          "id": "wizard_asi_4",
+          "name": "Увеличение характеристик",
+          "name_en": "Ability Score Improvement",
+          "level": 4,
+          "description": "Увеличьте одну характеристику на 2 или две характеристики на 1. Вместо этого можно выбрать черту, если правила вашей игры разрешают черты.",
+          "action": "other"
+        },
+        {
+          "id": "wizard_tradition_feature_6",
+          "name": "Особенность тайного искусства",
+          "name_en": "Arcane Tradition Feature",
+          "level": 6,
+          "description": "Вы получаете особенность выбранной школы на 6-м уровне. Конкретный эффект определяется подклассом.",
+          "action": "passive"
+        },
+        {
+          "id": "wizard_asi_8",
+          "name": "Увеличение характеристик",
+          "name_en": "Ability Score Improvement",
+          "level": 8,
+          "description": "Увеличьте одну характеристику на 2 или две характеристики на 1. Вместо этого можно выбрать черту, если правила вашей игры разрешают черты.",
+          "action": "other"
+        },
+        {
+          "id": "wizard_tradition_feature_10",
+          "name": "Особенность тайного искусства",
+          "name_en": "Arcane Tradition Feature",
+          "level": 10,
+          "description": "Вы получаете особенность выбранной школы на 10-м уровне. Конкретный эффект определяется подклассом.",
+          "action": "passive"
+        },
+        {
+          "id": "wizard_asi_12",
+          "name": "Увеличение характеристик",
+          "name_en": "Ability Score Improvement",
+          "level": 12,
+          "description": "Увеличьте одну характеристику на 2 или две характеристики на 1. Вместо этого можно выбрать черту, если правила вашей игры разрешают черты.",
+          "action": "other"
+        },
+        {
+          "id": "wizard_tradition_feature_14",
+          "name": "Особенность тайного искусства",
+          "name_en": "Arcane Tradition Feature",
+          "level": 14,
+          "description": "Вы получаете особенность выбранной школы на 14-м уровне. Конкретный эффект определяется подклассом.",
+          "action": "passive"
+        },
+        {
+          "id": "wizard_asi_16",
+          "name": "Увеличение характеристик",
+          "name_en": "Ability Score Improvement",
+          "level": 16,
+          "description": "Увеличьте одну характеристику на 2 или две характеристики на 1. Вместо этого можно выбрать черту, если правила вашей игры разрешают черты.",
+          "action": "other"
+        },
+        {
+          "id": "wizard_spell_mastery",
+          "name": "Мастерство заклинаний",
+          "name_en": "Spell Mastery",
+          "level": 18,
+          "description": "Выберите одно заклинание 1-го уровня и одно заклинание 2-го уровня из своей книги заклинаний. Вы можете накладывать их на минимальном уровне без траты ячеек заклинаний, если они подготовлены. Вы можете заменить выбранные заклинания после продолжительного отдыха.",
+          "action": "passive"
+        },
+        {
+          "id": "wizard_asi_19",
+          "name": "Увеличение характеристик",
+          "name_en": "Ability Score Improvement",
+          "level": 19,
+          "description": "Увеличьте одну характеристику на 2 или две характеристики на 1. Вместо этого можно выбрать черту, если правила вашей игры разрешают черты.",
+          "action": "other"
+        },
+        {
+          "id": "wizard_signature_spells",
+          "name": "Фирменные заклинания",
+          "name_en": "Signature Spells",
+          "level": 20,
+          "description": "Выберите два заклинания 3-го уровня из своей книги заклинаний как фирменные. Они всегда считаются подготовленными, и вы можете накладывать каждое из них один раз на 3-м уровне без траты ячейки. Восстанавливается после короткого или продолжительного отдыха.",
+          "action": "passive",
+          "recharge": "short"
+        }
+      ],
+      "subclasses": [
+        {
+          "id": "wizard_abjuration",
+          "name": "Школа ограждения",
+          "name_en": "School of Abjuration",
+          "source": "Player's Handbook (2014)",
+          "summary": "Специалист по защитным заклинаниям и барьерам.",
+          "description": "Волшебники ограждения изучают магию защиты, изгнания и создания барьеров. Они — щит группы.",
+          "features": [
+            {
+              "id": "wizard_abjuration_savant",
+              "name": "Знаток ограждения",
+              "name_en": "Abjuration Savant",
+              "level": 2,
+              "description": "Стоимость копирования заклинаний ограждения в книгу заклинаний снижается вдвое.",
+              "action": "passive"
+            },
+            {
+              "id": "wizard_abjuration_ward",
+              "name": "Магический оберег",
+              "name_en": "Arcane Ward",
+              "level": 2,
+              "description": "Когда вы накладываете заклинание ограждения 1-го уровня или выше, вы создаёте магический оберег, который получает хиты, равные 2 × уровень заклинания + модификатор Интеллекта. Оберег поглощает урон вместо вас. Восстанавливается, когда вы накладываете заклинания ограждения.",
+              "action": "passive"
+            },
+            {
+              "id": "wizard_abjuration_improved",
+              "name": "Улучшенное ограждение",
+              "name_en": "Improved Abjuration",
+              "level": 6,
+              "description": "Когда вы накладываете заклинание ограждения, требующее проверки характеристики для рассеивания или противодействия магии, вы добавляете бонус мастерства к этой проверке.",
+              "action": "passive"
+            },
+            {
+              "id": "wizard_abjuration_focus",
+              "name": "Сосредоточенность на защите",
+              "name_en": "Spell Resistance",
+              "level": 10,
+              "description": "Вы получаете преимущество на спасброски от заклинаний. Вы также получаете сопротивление урону от заклинаний.",
+              "action": "passive"
+            },
+            {
+              "id": "wizard_abjuration_mastery",
+              "name": "Мастерство ограждения",
+              "name_en": "Spell Resistance",
+              "level": 14,
+              "description": "Вы получаете преимущество на спасброски от заклинаний. Вы также получаете сопротивление урону от заклинаний.",
+              "action": "passive"
+            }
+          ]
+        },
+        {
+          "id": "wizard_conjuration",
+          "name": "Школа вызова",
+          "name_en": "School of Conjuration",
+          "source": "Player's Handbook (2014)",
+          "summary": "Специалист по призыву существ и телепортации.",
+          "description": "Волшебники вызова изучают магию создания предметов, призыва существ и перемещения в пространстве.",
+          "features": [
+            {
+              "id": "wizard_conjuration_savant",
+              "name": "Знаток вызова",
+              "name_en": "Conjuration Savant",
+              "level": 2,
+              "description": "Стоимость копирования заклинаний вызова в книгу заклинаний снижается вдвое.",
+              "action": "passive"
+            },
+            {
+              "id": "wizard_conjuration_minor",
+              "name": "Малое сотворение",
+              "name_en": "Minor Conjuration",
+              "level": 2,
+              "description": "Действием вы можете создать немагический предмет в руке или на земле. Предмет не может быть больше 3 футов и весить больше 10 фунтов. Он исчезает через 1 час или при получении урона.",
+              "action": "action"
+            },
+            {
+              "id": "wizard_conjuration_transposition",
+              "name": "Перемещение",
+              "name_en": "Benign Transposition",
+              "level": 6,
+              "description": "Действием вы можете телепортироваться на 30 футов в видимое свободное пространство или обменяться местами с согласным существом. Использование восстанавливается после продолжительного отдыха или после накладывания заклинания вызова 1-го уровня или выше.",
+              "action": "action",
+              "range": "30 футов"
+            },
+            {
+              "id": "wizard_conjuration_focus",
+              "name": "Сосредоточенность на вызове",
+              "name_en": "Focused Conjuration",
+              "level": 10,
+              "description": "Концентрация на заклинаниях вызова не может быть нарушена получением урона.",
+              "action": "passive"
+            },
+            {
+              "id": "wizard_conjuration_durable",
+              "name": "Долговечный вызов",
+              "name_en": "Durable Summons",
+              "level": 14,
+              "description": "Существа, призванные вами, получают 30 временных хитов.",
+              "action": "passive"
+            }
+          ]
+        },
+        {
+          "id": "wizard_divination",
+          "name": "Школа прорицания",
+          "name_en": "School of Divination",
+          "source": "Player's Handbook (2014)",
+          "summary": "Специалист по предсказаниям и видениям.",
+          "description": "Волшебники прорицания изучают магию, позволяющую видеть будущее, прошлое и скрытое.",
+          "features": [
+            {
+              "id": "wizard_divination_savant",
+              "name": "Знаток прорицания",
+              "name_en": "Divination Savant",
+              "level": 2,
+              "description": "Стоимость копирования заклинаний прорицания в книгу заклинаний снижается вдвое.",
+              "action": "passive"
+            },
+            {
+              "id": "wizard_divination_portent",
+              "name": "Предзнаменование",
+              "name_en": "Portent",
+              "level": 2,
+              "description": "После продолжительного отдыха бросьте две d20 и запишите результаты. Вы можете заменить любой бросок атаки, проверку характеристики или спасбросок (свой или видимого существа) на один из этих результатов. Каждый результат используется один раз.",
+              "action": "other",
+              "recharge": "long"
+            },
+            {
+              "id": "wizard_divination_expert",
+              "name": "Эксперт-прорицатель",
+              "name_en": "Expert Divination",
+              "level": 6,
+              "description": "Когда вы накладываете заклинание прорицания 2-го уровня или выше, вы восстанавливаете одну потраченную ячейку заклинаний более низкого уровня.",
+              "action": "passive"
+            },
+            {
+              "id": "wizard_divination_third_eye",
+              "name": "Третий глаз",
+              "name_en": "The Third Eye",
+              "level": 10,
+              "description": "Действием вы можете получить одно из преимуществ на 1 час: тёмное зрение 60 футов, видение невидимого в пределах 10 футов, чтение мыслей или усиленное зрение (увеличение в 10 раз). Использование восстанавливается после короткого или продолжительного отдыха.",
+              "action": "action",
+              "duration": "1 час",
+              "recharge": "short"
+            },
+            {
+              "id": "wizard_divination_greater_portent",
+              "name": "Великое предзнаменование",
+              "name_en": "Greater Portent",
+              "level": 14,
+              "description": "Вы бросаете три d20 для Предзнаменования вместо двух.",
+              "action": "passive"
+            }
+          ]
+        },
+        {
+          "id": "wizard_enchantment",
+          "name": "Школа очарования",
+          "name_en": "School of Enchantment",
+          "source": "Player's Handbook (2014)",
+          "summary": "Специалист по контролю разума и очарованию.",
+          "description": "Волшебники очарования изучают магию, позволяющую управлять умами и эмоциями других.",
+          "features": [
+            {
+              "id": "wizard_enchantment_savant",
+              "name": "Знаток очарования",
+              "name_en": "Enchantment Savant",
+              "level": 2,
+              "description": "Стоимость копирования заклинаний очарования в книгу заклинаний снижается вдвое.",
+              "action": "passive"
+            },
+            {
+              "id": "wizard_enchantment_hypnotic",
+              "name": "Гипнотический взгляд",
+              "name_en": "Hypnotic Gaze",
+              "level": 2,
+              "description": "Действием вы можете очаровать существо в пределах 5 футов, которое может вас видеть. Оно совершает спасбросок Мудрости (Сл 8 + бонус мастерства + модификатор Интеллекта). При провале оно очаровано и недееспособно, пока вы не отпустите его или не получите урон.",
+              "action": "action",
+              "range": "5 футов"
+            },
+            {
+              "id": "wizard_enchantment_instinctive",
+              "name": "Инстинктивное очарование",
+              "name_en": "Instinctive Charm",
+              "level": 6,
+              "description": "Когда существо в пределах 30 футов совершает атаку по вам, вы можете реакцией заставить его совершить спасбросок Мудрости. При провале оно должно выбрать другую цель или атака проваливается.",
+              "action": "reaction",
+              "range": "30 футов"
+            },
+            {
+              "id": "wizard_enchantment_split",
+              "name": "Разделённое очарование",
+              "name_en": "Split Enchantment",
+              "level": 10,
+              "description": "Когда вы накладываете заклинание очарования, нацеленное на одно существо, вы можете нацелить его на два существа.",
+              "action": "passive"
+            },
+            {
+              "id": "wizard_enchantment_alter",
+              "name": "Изменённые воспоминания",
+              "name_en": "Alter Memories",
+              "level": 14,
+              "description": "Когда вы накладываете заклинание очарования, вы можете изменить воспоминания цели так, чтобы она не знала, что была очарована.",
+              "action": "passive"
+            }
+          ]
+        },
+        {
+          "id": "wizard_evocation",
+          "name": "Школа воплощения",
+          "name_en": "School of Evocation",
+          "source": "Player's Handbook (2014)",
+          "summary": "Специалист по разрушительной магии.",
+          "description": "Волшебники воплощения изучают магию, создающую энергию — огонь, холод, молнии и силовые поля.",
+          "features": [
+            {
+              "id": "wizard_evocation_savant",
+              "name": "Знаток воплощения",
+              "name_en": "Evocation Savant",
+              "level": 2,
+              "description": "Стоимость копирования заклинаний воплощения в книгу заклинаний снижается вдвое.",
+              "action": "passive"
+            },
+            {
+              "id": "wizard_evocation_sculpt",
+              "name": "Лепить заклинания",
+              "name_en": "Sculpt Spells",
+              "level": 2,
+              "description": "Когда вы накладываете заклинание воплощения, вы можете выбрать существ, равных 1 + уровень заклинания. Эти существа автоматически преуспевают в спасбросках от заклинания и не получают урона при успехе.",
+              "action": "passive"
+            },
+            {
+              "id": "wizard_evocation_potent",
+              "name": "Мощный заговор",
+              "name_en": "Potent Cantrip",
+              "level": 6,
+              "description": "Когда существо преуспевает в спасброске от вашего заговора, оно всё равно получает половину урона (если заговор наносит урон).",
+              "action": "passive"
+            },
+            {
+              "id": "wizard_evocation_empowered",
+              "name": "Усиленное воплощение",
+              "name_en": "Empowered Evocation",
+              "level": 10,
+              "description": "Вы добавляете модификатор Интеллекта к одному броску урона любого заклинания воплощения.",
+              "action": "passive"
+            },
+            {
+              "id": "wizard_evocation_overchannel",
+              "name": "Перегрузка",
+              "name_en": "Overchannel",
+              "level": 14,
+              "description": "Когда вы накладываете заклинание волшебника 1-5 уровня, наносящее урон, вы можете нанести максимальный урон вместо броска. При использовании вы получаете некротический урон, который нельзя уменьшить.",
+              "action": "other"
+            }
+          ]
+        },
+        {
+          "id": "wizard_illusion",
+          "name": "Школа иллюзии",
+          "name_en": "School of Illusion",
+          "source": "Player's Handbook (2014)",
+          "summary": "Специалист по обману и иллюзиям.",
+          "description": "Волшебники иллюзии изучают магию, создающую ложные образы, звуки и ощущения.",
+          "features": [
+            {
+              "id": "wizard_illusion_savant",
+              "name": "Знаток иллюзии",
+              "name_en": "Illusion Savant",
+              "level": 2,
+              "description": "Стоимость копирования заклинаний иллюзии в книгу заклинаний снижается вдвое.",
+              "action": "passive"
+            },
+            {
+              "id": "wizard_illusion_minor",
+              "name": "Улучшенная малая иллюзия",
+              "name_en": "Improved Minor Illusion",
+              "level": 2,
+              "description": "Вы изучаете заговор Малая иллюзия. Вы можете создать и звук, и образ одновременно.",
+              "action": "passive"
+            },
+            {
+              "id": "wizard_illusion_malleable",
+              "name": "Податливые иллюзии",
+              "name_en": "Malleable Illusions",
+              "level": 6,
+              "description": "Когда вы накладываете заклинание иллюзии длительностью 1 минута или больше, вы можете действием изменить его эффект.",
+              "action": "action"
+            },
+            {
+              "id": "wizard_illusion_self",
+              "name": "Иллюзорное «я»",
+              "name_en": "Illusory Self",
+              "level": 10,
+              "description": "Реакцией, когда существо совершает атаку по вам, вы можете создать иллюзорного двойника. Атака автоматически промахивается. Использование восстанавливается после короткого или продолжительного отдыха.",
+              "action": "reaction",
+              "recharge": "short"
+            },
+            {
+              "id": "wizard_illusion_reality",
+              "name": "Иллюзорная реальность",
+              "name_en": "Illusory Reality",
+              "level": 14,
+              "description": "Когда вы накладываете заклинание иллюзии 1-го уровня или выше, вы можете сделать один немагический объект из иллюзии реальным на 1 минуту.",
+              "action": "passive"
+            }
+          ]
+        },
+        {
+          "id": "wizard_necromancy",
+          "name": "Школа некромантии",
+          "name_en": "School of Necromancy",
+          "source": "Player's Handbook (2014)",
+          "summary": "Специалист по магии смерти и нежити.",
+          "description": "Волшебники некромантии изучают магию жизни, смерти и нежити.",
+          "features": [
+            {
+              "id": "wizard_necromancy_savant",
+              "name": "Знаток некромантии",
+              "name_en": "Necromancy Savant",
+              "level": 2,
+              "description": "Стоимость копирования заклинаний некромантии в книгу заклинаний снижается вдвое.",
+              "action": "passive"
+            },
+            {
+              "id": "wizard_necromancy_grim",
+              "name": "Мрачная жатва",
+              "name_en": "Grim Harvest",
+              "level": 2,
+              "description": "Один раз за ход, когда вы убиваете существо заклинанием некромантии 1-го уровня или выше, вы восстанавливаете хиты, равные 2 × уровень заклинания + модификатор Интеллекта.",
+              "action": "passive"
+            },
+            {
+              "id": "wizard_necromancy_thralls",
+              "name": "Нежить-рабы",
+              "name_en": "Undead Thralls",
+              "level": 6,
+              "description": "Вы изучаете заклинание Анимирование мёртвых. Когда вы создаёте нежить, она получает дополнительные хиты и бонус к урону.",
+              "action": "passive"
+            },
+            {
+              "id": "wizard_necromancy_ward",
+              "name": "Нечестивый оберег",
+              "name_en": "Inured to Undeath",
+              "level": 10,
+              "description": "Вы получаете сопротивление некротическому урону. Ваш максимум хитов не может быть уменьшен.",
+              "action": "passive"
+            },
+            {
+              "id": "wizard_necromancy_command",
+              "name": "Командование нежитью",
+              "name_en": "Command Undead",
+              "level": 14,
+              "description": "Действием вы можете взять под контроль нежить в пределах 60 футов. Она совершает спасбросок Харизмы (Сл 8 + бонус мастерства + модификатор Интеллекта). При провале она подчиняется вам.",
+              "action": "action",
+              "range": "60 футов"
+            }
+          ]
+        },
+        {
+          "id": "wizard_transmutation",
+          "name": "Школа преобразования",
+          "name_en": "School of Transmutation",
+          "source": "Player's Handbook (2014)",
+          "summary": "Специалист по изменению материи и форм.",
+          "description": "Волшебники преобразования изучают магию, изменяющую физические свойства предметов и существ.",
+          "features": [
+            {
+              "id": "wizard_transmutation_savant",
+              "name": "Знаток преобразования",
+              "name_en": "Transmutation Savant",
+              "level": 2,
+              "description": "Стоимость копирования заклинаний преобразования в книгу заклинаний снижается вдвое.",
+              "action": "passive"
+            },
+            {
+              "id": "wizard_transmutation_alchemy",
+              "name": "Малое алхимическое превращение",
+              "name_en": "Minor Alchemy",
+              "level": 2,
+              "description": "Вы можете действием временно превратить немагический предмет из дерева, камня, железа, меди или серебра в другой материал того же размера на 1 час.",
+              "action": "action"
+            },
+            {
+              "id": "wizard_transmutation_stone",
+              "name": "Камень преобразования",
+              "name_en": "Transmuter's Stone",
+              "level": 6,
+              "description": "Вы создаёте камень, дающий одно из преимуществ: тёмное зрение, +10 футов скорости, сопротивление урону, или владение спасбросками Телосложения.",
+              "action": "other"
+            },
+            {
+              "id": "wizard_transmutation_shapechanger",
+              "name": "Изменение формы",
+              "name_en": "Shapechanger",
+              "level": 10,
+              "description": "Вы изучаете заклинание Полиморф. Вы можете накладывать его на себя без концентрации.",
+              "action": "passive"
+            },
+            {
+              "id": "wizard_transmutation_master",
+              "name": "Мастер преобразования",
+              "name_en": "Master Transmuter",
+              "level": 14,
+              "description": "Вы можете действием разрушить свой камень преобразования, чтобы создать один из эффектов: Великое преобразование, Панацея, Восстановление молодости или Оживление.",
+              "action": "action"
+            }
+          ]
+        },
+        {
+          "id": "wizard_bladesinging",
+          "name": "Песнь клинка",
+          "name_en": "Bladesinging",
+          "source": "Sword Coast Adventurer's Guide",
+          "summary": "Волшебник-боец, сочетающий магию и клинковое оружие.",
+          "description": "Певцы клинка — эльфийская традиция, сочетающая магию с изящным владением оружием.",
+          "restrictions": "Только эльфы (по лору SCAG); в TCoE ограничение снято.",
+          "features": [
+            {
+              "id": "wizard_bladesinging_training",
+              "name": "Обучение песне клинка",
+              "name_en": "Training in War and Song",
+              "level": 2,
+              "description": "Вы получаете владение лёгкими доспехами и одним одноручным оружием. Вы также получаете владение навыком Выступление.",
+              "action": "passive"
+            },
+            {
+              "id": "wizard_bladesinging_song",
+              "name": "Песнь клинка",
+              "name_en": "Bladesong",
+              "level": 2,
+              "description": "Бонусным действием вы входите в Песнь клинка на 1 минуту. Вы получаете бонус к КД, равный модификатору Интеллекта, +10 футов скорости, преимущество на проверки Акробатики, и бонус к спасброскам от концентрации. Использований = 2 (3 на 6-м, 4 на 10-м, 5 на 14-м, 6 на 18-м уровне), восстановление после продолжительного отдыха.",
+              "action": "bonus",
+              "duration": "1 минута",
+              "recharge": "long"
+            },
+            {
+              "id": "wizard_bladesinging_extra_attack",
+              "name": "Дополнительная атака",
+              "name_en": "Extra Attack",
+              "level": 6,
+              "description": "При действии Атака вы можете атаковать дважды вместо одного раза. Вы можете заменить одну атаку на заговор.",
+              "action": "passive"
+            },
+            {
+              "id": "wizard_bladesinging_defense",
+              "name": "Защитная песнь",
+              "name_en": "Song of Defense",
+              "level": 10,
+              "description": "Реакцией при получении урона вы можете потратить ячейку заклинаний, чтобы уменьшить урон на 5 × уровень ячейки.",
+              "action": "reaction"
+            },
+            {
+              "id": "wizard_bladesinging_victory",
+              "name": "Песнь победы",
+              "name_en": "Song of Victory",
+              "level": 14,
+              "description": "В Песне клинка вы добавляете модификатор Интеллекта к урону рукопашных атак оружием.",
+              "action": "passive"
+            }
+          ]
+        },
+        {
+          "id": "wizard_war_magic",
+          "name": "Боевая магия",
+          "name_en": "War Magic",
+          "source": "Xanathar's Guide to Everything",
+          "summary": "Волшебник, специализирующийся на боевых заклинаниях и защите.",
+          "description": "Волшебники боевой магии сочетают разрушительные заклинания с тактической защитой.",
+          "features": [
+            {
+              "id": "wizard_war_magic_deflection",
+              "name": "Магическое отклонение",
+              "name_en": "Arcane Deflection",
+              "level": 2,
+              "description": "Реакцией, когда вы получаете урон от атаки или проваливаете спасбросок, вы можете получить +2 к КД против атаки или +4 к спасброску. После использования вы не можете накладывать заклинания кроме заговоров до конца следующего хода.",
+              "action": "reaction"
+            },
+            {
+              "id": "wizard_war_magic_tactical",
+              "name": "Тактическое озарение",
+              "name_en": "Tactical Wit",
+              "level": 2,
+              "description": "Вы добавляете модификатор Интеллекта к броскам инициативы.",
+              "action": "passive"
+            },
+            {
+              "id": "wizard_war_magic_power_surge",
+              "name": "Всплеск силы",
+              "name_en": "Power Surge",
+              "level": 6,
+              "description": "Вы можете накапливать силу, которая позволяет нанести дополнительный урон силовым полем при попадании заклинанием.",
+              "action": "passive"
+            },
+            {
+              "id": "wizard_war_magic_durable",
+              "name": "Прочная магия",
+              "name_en": "Durable Magic",
+              "level": 10,
+              "description": "Пока вы концентрируетесь на заклинании, вы получаете +2 к КД и спасброскам.",
+              "action": "passive"
+            },
+            {
+              "id": "wizard_war_magic_deflecting_shroud",
+              "name": "Отклоняющий покров",
+              "name_en": "Deflecting Shroud",
+              "level": 14,
+              "description": "Когда вы используете Магическое отклонение, вы можете нанести урон силовым полем существам в пределах 60 футов, равный половине уровня волшебника.",
+              "action": "passive",
+              "range": "60 футов"
+            }
+          ]
+        },
+        {
+          "id": "wizard_chronurgy",
+          "name": "Хронургия",
+          "name_en": "Chronurgy Magic",
+          "source": "Explorer's Guide to Wildemount",
+          "summary": "Волшебник, управляющий временем.",
+          "description": "Хронурги изучают магию времени, замедляя врагов и изменяя ход событий.",
+          "features": [
+            {
+              "id": "wizard_chronurgy_initiative",
+              "name": "Хроно-инициатива",
+              "name_en": "Chronal Shift",
+              "level": 2,
+              "description": "После броска инициативы вы можете изменить результат на 1 в любую сторону. Использование восстанавливается после короткого или продолжительного отдыха.",
+              "action": "other",
+              "recharge": "short"
+            },
+            {
+              "id": "wizard_chronurgy_shift",
+              "name": "Временной сдвиг",
+              "name_en": "Temporal Awareness",
+              "level": 2,
+              "description": "Вы добавляете модификатор Интеллекта к броскам инициативы.",
+              "action": "passive"
+            },
+            {
+              "id": "wizard_chronurgy_stasis",
+              "name": "Стазис",
+              "name_en": "Momentary Stasis",
+              "level": 6,
+              "description": "Действием вы можете поместить существо в стазис на 1 минуту. Оно недееспособно и имеет скорость 0. Использование восстанавливается после короткого или продолжительного отдыха.",
+              "action": "action",
+              "duration": "1 минута",
+              "recharge": "short"
+            },
+            {
+              "id": "wizard_chronurgy_arcanums",
+              "name": "Хроно-арканумы",
+              "name_en": "Arcane Abeyance",
+              "level": 10,
+              "description": "Вы можете создать сферу, в которой хранится заклинание 4-го уровня или ниже. Любое существо может активировать сферу, чтобы наложить заклинание.",
+              "action": "action"
+            },
+            {
+              "id": "wizard_chronurgy_convergence",
+              "name": "Временная конвергенция",
+              "name_en": "Convergent Future",
+              "level": 14,
+              "description": "Вы можете изменить результат броска d20 на 1 в любую сторону, но получаете один уровень истощения.",
+              "action": "reaction"
+            }
+          ]
+        },
+        {
+          "id": "wizard_graviturgy",
+          "name": "Гравитургия",
+          "name_en": "Graviturgy Magic",
+          "source": "Explorer's Guide to Wildemount",
+          "summary": "Волшебник, управляющий гравитацией.",
+          "description": "Гравитурги изучают магию гравитации, притягивая и отталкивая существ и предметы.",
+          "features": [
+            {
+              "id": "wizard_graviturgy_adjust",
+              "name": "Регулировка плотности",
+              "name_en": "Adjust Density",
+              "level": 2,
+              "description": "Действием вы можете изменить вес существа или предмета в пределах 30 футов. Вы можете удвоить или уменьшить вдвое его вес, что влияет на скорость и урон.",
+              "action": "action",
+              "range": "30 футов"
+            },
+            {
+              "id": "wizard_graviturgy_gravity_well",
+              "name": "Гравитационный колодец",
+              "name_en": "Gravity Well",
+              "level": 6,
+              "description": "Когда вы накладываете заклинание, вы можете создать гравитационный колодец, который притягивает существ к центру.",
+              "action": "passive"
+            },
+            {
+              "id": "wizard_graviturgy_violent",
+              "name": "Насильственное притяжение",
+              "name_en": "Violent Attraction",
+              "level": 10,
+              "description": "Когда существо получает урон от падения или гравитации, вы можете реакцией добавить 1к10 к урону.",
+              "action": "reaction"
+            },
+            {
+              "id": "wizard_graviturgy_event_horizon",
+              "name": "Горизонт событий",
+              "name_en": "Event Horizon",
+              "level": 14,
+              "description": "Действием вы создаёте гравитационную аномалию радиусом 30 футов на 1 минуту. Враги в этой области получают урон силовым полем и не могут покинуть её.",
+              "action": "action",
+              "range": "30 футов",
+              "duration": "1 минута"
+            }
+          ]
+        },
+        {
+          "id": "wizard_scribes",
+          "name": "Орден писцов",
+          "name_en": "Order of Scribes",
+          "source": "Tasha's Cauldron of Everything",
+          "summary": "Волшебник, оживляющий книгу заклинаний.",
+          "description": "Писцы превращают свою книгу заклинаний в магического компаньона, способного помогать в бою и исследовании.",
+          "features": [
+            {
+              "id": "wizard_scribes_book",
+              "name": "Волшебная книга",
+              "name_en": "Wizardly Quill",
+              "level": 2,
+              "description": "Вы создаёте магическое перо, которое позволяет записывать заклинания за 2 минуты за уровень заклинания вместо 2 часов.",
+              "action": "other"
+            },
+            {
+              "id": "wizard_scribes_manifest",
+              "name": "Проявление разума",
+              "name_en": "Awakened Spellbook",
+              "level": 2,
+              "description": "Ваша книга заклинаний становится магическим существом. Вы можете использовать её как фокусировку и менять тип урона заклинаний.",
+              "action": "passive"
+            },
+            {
+              "id": "wizard_scribes_manifest_mind",
+              "name": "Манифестация разума",
+              "name_en": "Manifest Mind",
+              "level": 6,
+              "description": "Вы можете создать призрачное проявление своей книги, которое может накладывать заклинания из вашей книги.",
+              "action": "action"
+            },
+            {
+              "id": "wizard_scribes_master_scroll",
+              "name": "Мастер свитков",
+              "name_en": "Master Scrivener",
+              "level": 10,
+              "description": "Вы можете создавать свитки быстрее и дешевле.",
+              "action": "passive"
+            },
+            {
+              "id": "wizard_scribes_one_with_word",
+              "name": "Единство со словом",
+              "name_en": "One with the Word",
+              "level": 14,
+              "description": "Вы можете использовать свою книгу заклинаний как реакцию, чтобы избежать урона или получить преимущество.",
+              "action": "reaction"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "subclasses": []
+}
