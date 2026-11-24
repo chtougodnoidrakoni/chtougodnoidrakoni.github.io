@@ -407,6 +407,7 @@ function toClass(c: ClassIn, p: PackIn, ed: Ed): ClassDef {
     saves: c.saving_throws.map((a) => abOf(a)!), skills: { n: c.skills.choose, from: c.skills.from },
     armor: c.armor_text ?? ((c.armor_proficiencies ?? []).map((x) => ({ light: 'лёгкие', medium: 'средние', heavy: 'тяжёлые', shields: 'щиты' }[x])).join(', ') || 'нет'),
     shields: (c.armor_proficiencies ?? []).includes('shields'), armorKinds, weapons, weapons24: weapons === 'martial' ? 'martial' : weapons === 'simple' ? 'simple' : undefined,
+    simpleToo: !!wp.simple && !!wp.list?.length,
     tools: c.tool_proficiencies, caster, spellAb: sc ? abOf(sc.ability) : undefined, spellKind: sc?.kind,
     sub: { at14: c.subclass_level, at24: c.subclass_level, name14: '', name24: '', title: c.subclass_title ?? 'Подкласс' },
     asi14: c.asi_levels ?? [4, 8, 12, 16, 19], asi24: (c.asi_levels ?? [4, 8, 12, 16]).filter((l) => l !== 19),
@@ -446,14 +447,22 @@ function build() {
     if (!s.enabled) continue;
     const ed: Ed = s.pack.ruleset === '5e-2014' ? '2014' : '2024';
     for (const c of s.pack.classes ?? []) {
-      const def = toClass(c, s.pack, ed);
+      let def = toClass(c, s.pack, ed);
+      const base = CLASSES.find((x) => x.id === c.id);
+      if (base) {
+        // пакет заменяет встроенный класс, но то, чего в пакете нет, берём из встроенного:
+        // выбор боевого стиля, компетентность (если в пакете она только текстом), стартовый набор
+        const hasExp = [...c.features, ...(c.subclasses ?? []).flatMap((x) => x.features)].some((f) => (f.effects ?? []).some((e) => e.type === 'expertise'));
+        def = { ...def, style: base.style, expertise: hasExp ? undefined : base.expertise, weapons24: def.weapons24 ?? base.weapons24, kit: def.kit || base.kit, tools: def.tools ?? base.tools, sub: { ...def.sub, name14: '', name24: '' } };
+      }
       const i = classes[ed].findIndex((x) => x.id === c.id);
       if (i >= 0) classes[ed][i] = def; else classes[ed].push(def);
     }
     for (const sc of allSubs(s.pack)) {
       const src = sc.source ?? s.pack.pack_name;
       const d: SubDef = { id: `${s.pack.pack_id}:${sc.id}`, classId: sc.class_id, name: sc.name, source: src, pack: s.pack.pack_name, level: sc.level, features: sc.features.map((f) => toFeature(f, src)), spells: sc.spells ?? [], summary: sc.summary };
-      subs[ed] = [...subs[ed].filter((x) => x.id !== d.id), d];
+      // одинаковый подкласс из двух пакетов показываем один раз — побеждает пакет, загруженный позже
+      subs[ed] = [...subs[ed].filter((x) => x.id !== d.id && !(x.classId === d.classId && x.name.toLowerCase() === d.name.toLowerCase())), d];
     }
     for (const r of s.pack.races ?? []) {
       const def = toRace(r, s.pack);

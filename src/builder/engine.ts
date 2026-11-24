@@ -165,7 +165,8 @@ export function proficientWeapon(b: Build, name: string): boolean {
   if (rule === 'simple') return !w.martial;
   if (rule === 'light') return !w.martial || !!w.light;
   if (rule === 'finesse-light') return !w.martial || !!w.finesse || !!w.light;
-  return (['bard', 'rogue', 'monk'].includes(c.id) && !w.martial) || rule.includes(name);
+  const lc = name.toLowerCase();
+  return ((c.simpleToo || ['bard', 'rogue', 'monk'].includes(c.id)) && !w.martial) || rule.some((x) => x.toLowerCase() === lc);
 }
 
 export interface Attack { name: string; bonus: number; dmg: string; type: string; props: string; prof: boolean }

@@ -32,6 +32,8 @@ export interface ClassDef {
   kit: string;
   /** только у классов из пакетов контента */
   source?: string; pack?: string; summary?: string; fdefs?: FeatureDef[]; spellDef?: SpellDef;
+  /** список оружия из пакета дополняет простое оружие */
+  simpleToo?: boolean;
 }
 
 const A = [4, 8, 12, 16, 19];
