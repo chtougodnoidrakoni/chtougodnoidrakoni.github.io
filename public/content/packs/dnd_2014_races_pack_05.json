@@ -1,0 +1,910 @@
+{
+  "format": "dnd-content-pack",
+  "format_version": 1,
+  "ruleset": "5e-2014",
+  "pack_id": "dnd_2014_races_pack_05",
+  "pack_name": "D&D 5e (2014) — Виды (Часть 5)",
+  "pack_version": 1,
+  "language": "ru",
+  "author": "Авторский структурированный справочник механик",
+  "description": "Финальная часть пакета видов для правил 2014 года: Гитьянки, Гитзерай, Генази, Багбир, Гоблин, Хобгоблин, Кобольд, Ящеролюд, Орк, Юань-ти.",
+  "sources": [
+    {
+      "id": "eepc",
+      "name": "Elemental Evil Player's Companion"
+    },
+    {
+      "id": "scag",
+      "name": "Sword Coast Adventurer's Guide"
+    },
+    {
+      "id": "vgtm",
+      "name": "Volo's Guide to Monsters"
+    },
+    {
+      "id": "mtof",
+      "name": "Mordenkainen's Tome of Foes"
+    }
+  ],
+  "classes": [],
+  "subclasses": [],
+  "races": [
+    {
+      "id": "githyanki",
+      "name": "Гитьянки",
+      "name_en": "Githyanki",
+      "source": "Mordenkainen's Tome of Foes",
+      "summary": "Воинственные потомки гитьянки, живущие в Астральном Плане.",
+      "description": "Гитьянки — суровые и дисциплинированные воины, известные своей ненавистью к иллитидам. Они живут в Астральном Плане и часто совершают набеги на Материальный План.",
+      "size": "Medium",
+      "speed": 30,
+      "ability_score_increase": {
+        "strength": 2,
+        "intelligence": 1
+      },
+      "age": {
+        "adulthood": 15,
+        "lifespan": 100
+      },
+      "alignment": "Склонны к закону и злу.",
+      "languages": [
+        "Общий",
+        "Гитьянки"
+      ],
+      "proficiencies": {
+        "skills": [],
+        "weapons": [
+          "Длинный меч",
+          "Короткий меч",
+          "Короткий лук"
+        ],
+        "armor": [
+          "medium"
+        ]
+      },
+      "subrace_title": "Наследие",
+      "traits": [
+        {
+          "id": "githyanki_darkvision",
+          "name": "Тёмное зрение",
+          "name_en": "Darkvision",
+          "description": "Вы видите в темноте на расстоянии 60 футов.",
+          "effects": [
+            {
+              "type": "darkvision",
+              "value": 60
+            }
+          ]
+        },
+        {
+          "id": "githyanki_psionics",
+          "name": "Псионика",
+          "name_en": "Githyanki Psionics",
+          "description": "Вы знаете заговор Волшебная рука. С 3-го уровня — Прыжок, с 5-го — Туманный шаг.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Волшебная рука; Прыжок (3 ур.); Туманный шаг (5 ур.)"
+            }
+          ]
+        },
+        {
+          "id": "githyanki_armor",
+          "name": "Боевая тренировка",
+          "name_en": "Martial Prodigy",
+          "description": "Вы получаете владение средними доспехами и указанным оружием.",
+          "effects": [
+            {
+              "type": "weapon_proficiency",
+              "value": [
+                "Длинный меч",
+                "Короткий меч",
+                "Короткий лук"
+              ]
+            }
+          ]
+        }
+      ],
+      "subraces": []
+    },
+    {
+      "id": "githzerai",
+      "name": "Гитзерай",
+      "name_en": "Githzerai",
+      "source": "Mordenkainen's Tome of Foes",
+      "summary": "Аскетичные потомки гит, живущие в Лимбо.",
+      "description": "Гитзерай — спокойные и мудрые существа, ищущие гармонию в хаосе Лимбо.",
+      "size": "Medium",
+      "speed": 30,
+      "ability_score_increase": {
+        "wisdom": 2,
+        "intelligence": 1
+      },
+      "age": {
+        "adulthood": 15,
+        "lifespan": 100
+      },
+      "alignment": "Склонны к закону и нейтралитету.",
+      "languages": [
+        "Общий",
+        "Гитзерай"
+      ],
+      "proficiencies": {
+        "skills": [
+          "Проницательность"
+        ],
+        "weapons": [],
+        "armor": []
+      },
+      "subrace_title": "Наследие",
+      "traits": [
+        {
+          "id": "githzerai_darkvision",
+          "name": "Тёмное зрение",
+          "name_en": "Darkvision",
+          "description": "Вы видите в темноте на расстоянии 60 футов.",
+          "effects": [
+            {
+              "type": "darkvision",
+              "value": 60
+            }
+          ]
+        },
+        {
+          "id": "githzerai_psionics",
+          "name": "Псионика",
+          "name_en": "Githzerai Psionics",
+          "description": "Вы знаете заговор Волшебная рука. С 3-го уровня — Щит, с 5-го — Обнаружение мыслей.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Волшебная рука; Щит (3 ур.); Обнаружение мыслей (5 ур.)"
+            }
+          ]
+        },
+        {
+          "id": "githzerai_mental",
+          "name": "Ментальная дисциплина",
+          "name_en": "Mental Discipline",
+          "description": "Вы получаете преимущество на спасброски от очарования и испуга.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Преимущество на спасброски от очарования и испуга"
+            }
+          ]
+        }
+      ],
+      "subraces": []
+    },
+    {
+      "id": "genasi",
+      "name": "Генази",
+      "name_en": "Genasi",
+      "source": "Elemental Evil Player's Companion",
+      "summary": "Потомки стихийных существ и смертных.",
+      "description": "Генази несут в себе силу стихий. Они горды, страстны и часто не понимают смертных.",
+      "size": "Medium",
+      "speed": 30,
+      "ability_score_increase": {
+        "constitution": 2
+      },
+      "age": {
+        "adulthood": 20,
+        "lifespan": 120
+      },
+      "alignment": "Склонны к хаосу.",
+      "languages": [
+        "Общий",
+        "Первичный"
+      ],
+      "proficiencies": {
+        "skills": [],
+        "weapons": [],
+        "armor": []
+      },
+      "subrace_title": "Стихийное наследие",
+      "traits": [],
+      "subraces": [
+        {
+          "id": "genasi_air",
+          "name": "Воздушный генази",
+          "name_en": "Air Genasi",
+          "source": "Elemental Evil Player's Companion",
+          "summary": "Наследие воздуха.",
+          "ability_score_increase": {
+            "dexterity": 1
+          },
+          "traits": [
+            {
+              "id": "air_genasi_breath",
+              "name": "Бесконечное дыхание",
+              "description": "Вы можете задерживать дыхание бесконечно.",
+              "effects": [
+                {
+                  "type": "note",
+                  "text": "Бесконечная задержка дыхания"
+                }
+              ]
+            },
+            {
+              "id": "air_genasi_levitate",
+              "name": "Левитация",
+              "description": "С 3-го уровня вы можете накладывать Левитацию один раз в долгий отдых.",
+              "effects": [
+                {
+                  "type": "note",
+                  "text": "Левитация (1/долгий отдых)"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "genasi_earth",
+          "name": "Земляной генази",
+          "name_en": "Earth Genasi",
+          "source": "Elemental Evil Player's Companion",
+          "summary": "Наследие земли.",
+          "ability_score_increase": {
+            "strength": 1
+          },
+          "traits": [
+            {
+              "id": "earth_genasi_walk",
+              "name": "Хождение по земле",
+              "description": "Вы можете перемещаться по труднопроходимой местности из камня и земли без штрафов.",
+              "effects": [
+                {
+                  "type": "note",
+                  "text": "Игнорирование каменной/земляной труднопроходимой местности"
+                }
+              ]
+            },
+            {
+              "id": "earth_genasi_pass",
+              "name": "Без следа",
+              "description": "С 3-го уровня вы можете накладывать Проход без следа один раз в долгий отдых.",
+              "effects": [
+                {
+                  "type": "note",
+                  "text": "Проход без следа (1/долгий отдых)"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "genasi_fire",
+          "name": "Огненный генази",
+          "name_en": "Fire Genasi",
+          "source": "Elemental Evil Player's Companion",
+          "summary": "Наследие огня.",
+          "ability_score_increase": {
+            "intelligence": 1
+          },
+          "traits": [
+            {
+              "id": "fire_genasi_darkvision",
+              "name": "Тёмное зрение",
+              "description": "Вы видите в темноте на 60 футов.",
+              "effects": [
+                {
+                  "type": "darkvision",
+                  "value": 60
+                }
+              ]
+            },
+            {
+              "id": "fire_genasi_resistance",
+              "name": "Сопротивление огню",
+              "description": "Вы получаете сопротивление урону огнём.",
+              "effects": [
+                {
+                  "type": "note",
+                  "text": "Сопротивление огню"
+                }
+              ]
+            },
+            {
+              "id": "fire_genasi_magic",
+              "name": "Магия огня",
+              "description": "Вы знаете заговор Управление огнём. С 3-го уровня — Огненные ладони.",
+              "effects": [
+                {
+                  "type": "note",
+                  "text": "Управление огнём; Огненные ладони (3 ур.)"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "genasi_water",
+          "name": "Водный генази",
+          "name_en": "Water Genasi",
+          "source": "Elemental Evil Player's Companion",
+          "summary": "Наследие воды.",
+          "ability_score_increase": {
+            "wisdom": 1
+          },
+          "traits": [
+            {
+              "id": "water_genasi_amphibious",
+              "name": "Амфибия",
+              "description": "Вы можете дышать воздухом и под водой, и получаете скорость плавания 30 футов.",
+              "effects": [
+                {
+                  "type": "note",
+                  "text": "Дыхание под водой, скорость плавания 30"
+                }
+              ]
+            },
+            {
+              "id": "water_genasi_resistance",
+              "name": "Сопротивление кислоте",
+              "description": "Вы получаете сопротивление урону кислотой.",
+              "effects": [
+                {
+                  "type": "note",
+                  "text": "Сопротивление кислоте"
+                }
+              ]
+            },
+            {
+              "id": "water_genasi_magic",
+              "name": "Магия воды",
+              "description": "Вы знаете заговор Формовка воды. С 3-го уровня — Создание или уничтожение воды.",
+              "effects": [
+                {
+                  "type": "note",
+                  "text": "Формовка воды; Создание/уничтожение воды (3 ур.)"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "bugbear",
+      "name": "Багбир",
+      "name_en": "Bugbear",
+      "source": "Volo's Guide to Monsters",
+      "summary": "Огромные и свирепые гоблиноиды.",
+      "description": "Багбиры — сильные и жестокие существа, часто служащие злым силам.",
+      "size": "Medium",
+      "speed": 30,
+      "ability_score_increase": {
+        "strength": 2,
+        "dexterity": 1
+      },
+      "age": {
+        "adulthood": 16,
+        "lifespan": 80
+      },
+      "alignment": "Склонны к хаосу и злу.",
+      "languages": [
+        "Общий",
+        "Гоблинский"
+      ],
+      "proficiencies": {
+        "skills": [
+          "Скрытность"
+        ],
+        "weapons": [],
+        "armor": []
+      },
+      "subrace_title": "Наследие",
+      "traits": [
+        {
+          "id": "bugbear_darkvision",
+          "name": "Тёмное зрение",
+          "name_en": "Darkvision",
+          "description": "Вы видите в темноте на расстоянии 60 футов.",
+          "effects": [
+            {
+              "type": "darkvision",
+              "value": 60
+            }
+          ]
+        },
+        {
+          "id": "bugbear_long_limbed",
+          "name": "Длинные конечности",
+          "name_en": "Long-Limbed",
+          "description": "Ваша досягаемость для рукопашных атак увеличивается на 5 футов.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Досягаемость +5 фт"
+            }
+          ]
+        },
+        {
+          "id": "bugbear_powerful_build",
+          "name": "Мощное телосложение",
+          "name_en": "Powerful Build",
+          "description": "Вы считаетесь на один размер больше для грузоподъёмности.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Считаетесь на размер больше для грузоподъёмности"
+            }
+          ]
+        },
+        {
+          "id": "bugbear_surprise_attack",
+          "name": "Внезапная атака",
+          "name_en": "Surprise Attack",
+          "description": "Если вы застали врасплох существо, ваша первая атака по нему наносит дополнительный урон 2к6.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "+2к6 урона при внезапной атаке"
+            }
+          ]
+        }
+      ],
+      "subraces": []
+    },
+    {
+      "id": "goblin",
+      "name": "Гоблин",
+      "name_en": "Goblin",
+      "source": "Volo's Guide to Monsters",
+      "summary": "Маленькие и хитрые гоблиноиды.",
+      "description": "Гоблины — мелкие, но опасные существа, известные своей хитростью и склонностью к хаосу.",
+      "size": "Small",
+      "speed": 30,
+      "ability_score_increase": {
+        "dexterity": 2,
+        "constitution": 1
+      },
+      "age": {
+        "adulthood": 8,
+        "lifespan": 60
+      },
+      "alignment": "Склонны к хаосу и злу.",
+      "languages": [
+        "Общий",
+        "Гоблинский"
+      ],
+      "proficiencies": {
+        "skills": [],
+        "weapons": [],
+        "armor": []
+      },
+      "subrace_title": "Наследие",
+      "traits": [
+        {
+          "id": "goblin_darkvision",
+          "name": "Тёмное зрение",
+          "name_en": "Darkvision",
+          "description": "Вы видите в темноте на расстоянии 60 футов.",
+          "effects": [
+            {
+              "type": "darkvision",
+              "value": 60
+            }
+          ]
+        },
+        {
+          "id": "goblin_fury",
+          "name": "Ярость маленького",
+          "name_en": "Fury of the Small",
+          "description": "Когда вы наносите урон существу, которое больше вас, вы можете добавить уровень урона к атаке. Восстанавливается после короткого или продолжительного отдыха.",
+          "uses": 1,
+          "recharge": "short",
+          "effects": [
+            {
+              "type": "note",
+              "text": "+уровень к урону по крупным (1/короткий отдых)"
+            }
+          ]
+        },
+        {
+          "id": "goblin_nimble",
+          "name": "Проворное бегство",
+          "name_en": "Nimble Escape",
+          "description": "Вы можете бонусным действием совершить Отход или Скрытность.",
+          "action": "bonus",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Бонусное действие: Отход или Скрытность"
+            }
+          ]
+        }
+      ],
+      "subraces": []
+    },
+    {
+      "id": "hobgoblin",
+      "name": "Хобгоблин",
+      "name_en": "Hobgoblin",
+      "source": "Volo's Guide to Monsters",
+      "summary": "Дисциплинированные и воинственные гоблиноиды.",
+      "description": "Хобгоблины — строгие и организованные существа, ценящие порядок и войну.",
+      "size": "Medium",
+      "speed": 30,
+      "ability_score_increase": {
+        "constitution": 2,
+        "intelligence": 1
+      },
+      "age": {
+        "adulthood": 12,
+        "lifespan": 80
+      },
+      "alignment": "Склонны к закону и злу.",
+      "languages": [
+        "Общий",
+        "Гоблинский"
+      ],
+      "proficiencies": {
+        "skills": [],
+        "weapons": [],
+        "armor": []
+      },
+      "subrace_title": "Наследие",
+      "traits": [
+        {
+          "id": "hobgoblin_darkvision",
+          "name": "Тёмное зрение",
+          "name_en": "Darkvision",
+          "description": "Вы видите в темноте на расстоянии 60 футов.",
+          "effects": [
+            {
+              "type": "darkvision",
+              "value": 60
+            }
+          ]
+        },
+        {
+          "id": "hobgoblin_martial",
+          "name": "Боевая тренировка",
+          "name_en": "Martial Training",
+          "description": "Вы владеете двумя видами боевого оружия и лёгкими доспехами.",
+          "effects": [
+            {
+              "type": "weapon_proficiency",
+              "value": [
+                "martial"
+              ]
+            },
+            {
+              "type": "armor_proficiency",
+              "value": [
+                "light"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "hobgoblin_saving_face",
+          "name": "Спасение лица",
+          "name_en": "Saving Face",
+          "description": "Когда вы или союзник в 30 футах проваливаете проверку или спасбросок, вы можете добавить +2 к результату. Восстанавливается после короткого или продолжительного отдыха.",
+          "uses": 1,
+          "recharge": "short",
+          "effects": [
+            {
+              "type": "note",
+              "text": "+2 к броску союзника (1/короткий отдых)"
+            }
+          ]
+        }
+      ],
+      "subraces": []
+    },
+    {
+      "id": "kobold",
+      "name": "Кобольд",
+      "name_en": "Kobold",
+      "source": "Volo's Guide to Monsters",
+      "summary": "Маленькие драконоподобные рептилии.",
+      "description": "Кобольды — мелкие, но хитрые существа, часто служащие драконам.",
+      "size": "Small",
+      "speed": 30,
+      "ability_score_increase": {
+        "dexterity": 2
+      },
+      "age": {
+        "adulthood": 6,
+        "lifespan": 120
+      },
+      "alignment": "Склонны к закону и злу.",
+      "languages": [
+        "Общий",
+        "Драконий"
+      ],
+      "proficiencies": {
+        "skills": [],
+        "weapons": [],
+        "armor": []
+      },
+      "subrace_title": "Наследие",
+      "traits": [
+        {
+          "id": "kobold_darkvision",
+          "name": "Тёмное зрение",
+          "name_en": "Darkvision",
+          "description": "Вы видите в темноте на расстоянии 60 футов.",
+          "effects": [
+            {
+              "type": "darkvision",
+              "value": 60
+            }
+          ]
+        },
+        {
+          "id": "kobold_pack_tactics",
+          "name": "Стайная тактика",
+          "name_en": "Pack Tactics",
+          "description": "Вы получаете преимущество на броски атаки, если рядом с целью есть союзник.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Преимущество на атаки при союзнике рядом с целью"
+            }
+          ]
+        },
+        {
+          "id": "kobold_sunlight",
+          "name": "Чувствительность к солнцу",
+          "name_en": "Sunlight Sensitivity",
+          "description": "Вы получаете помеху на броски атаки и проверки Внимательности на солнечном свете.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Помеха на атаки и Внимательность на солнце"
+            }
+          ]
+        }
+      ],
+      "subraces": []
+    },
+    {
+      "id": "lizardfolk",
+      "name": "Ящеролюд",
+      "name_en": "Lizardfolk",
+      "source": "Volo's Guide to Monsters",
+      "summary": "Хладнокровные рептилии-каннибалы.",
+      "description": "Ящеролюды — практичные и безжалостные существа, живущие в болотах.",
+      "size": "Medium",
+      "speed": 30,
+      "ability_score_increase": {
+        "constitution": 2,
+        "wisdom": 1
+      },
+      "age": {
+        "adulthood": 14,
+        "lifespan": 60
+      },
+      "alignment": "Склонны к нейтралитету.",
+      "languages": [
+        "Общий",
+        "Драконий"
+      ],
+      "proficiencies": {
+        "skills": [
+          "Выживание",
+          "Природа",
+          "Уход за животными"
+        ],
+        "weapons": [],
+        "armor": []
+      },
+      "subrace_title": "Наследие",
+      "traits": [
+        {
+          "id": "lizardfolk_bite",
+          "name": "Укус",
+          "name_en": "Bite",
+          "description": "Вы можете атаковать укусом (1к6 + модификатор Силы).",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Атака укусом 1к6"
+            }
+          ]
+        },
+        {
+          "id": "lizardfolk_armor",
+          "name": "Природная броня",
+          "name_en": "Natural Armor",
+          "description": "Ваш КД без доспехов равен 13 + модификатор Ловкости.",
+          "effects": [
+            {
+              "type": "unarmored_ac",
+              "base": 13,
+              "abilities": [
+                "dexterity"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "lizardfolk_hold_breath",
+          "name": "Задержка дыхания",
+          "name_en": "Hold Breath",
+          "description": "Вы можете задерживать дыхание на 15 минут.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Задержка дыхания 15 минут"
+            }
+          ]
+        },
+        {
+          "id": "lizardfolk_hungry",
+          "name": "Голодные челюсти",
+          "name_en": "Hungry Jaws",
+          "description": "Бонусным действием вы можете укусить существо, восстановив временные хиты.",
+          "action": "bonus",
+          "uses": 1,
+          "recharge": "short",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Укус + временные хиты (1/короткий отдых)"
+            }
+          ]
+        }
+      ],
+      "subraces": []
+    },
+    {
+      "id": "orc",
+      "name": "Орк",
+      "name_en": "Orc",
+      "source": "Volo's Guide to Monsters",
+      "summary": "Свирепые и сильные воины.",
+      "description": "Орки — агрессивные и сильные существа, известные своей яростью в бою.",
+      "size": "Medium",
+      "speed": 30,
+      "ability_score_increase": {
+        "strength": 2,
+        "constitution": 1
+      },
+      "age": {
+        "adulthood": 12,
+        "lifespan": 50
+      },
+      "alignment": "Склонны к хаосу и злу.",
+      "languages": [
+        "Общий",
+        "Орочий"
+      ],
+      "proficiencies": {
+        "skills": [
+          "Запугивание"
+        ],
+        "weapons": [],
+        "armor": []
+      },
+      "subrace_title": "Наследие",
+      "traits": [
+        {
+          "id": "orc_darkvision",
+          "name": "Тёмное зрение",
+          "name_en": "Darkvision",
+          "description": "Вы видите в темноте на расстоянии 60 футов.",
+          "effects": [
+            {
+              "type": "darkvision",
+              "value": 60
+            }
+          ]
+        },
+        {
+          "id": "orc_aggressive",
+          "name": "Агрессия",
+          "name_en": "Aggressive",
+          "description": "Бонусным действием вы можете переместиться к враждебному существу на свою скорость.",
+          "action": "bonus",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Бонусный рывок к врагу"
+            }
+          ]
+        },
+        {
+          "id": "orc_powerful_build",
+          "name": "Мощное телосложение",
+          "name_en": "Powerful Build",
+          "description": "Вы считаетесь на один размер больше для грузоподъёмности.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Считаетесь на размер больше для грузоподъёмности"
+            }
+          ]
+        }
+      ],
+      "subraces": []
+    },
+    {
+      "id": "yuan_ti",
+      "name": "Юань-ти",
+      "name_en": "Yuan-ti Pureblood",
+      "source": "Volo's Guide to Monsters",
+      "summary": "Змеиные гуманоиды с иммунитетом к магии.",
+      "description": "Юань-ти — холодные и расчётливые существа со змеиными чертами. Они устойчивы к магии и ядам.",
+      "size": "Medium",
+      "speed": 30,
+      "ability_score_increase": {
+        "charisma": 2,
+        "intelligence": 1
+      },
+      "age": {
+        "adulthood": 15,
+        "lifespan": 80
+      },
+      "alignment": "Склонны к хаосу и злу.",
+      "languages": [
+        "Общий",
+        "Абиссальный",
+        "Драконий"
+      ],
+      "proficiencies": {
+        "skills": [],
+        "weapons": [],
+        "armor": []
+      },
+      "subrace_title": "Наследие",
+      "traits": [
+        {
+          "id": "yuan_ti_darkvision",
+          "name": "Тёмное зрение",
+          "name_en": "Darkvision",
+          "description": "Вы видите в темноте на расстоянии 60 футов.",
+          "effects": [
+            {
+              "type": "darkvision",
+              "value": 60
+            }
+          ]
+        },
+        {
+          "id": "yuan_ti_magic_resistance",
+          "name": "Сопротивление магии",
+          "name_en": "Magic Resistance",
+          "description": "Вы получаете преимущество на спасброски от заклинаний.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Преимущество на спасброски от заклинаний"
+            }
+          ]
+        },
+        {
+          "id": "yuan_ti_poison",
+          "name": "Иммунитет к яду",
+          "name_en": "Poison Immunity",
+          "description": "Вы получаете иммунитет к урону ядом и состоянию отравления.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Иммунитет к яду"
+            }
+          ]
+        },
+        {
+          "id": "yuan_ti_magic",
+          "name": "Магия юань-ти",
+          "name_en": "Innate Spellcasting",
+          "description": "Вы знаете заговор Ядовитый брызг. С 3-го уровня — Внушение, с 5-го — Удержание личности.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Ядовитый брызг; Внушение (3 ур.); Удержание личности (5 ур.)"
+            }
+          ]
+        }
+      ],
+      "subraces": []
+    }
+  ]
+}
