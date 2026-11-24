@@ -57,7 +57,11 @@ export function App() {
                 <div className="text-xs text-cream/60">{user ? `Привет, ${user.name.split(' ')[0]}!` : 'Клуб настольных ролевых игр · Астрахань'}</div>
               </div>
             </header>
-            <nav className="flex gap-1.5 mt-4 p-1 rounded-2xl bg-moss-deep/70 border border-moss-light/60">
+            <div className="grid grid-cols-2 gap-2 mt-4">
+              <button onClick={() => openLink(SITES.builder)} className="h-12 rounded-2xl bg-gradient-to-b from-sand-light to-sand text-moss-deep font-semibold text-sm inline-flex items-center justify-center gap-1.5"><Sparkles size={17} />Билдер персонажа</button>
+              <button onClick={() => openLink(SITES.sheet)} className="h-12 rounded-2xl bg-moss border border-sand/60 text-sand-light font-semibold text-sm inline-flex items-center justify-center gap-1.5"><ScrollText size={17} />Лист персонажа</button>
+            </div>
+            <nav className="flex gap-1.5 mt-3 p-1 rounded-2xl bg-moss-deep/70 border border-moss-light/60">
               {([['', 'Игры', <Swords key="s" size={16} />], ['my', 'Мои записи', <CalendarDays key="c" size={16} />], ...(staff ? [['admin', 'Управление', <Settings key="g" size={16} />]] : [])] as [string, string, ReactNode][]).map(([h, t, icon]) => {
                 const on = (view.name === 'list' && h === '') || view.name === h;
                 return <button key={h} onClick={() => go(h)} className={cx('flex-1 h-10 rounded-xl text-sm inline-flex items-center justify-center gap-1.5', on ? 'bg-sand text-moss-deep font-semibold' : 'text-cream/75')}>{icon}{t}</button>;
@@ -258,11 +262,7 @@ function My() {
 function Links() {
   return (
     <section className="mt-8">
-      <div className="grid gap-2">
-        <button onClick={() => openLink(SITES.builder)} className="h-14 rounded-2xl bg-gradient-to-b from-sand-light to-sand text-moss-deep font-semibold inline-flex items-center justify-center gap-2"><Sparkles size={19} />Билдер персонажа</button>
-        <button onClick={() => openLink(SITES.sheet)} className="h-14 rounded-2xl bg-moss border border-sand/60 text-sand-light font-semibold inline-flex items-center justify-center gap-2"><ScrollText size={19} />Заполнить лист персонажа</button>
-      </div>
-      <div className="text-xs text-cream/50 mt-5 mb-2 text-center">Наши сайты и каналы</div>
+      <div className="text-xs text-cream/50 mb-2 text-center">Наши сайты и каналы</div>
       <div className="grid grid-cols-2 gap-2">
         <button onClick={() => openLink(SITES.sheet)} className="h-11 rounded-xl border border-moss-light text-sm text-cream/85">Сайт листов</button>
         <button onClick={() => openLink(SITES.builder)} className="h-11 rounded-xl border border-moss-light text-sm text-cream/85">Сборка персонажа</button>
