@@ -1,0 +1,484 @@
+{
+  "format": "dnd-content-pack",
+  "format_version": 1,
+  "ruleset": "5e-2014",
+  "pack_id": "dnd_2014_races_pack_02",
+  "pack_name": "D&D 5e (2014) — Виды (Часть 2)",
+  "pack_version": 1,
+  "language": "ru",
+  "author": "Авторский структурированный справочник механик",
+  "description": "Вторая часть пакета видов для правил 2014 года: Человек, Драконорождённый, Гном.",
+  "sources": [
+    {
+      "id": "phb_2014",
+      "name": "Player's Handbook (2014)"
+    }
+  ],
+  "classes": [],
+  "subclasses": [],
+  "races": [
+    {
+      "id": "human",
+      "name": "Человек",
+      "name_en": "Human",
+      "source": "Player's Handbook (2014)",
+      "summary": "Самый универсальный и амбициозный народ.",
+      "description": "Люди — самый молодой и разнообразный народ. Они не обладают тёмным зрением или долголетием, но их амбиции и приспособляемость позволяют им достичь вершин в любой сфере.",
+      "size": "Medium",
+      "speed": 30,
+      "ability_score_increase": {
+        "strength": 1,
+        "dexterity": 1,
+        "constitution": 1,
+        "intelligence": 1,
+        "wisdom": 1,
+        "charisma": 1
+      },
+      "age": {
+        "adulthood": 18,
+        "lifespan": 100
+      },
+      "alignment": "Склонны к любому мировоззрению.",
+      "languages": [
+        "Общий",
+        "Один дополнительный на выбор"
+      ],
+      "proficiencies": {
+        "skills": [],
+        "weapons": [],
+        "armor": []
+      },
+      "subrace_title": "Вариант",
+      "traits": [],
+      "subraces": [
+        {
+          "id": "human_variant",
+          "name": "Вариант человека",
+          "name_en": "Variant Human",
+          "source": "Player's Handbook (2014)",
+          "summary": "Более специализированный человек с чертой.",
+          "ability_score_increase": {
+            "strength": 1,
+            "dexterity": 1
+          },
+          "traits": [
+            {
+              "id": "human_variant_skill",
+              "name": "Навык",
+              "name_en": "Skill",
+              "description": "Вы получаете владение одним навыком на выбор.",
+              "effects": [
+                {
+                  "type": "note",
+                  "text": "Один навык на выбор"
+                }
+              ]
+            },
+            {
+              "id": "human_variant_feat",
+              "name": "Черта",
+              "name_en": "Feat",
+              "description": "Вы получаете одну черту на выбор.",
+              "effects": [
+                {
+                  "type": "note",
+                  "text": "Одна черта на выбор"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dragonborn",
+      "name": "Драконорождённый",
+      "name_en": "Dragonborn",
+      "source": "Player's Handbook (2014)",
+      "summary": "Гордый народ с драконьей кровью.",
+      "description": "Драконорождённые — высокие и мускулистые существа с чешуёй, напоминающие драконов. Они гордятся своей честью и древним наследием.",
+      "size": "Medium",
+      "speed": 30,
+      "ability_score_increase": {
+        "strength": 2,
+        "charisma": 1
+      },
+      "age": {
+        "adulthood": 15,
+        "lifespan": 80
+      },
+      "alignment": "Склонны к добру и закону, но бывают и злыми.",
+      "languages": [
+        "Общий",
+        "Драконий"
+      ],
+      "proficiencies": {
+        "skills": [],
+        "weapons": [],
+        "armor": []
+      },
+      "subrace_title": "Драконье наследие",
+      "traits": [
+        {
+          "id": "dragonborn_breath",
+          "name": "Оружие дыхания",
+          "name_en": "Breath Weapon",
+          "description": "Вы можете действием выдохнуть стихийную энергию (зависит от наследия). Цели совершают спасбросок, урон 2к6 (растёт с уровнем).",
+          "action": "action",
+          "uses": {
+            "proficiency": true
+          },
+          "recharge": "short",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Дыхание: 2к6 урона (3к6 на 6 ур. и т.д.)"
+            }
+          ]
+        },
+        {
+          "id": "dragonborn_resistance",
+          "name": "Сопротивление урону",
+          "name_en": "Damage Resistance",
+          "description": "Вы получаете сопротивление урону, связанному с вашим драконьим наследием.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Сопротивление стихии наследия"
+            }
+          ]
+        }
+      ],
+      "subraces": [
+        {
+          "id": "black_dragon",
+          "name": "Чёрный дракон",
+          "name_en": "Black Dragon",
+          "source": "Player's Handbook (2014)",
+          "summary": "Наследие кислоты.",
+          "traits": [
+            {
+              "id": "black_breath",
+              "name": "Дыхание кислотой",
+              "description": "Кислота, спасбросок Ловкости (линия 30 фт).",
+              "effects": [
+                {
+                  "type": "note",
+                  "text": "Кислота, Ловкость"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "blue_dragon",
+          "name": "Синий дракон",
+          "name_en": "Blue Dragon",
+          "source": "Player's Handbook (2014)",
+          "summary": "Наследие электричества.",
+          "traits": [
+            {
+              "id": "blue_breath",
+              "name": "Дыхание молнией",
+              "description": "Электричество, спасбросок Ловкости (линия 30 фт).",
+              "effects": [
+                {
+                  "type": "note",
+                  "text": "Электричество, Ловкость"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "brass_dragon",
+          "name": "Латунный дракон",
+          "name_en": "Brass Dragon",
+          "source": "Player's Handbook (2014)",
+          "summary": "Наследие огня.",
+          "traits": [
+            {
+              "id": "brass_breath",
+              "name": "Дыхание огнём",
+              "description": "Огонь, спасбросок Ловкости (линия 30 фт).",
+              "effects": [
+                {
+                  "type": "note",
+                  "text": "Огонь, Ловкость"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "bronze_dragon",
+          "name": "Бронзовый дракон",
+          "name_en": "Bronze Dragon",
+          "source": "Player's Handbook (2014)",
+          "summary": "Наследие электричества.",
+          "traits": [
+            {
+              "id": "bronze_breath",
+              "name": "Дыхание молнией",
+              "description": "Электричество, спасбросок Ловкости (линия 30 фт).",
+              "effects": [
+                {
+                  "type": "note",
+                  "text": "Электричество, Ловкость"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "copper_dragon",
+          "name": "Медный дракон",
+          "name_en": "Copper Dragon",
+          "source": "Player's Handbook (2014)",
+          "summary": "Наследие кислоты.",
+          "traits": [
+            {
+              "id": "copper_breath",
+              "name": "Дыхание кислотой",
+              "description": "Кислота, спасбросок Ловкости (линия 30 фт).",
+              "effects": [
+                {
+                  "type": "note",
+                  "text": "Кислота, Ловкость"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "gold_dragon",
+          "name": "Золотой дракон",
+          "name_en": "Gold Dragon",
+          "source": "Player's Handbook (2014)",
+          "summary": "Наследие огня.",
+          "traits": [
+            {
+              "id": "gold_breath",
+              "name": "Дыхание огнём",
+              "description": "Огонь, спасбросок Ловкости (конус 15 фт).",
+              "effects": [
+                {
+                  "type": "note",
+                  "text": "Огонь, Ловкость"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "green_dragon",
+          "name": "Зелёный дракон",
+          "name_en": "Green Dragon",
+          "source": "Player's Handbook (2014)",
+          "summary": "Наследие яда.",
+          "traits": [
+            {
+              "id": "green_breath",
+              "name": "Дыхание ядом",
+              "description": "Яд, спасбросок Телосложения (конус 15 фт).",
+              "effects": [
+                {
+                  "type": "note",
+                  "text": "Яд, Телосложение"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "red_dragon",
+          "name": "Красный дракон",
+          "name_en": "Red Dragon",
+          "source": "Player's Handbook (2014)",
+          "summary": "Наследие огня.",
+          "traits": [
+            {
+              "id": "red_breath",
+              "name": "Дыхание огнём",
+              "description": "Огонь, спасбросок Ловкости (конус 15 фт).",
+              "effects": [
+                {
+                  "type": "note",
+                  "text": "Огонь, Ловкость"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "silver_dragon",
+          "name": "Серебряный дракон",
+          "name_en": "Silver Dragon",
+          "source": "Player's Handbook (2014)",
+          "summary": "Наследие холода.",
+          "traits": [
+            {
+              "id": "silver_breath",
+              "name": "Дыхание холодом",
+              "description": "Холод, спасбросок Телосложения (конус 15 фт).",
+              "effects": [
+                {
+                  "type": "note",
+                  "text": "Холод, Телосложение"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "white_dragon",
+          "name": "Белый дракон",
+          "name_en": "White Dragon",
+          "source": "Player's Handbook (2014)",
+          "summary": "Наследие холода.",
+          "traits": [
+            {
+              "id": "white_breath",
+              "name": "Дыхание холодом",
+              "description": "Холод, спасбросок Телосложения (конус 15 фт).",
+              "effects": [
+                {
+                  "type": "note",
+                  "text": "Холод, Телосложение"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gnome",
+      "name": "Гном",
+      "name_en": "Gnome",
+      "source": "Player's Handbook (2014)",
+      "summary": "Маленький народ изобретателей и иллюзионистов.",
+      "description": "Гномы — небольшие, любопытные существа с острым умом. Они обожают изобретать, шутить и изучать магию.",
+      "size": "Small",
+      "speed": 25,
+      "ability_score_increase": {
+        "intelligence": 2
+      },
+      "age": {
+        "adulthood": 40,
+        "lifespan": 500
+      },
+      "alignment": "Склонны к добру и хаосу.",
+      "languages": [
+        "Общий",
+        "Гномий"
+      ],
+      "proficiencies": {
+        "skills": [],
+        "weapons": [],
+        "armor": []
+      },
+      "subrace_title": "Подраса",
+      "traits": [
+        {
+          "id": "gnome_darkvision",
+          "name": "Тёмное зрение",
+          "name_en": "Darkvision",
+          "description": "Вы видите в темноте на расстоянии 60 футов.",
+          "effects": [
+            {
+              "type": "darkvision",
+              "value": 60
+            }
+          ]
+        },
+        {
+          "id": "gnome_cunning",
+          "name": "Гномья хитрость",
+          "name_en": "Gnome Cunning",
+          "description": "Вы получаете преимущество на все спасброски Интеллекта, Мудрости и Харизмы от магии.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Преимущество на спасброски от магии (ИНТ, МДР, ХАР)"
+            }
+          ]
+        }
+      ],
+      "subraces": [
+        {
+          "id": "forest_gnome",
+          "name": "Лесной гном",
+          "name_en": "Forest Gnome",
+          "source": "Player's Handbook (2014)",
+          "summary": "Скрытные гномы с магией иллюзий и связью с природой.",
+          "ability_score_increase": {
+            "dexterity": 1
+          },
+          "traits": [
+            {
+              "id": "forest_gnome_illusion",
+              "name": "Природная иллюзия",
+              "name_en": "Natural Illusionist",
+              "description": "Вы знаете заговор Малая иллюзия. Интеллект — базовая характеристика.",
+              "effects": [
+                {
+                  "type": "note",
+                  "text": "Заговор Малая иллюзия"
+                }
+              ]
+            },
+            {
+              "id": "forest_gnome_speak",
+              "name": "Разговор с маленькими зверями",
+              "name_en": "Speak with Small Beasts",
+              "description": "Вы можете общаться с маленькими зверями.",
+              "effects": [
+                {
+                  "type": "note",
+                  "text": "Общение с мелкими зверями"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "rock_gnome",
+          "name": "Скальный гном",
+          "name_en": "Rock Gnome",
+          "source": "Player's Handbook (2014)",
+          "summary": "Изобретательные гномы, создающие механизмы.",
+          "ability_score_increase": {
+            "constitution": 1
+          },
+          "traits": [
+            {
+              "id": "rock_gnome_lore",
+              "name": "Знание ремесленника",
+              "name_en": "Artificer's Lore",
+              "description": "Вы добавляете удвоенный бонус мастерства к проверкам Истории, связанным с магическими, алхимическими или техническими предметами.",
+              "effects": [
+                {
+                  "type": "note",
+                  "text": "Удвоенный бонус к Истории (магия/техника)"
+                }
+              ]
+            },
+            {
+              "id": "rock_gnome_tinker",
+              "name": "Мастер-изобретатель",
+              "name_en": "Tinker",
+              "description": "Вы владеете инструментами ремонтника и можете создавать маленькие механизмы.",
+              "effects": [
+                {
+                  "type": "note",
+                  "text": "Владение инструментами ремонтника"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
