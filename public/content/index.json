@@ -1,6 +1,7 @@
 {
   "packs": [
     "srd_subclasses_2014.json",
-    "dnd_2014_backgrounds_master.json"
+    "dnd_2014_backgrounds_master.json",
+    "dnd_2014_races_pack_06.json"
   ]
 }
