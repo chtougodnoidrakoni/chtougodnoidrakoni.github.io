@@ -8,6 +8,7 @@
     "dnd_2014_druid_volume_01.json",
     "dnd_2014_fighter_volume_01.json",
     "dnd_2014_barbarian_volume_01.json",
-    "dnd_2014_feats_master.json"
+    "dnd_2014_feats_master.json",
+    "phb2014_backgrounds.json"
   ]
 }
