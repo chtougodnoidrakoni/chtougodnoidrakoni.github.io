@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { ArrowLeft, CalendarDays, Crown, ImagePlus, Plus, Settings, Sparkles, Swords, ScrollText, Users, X } from 'lucide-react';
+import { ArrowLeft, CalendarDays, Crown, Info, Cake, Coins, Heart, Ticket, ChevronDown, ImagePlus, Plus, Settings, Sparkles, Swords, ScrollText, Users, X } from 'lucide-react';
 import { Btn, Field, TextIn } from '../Panels';
 import { api, fmtDay, fmtTime, imgUrl, loadConfig, toIso, toLocal, type Game, type Player, type Role } from './api';
 import { confirmBox, haptic, openLink, setupTelegram, tg } from './tg';
@@ -23,7 +23,7 @@ export function priceOf(g: { price: string }): number | null {
 }
 export const SYSTEMS = ['D&D 2014', 'D&D 2024', 'Зов Ктулху', 'Клинки во тьме', 'Киберпанк RED'];
 
-type View = { name: 'list' } | { name: 'game'; id: number } | { name: 'my' } | { name: 'admin' } | { name: 'edit'; id?: number; copy?: number; day?: string; room?: 'red' | 'green' };
+type View = { name: 'list' } | { name: 'game'; id: number } | { name: 'my' } | { name: 'info' } | { name: 'admin' } | { name: 'edit'; id?: number; copy?: number; day?: string; room?: 'red' | 'green' };
 const parseHash = (): View => {
   const h = location.hash.replace(/^#/, '');
   const g = h.match(/^game\/(\d+)/); if (g) return { name: 'game', id: +g[1]! };
@@ -31,6 +31,7 @@ const parseHash = (): View => {
   const c = h.match(/^copy\/(\d+)/); if (c) return { name: 'edit', copy: +c[1]! };
   const n = h.match(/^new(?:\/(\d{4}-\d{2}-\d{2})\/(red|green))?$/); if (n) return { name: 'edit', day: n[1], room: n[2] as 'red' | 'green' | undefined };
   if (h === 'my') return { name: 'my' };
+  if (h === 'info') return { name: 'info' };
   if (h === 'admin') return { name: 'admin' };
   return { name: 'list' };
 };
@@ -57,7 +58,7 @@ export function App() {
   return (
     <div className="min-h-dvh pb-[max(1.5rem,env(safe-area-inset-bottom))]">
       <div className="max-w-xl mx-auto px-4 pt-[max(.75rem,env(safe-area-inset-top))]">
-        {view.name === 'list' || view.name === 'my' || view.name === 'admin' ? (
+        {view.name === 'list' || view.name === 'my' || view.name === 'info' || view.name === 'admin' ? (
           <>
             <header className="flex items-center gap-3 pt-2">
               <img src={`${ROOT}icons/icon-192.png`} alt="" className="w-12 h-12 rounded-full" />
@@ -71,9 +72,9 @@ export function App() {
               <button onClick={() => openLink(SITES.sheet)} className="h-12 rounded-2xl bg-moss border border-sand/60 text-sand-light font-semibold text-sm inline-flex items-center justify-center gap-1.5"><ScrollText size={17} />Лист персонажа</button>
             </div>
             <nav className="flex gap-1.5 mt-3 p-1 rounded-2xl bg-moss-deep/70 border border-moss-light/60">
-              {([['', 'Игры', <Swords key="s" size={16} />], ['my', 'Мои записи', <CalendarDays key="c" size={16} />], ...(staff ? [['admin', 'Управление', <Settings key="g" size={16} />]] : [])] as [string, string, ReactNode][]).map(([h, t, icon]) => {
+              {([['', 'Игры', <Swords key="s" size={16} />], ['my', 'Мои', <CalendarDays key="c" size={16} />], ['info', 'О клубе', <Info key="i" size={16} />], ...(staff ? [['admin', 'Админ', <Settings key="g" size={16} />]] : [])] as [string, string, ReactNode][]).map(([h, t, icon]) => {
                 const on = (view.name === 'list' && h === '') || view.name === h;
-                return <button key={h} onClick={() => go(h)} className={cx('flex-1 h-10 rounded-xl text-sm inline-flex items-center justify-center gap-1.5', on ? 'bg-sand text-moss-deep font-semibold' : 'text-cream/75')}>{icon}{t}</button>;
+                return <button key={h} onClick={() => go(h)} className={cx('flex-1 min-w-0 h-10 px-1 rounded-xl text-[13px] inline-flex items-center justify-center gap-1', on ? 'bg-sand text-moss-deep font-semibold' : 'text-cream/75')}>{icon}{t}</button>;
               })}
             </nav>
           </>
@@ -82,6 +83,7 @@ export function App() {
         {ready === 'noapi' && <div className="mt-6 rounded-2xl border border-amber-300/50 bg-amber-300/10 p-4 text-sm text-amber-100">Сервер записей ещё не подключён. Как только администратор его включит, здесь появятся игры.</div>}
         {ready === 'ok' && view.name === 'list' && <Week say={say} staff={staff} />}
         {ready === 'ok' && view.name === 'my' && <My />}
+        {view.name === 'info' && <ClubInfo />}
         {ready === 'ok' && view.name === 'game' && <GamePage id={view.id} say={say} role={role} />}
         {ready === 'ok' && view.name === 'admin' && staff && <Admin role={role} say={say} />}
         {ready === 'ok' && view.name === 'edit' && staff && <Edit id={view.id} copy={view.copy} day={view.day} room={view.room} say={say} />}
@@ -533,6 +535,69 @@ function Booking({ kind, g, onClose }: { kind: 'full' | 'rules'; g: Game; onClos
           </>
         )}
       </div>
+    </div>
+  );
+}
+
+/** Вкладка «О клубе»: тексты из закрепов канала, разложенные по разделам. */
+function InfoCard({ icon, title, open, children }: { icon: ReactNode; title: string; open?: boolean; children: ReactNode }) {
+  return (
+    <details open={open} className="group rounded-2xl bg-moss-deep/70 border border-moss-light/60 overflow-hidden">
+      <summary className="list-none cursor-pointer flex items-center gap-2.5 px-4 h-14 text-sand-light font-semibold [&::-webkit-details-marker]:hidden">
+        <span className="text-sand">{icon}</span><span className="flex-1">{title}</span>
+        <ChevronDown size={18} className="text-cream/50 transition-transform group-open:rotate-180" />
+      </summary>
+      <div className="px-4 pb-4 text-[15px] text-cream/85 leading-relaxed grid gap-2.5">{children}</div>
+    </details>
+  );
+}
+const Price = ({ t, p, children }: { t: string; p: string; children?: ReactNode }) => (
+  <div className="border-t border-moss-light/40 pt-2.5 first:border-0 first:pt-0">
+    <div className="flex justify-between gap-3"><b className="text-cream">{t}</b><span className="text-sand-light font-semibold whitespace-nowrap">{p}</span></div>
+    {children && <div className="text-sm text-cream/70 mt-0.5">{children}</div>}
+  </div>
+);
+function ClubInfo() {
+  return (
+    <div className="grid gap-2.5 mt-4 pb-4">
+      <InfoCard icon={<Heart size={18} />} title="Добро пожаловать" open>
+        <p>Ты нашёл то самое место, где длина вечера зависит от того, превратится ли друид внезапно в медведя или нет.</p>
+        <p className="text-sand-light font-semibold">Здесь тебе рады, даже если ты:</p>
+        <ul className="grid gap-1.5 list-disc pl-5">
+          <li>видел D&D только в «Очень странных делах» и думаешь, что «D20» — это гаечный ключ. Не страшно, мы всё объясним и покажем;</li>
+          <li>уже играешь, устал быть ДМ-ом или ищешь новую пати. Новых друзей ты тут точно найдёшь;</li>
+          <li>творческая личность, которая ищет повод надеть эльфийские уши. Мы такое любим и всячески поощряем;</li>
+          <li>просто ищешь, куда сходить в пятницу вечером. Мы в центре, совсем рядом с Фиолетовым.</li>
+        </ul>
+        <p className="text-sand-light font-semibold">Что у нас есть:</p>
+        <ul className="grid gap-1.5 list-disc pl-5">
+          <li>уютное место со сказочной атмосферой и стол с экраном: на него выводятся локации, есть миниатюрки и раздатка;</li>
+          <li>ваншоты и кампании с интересными сюжетами;</li>
+          <li>игры для новичков.</li>
+        </ul>
+      </InfoCard>
+      <InfoCard icon={<Coins size={18} />} title="Цены">
+        <Price t="Ваншот" p="1200 ₽" />
+        <Price t="Абонемент на кампанию" p="3900 ₽">4 игры, выходит 975 ₽ за игру. Ходите раз в две недели, время и место закреплены за вами — не нужно каждый раз думать, попадёте или нет.</Price>
+        <Price t="Выкуп стола" p="7000 ₽">Только для вашей компании, от 3 до 6 человек (6 — максимум).</Price>
+        <Price t="День рождения в ДнД-шной" p="9500 ₽">Что входит — в разделе ниже.</Price>
+      </InfoCard>
+      <InfoCard icon={<Ticket size={18} />} title="Как записаться">
+        <p>Выберите игру в расписании и напишите администратору — он подтвердит место и пришлёт реквизиты.</p>
+        <p><b className="text-cream">Предоплата — 700 ₽</b>, остаток платите на игре. Предоплата вернётся или перейдёт в депозит, если предупредите, что не сможете прийти, не позднее чем за сутки до начала.</p>
+        <Btn tone="gold" className="h-12 mt-1" onClick={() => openLink(adminLink('Здравствуйте! Хочу записаться на игру.'))}>Написать администратору</Btn>
+      </InfoCard>
+      <InfoCard icon={<Cake size={18} />} title="ДнД-день рождения">
+        <p>Проводим такие праздники с самого открытия. Что входит:</p>
+        <ul className="grid gap-1.5 list-disc pl-5">
+          <li><b className="text-cream">Сценарий под именинника.</b> Мрачная история, детектив, эпичные битвы или погружение в знакомый мир — скажите, что любите, и мы это сделаем.</li>
+          <li><b className="text-cream">Персональные листы и миниатюры</b> с портретами и предысториями. Благодаря ИИ фигурки подозрительно похожи на вас.</li>
+          <li><b className="text-cream">Поздравление со свечкой внутри игры</b> — прямо в сюжете, а не в перерыве за чаем.</li>
+          <li><b className="text-cream">4–5 часов игры</b> без посторонних: только ваша компания и приключение, которое готовили для вас.</li>
+        </ul>
+        <p className="text-sm text-cream/65">Стоимость — 9500 ₽. Пока берём игроков от 14 лет, скоро будут и детские игры.</p>
+        <Btn tone="gold" className="h-12 mt-1" onClick={() => openLink(adminLink('Здравствуйте! Хочу устроить ДнД-день рождения. Расскажите подробности?'))}>Обсудить праздник</Btn>
+      </InfoCard>
     </div>
   );
 }

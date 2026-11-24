@@ -14,7 +14,7 @@ test('Telegram-приложение: администратор создаёт �
   await as(admin, 'id=1&username=astrakhan_trener&name=Замир');
   await admin.goto('./app/');
   await expect(admin.getByText('Привет, Замир!')).toBeVisible();
-  await admin.getByRole('button', { name: 'Управление' }).click();
+  await admin.getByRole('button', { name: 'Админ' }).click();
   await admin.getByRole('button', { name: 'Новая игра' }).click();
   await admin.locator('input[type=file]').setInputFiles('public/icons/icon-512.png');
   await admin.locator('label:has-text("Название") input').fill('Тени Драккенхейма');
@@ -42,7 +42,7 @@ test('Telegram-приложение: администратор создаёт �
   await expect(day.getByText('Свободно — игра не запланирована')).toBeVisible();
   await expect(player.getByText('Поставить игру')).toHaveCount(0);
   await expect(player.locator('section[aria-label]')).toHaveCount(7);
-  await expect(player.getByRole('button', { name: 'Управление' })).toHaveCount(0);
+  await expect(player.getByRole('button', { name: 'Админ' })).toHaveCount(0);
   await player.screenshot({ path: 'e2e/shots/t1-list.png', fullPage: true });
   await card.click();
   await player.getByRole('button', { name: 'Записаться' }).click();
@@ -61,6 +61,12 @@ test('Telegram-приложение: администратор создаёт �
   await player.goto('./app/');
   await player.getByRole('button', { name: 'Следующая неделя' }).first().click();
   await expect(player.locator('section[aria-label]')).toHaveCount(7);
+  await player.getByRole('button', { name: 'О клубе' }).click();
+  await player.getByText('Цены', { exact: true }).click();
+  await expect(player.getByText('Абонемент на кампанию')).toBeVisible();
+  await player.getByText('ДнД-день рождения', { exact: true }).click();
+  await expect(player.getByRole('button', { name: 'Обсудить праздник' })).toBeVisible();
+  await player.screenshot({ path: 'e2e/shots/t4-info.png', fullPage: true });
   await player.goto('./app/#my');
   await expect(player.getByRole('button', { name: 'Тени Драккенхейма' })).toContainText('Вы записаны');
   // администратор: пустая клетка открывает новую игру с датой и комнатой
