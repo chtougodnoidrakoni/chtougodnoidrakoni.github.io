@@ -1,0 +1,616 @@
+{
+  "format": "dnd-content-pack",
+  "format_version": 1,
+  "ruleset": "5e-2014",
+  "pack_id": "dnd_2014_artificer_volume_01",
+  "pack_name": "D&D 5e (2014) — Изобретатель и специализации",
+  "pack_version": 1,
+  "language": "ru",
+  "author": "Авторский структурированный справочник механик",
+  "description": "Том контентной библиотеки: класс Изобретатель и его официальные подклассы, опубликованные для правил 2014 года. Описания механик сформулированы своими словами; это не дословная копия книг.",
+  "sources": [
+    {
+      "id": "erlw",
+      "name": "Eberron: Rising from the Last War"
+    },
+    {
+      "id": "tce",
+      "name": "Tasha's Cauldron of Everything"
+    }
+  ],
+  "classes": [
+    {
+      "id": "artificer",
+      "name": "Изобретатель",
+      "name_en": "Artificer",
+      "source": "Eberron: Rising from the Last War",
+      "summary": "Мастер изобретений, сочетающий магию с технологиями.",
+      "description": "Изобретатель — это маг-ремесленник, который использует свои знания для создания магических предметов, зелий и механизмов. Он не полагается на грубую силу или чистую магию, а использует смекалку и инструменты для поддержки союзников и уничтожения врагов.",
+      "role": "Поддержка, боец, крафтер",
+      "primary_abilities": [
+        "intelligence"
+      ],
+      "hit_die": 8,
+      "saving_throws": [
+        "constitution",
+        "intelligence"
+      ],
+      "armor_proficiencies": [
+        "light",
+        "medium",
+        "shields"
+      ],
+      "armor_text": "Лёгкие и средние доспехи, щиты",
+      "weapon_proficiencies": {
+        "simple": true,
+        "martial": false,
+        "list": []
+      },
+      "tool_proficiencies": "Воровские инструменты, набор ремонтника, набор травника",
+      "skills": {
+        "choose": 2,
+        "from": [
+          "Аркана",
+          "История",
+          "Расследование",
+          "Медицина",
+          "Природа",
+          "Внимательность",
+          "Ловкость рук"
+        ]
+      },
+      "starting_equipment": [
+        "Кожаный доспех, два кинжала и воровские инструменты",
+        "Лёгкий арбалет и 20 болтов",
+        "Набор исследователя подземелий",
+        "Набор ремонтника"
+      ],
+      "subclass_level": 3,
+      "subclass_title": "Специализация изобретателя",
+      "asi_levels": [
+        4,
+        8,
+        12,
+        16,
+        19
+      ],
+      "spellcasting": {
+        "ability": "intelligence",
+        "kind": "prepared",
+        "progression": "half_up",
+        "cantrips": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          3,
+          3,
+          3,
+          3,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "prepared": {
+          "base": "half_level_up",
+          "min": 1
+        },
+        "spell_list": "artificer"
+      },
+      "progression": [
+        {
+          "level": 1,
+          "notes": "Магическое ремесло; Использование заклинаний."
+        },
+        {
+          "level": 2,
+          "notes": "Наполнение предметов; Инструменты ремесленника."
+        },
+        {
+          "level": 3,
+          "notes": "Специализация изобретателя; Право на создание."
+        },
+        {
+          "level": 4,
+          "notes": "Увеличение характеристик."
+        },
+        {
+          "level": 5,
+          "notes": "Особенность специализации."
+        },
+        {
+          "level": 6,
+          "notes": "Компетентность в инструментах."
+        },
+        {
+          "level": 7,
+          "notes": "Вспышка гениальности."
+        },
+        {
+          "level": 8,
+          "notes": "Увеличение характеристик."
+        },
+        {
+          "level": 9,
+          "notes": "Особенность специализации."
+        },
+        {
+          "level": 10,
+          "notes": "Улучшенное наполнение предметов; Магический предмет."
+        },
+        {
+          "level": 11,
+          "notes": "Создание магических предметов."
+        },
+        {
+          "level": 12,
+          "notes": "Увеличение характеристик."
+        },
+        {
+          "level": 13,
+          "notes": "—"
+        },
+        {
+          "level": 14,
+          "notes": "Учёный-ремесленник."
+        },
+        {
+          "level": 15,
+          "notes": "Особенность специализации."
+        },
+        {
+          "level": 16,
+          "notes": "Увеличение характеристик."
+        },
+        {
+          "level": 17,
+          "notes": "—"
+        },
+        {
+          "level": 18,
+          "notes": "Мастер предметов."
+        },
+        {
+          "level": 19,
+          "notes": "Увеличение характеристик."
+        },
+        {
+          "level": 20,
+          "notes": "Душа изобретения."
+        }
+      ],
+      "features": [
+        {
+          "id": "artificer_magical_tinkering",
+          "name": "Магическое ремесло",
+          "name_en": "Magical Tinkering",
+          "level": 1,
+          "description": "Вы можете действием коснуться крошечного немагического предмета и наделить его одним из магических свойств (свет, запись сообщения, издавание запаха или звука). Эффект длится до вашего следующего продолжительного отдыха.",
+          "action": "action"
+        },
+        {
+          "id": "artificer_spellcasting",
+          "name": "Использование заклинаний",
+          "name_en": "Spellcasting",
+          "level": 1,
+          "description": "Интеллект — базовая характеристика заклинаний изобретателя. Вы готовите заклинания после продолжительного отдыха (модификатор Интеллекта + половина уровня, округление вверх, минимум 1). Вы можете использовать воровские инструменты или инструменты ремесленника как фокусировку.",
+          "action": "passive",
+          "formula": "Подготовленные заклинания = модификатор Интеллекта + половина уровня изобретателя (вверх, мин. 1)"
+        },
+        {
+          "id": "artificer_infuse_item",
+          "name": "Наполнение предметов",
+          "name_en": "Infuse Item",
+          "level": 2,
+          "description": "Вы можете наполнять немагические предметы магической силой. Вы изучаете 4 плана наполнения и получаете 2 слота для наполнения. Предметы считаются магическими, пока вы живы.",
+          "action": "other"
+        },
+        {
+          "id": "artificer_tool_expertise",
+          "name": "Инструменты ремесленника",
+          "name_en": "Tool Expertise",
+          "level": 2,
+          "description": "Вы получаете владение одним видом ремесленных инструментов.",
+          "action": "passive"
+        },
+        {
+          "id": "artificer_specialist",
+          "name": "Специализация изобретателя",
+          "name_en": "Artificer Specialist",
+          "level": 3,
+          "description": "Вы выбираете специализацию — подкласс, определяющий ваш подход к изобретениям. Специализация открывает особенности на 3, 5, 9 и 15 уровнях изобретателя.",
+          "action": "other"
+        },
+        {
+          "id": "artificer_right_tool",
+          "name": "Право на создание",
+          "name_en": "The Right Tool for the Job",
+          "level": 3,
+          "description": "Вы можете действием создать набор ремесленных инструментов в пустой руке или на земле.",
+          "action": "action"
+        },
+        {
+          "id": "artificer_asi_4",
+          "name": "Увеличение характеристик",
+          "name_en": "Ability Score Improvement",
+          "level": 4,
+          "description": "Увеличьте одну характеристику на 2 или две характеристики на 1. Вместо этого можно выбрать черту, если правила вашей игры разрешают черты.",
+          "action": "other"
+        },
+        {
+          "id": "artificer_specialist_feature_5",
+          "name": "Особенность специализации",
+          "name_en": "Artificer Specialist Feature",
+          "level": 5,
+          "description": "Вы получаете особенность выбранной специализации на 5-м уровне. Конкретный эффект определяется подклассом.",
+          "action": "passive"
+        },
+        {
+          "id": "artificer_tool_expertise_6",
+          "name": "Компетентность в инструментах",
+          "name_en": "Tool Expertise",
+          "level": 6,
+          "description": "Ваш бонус мастерства удваивается для любых проверок, использующих ваши владения ремесленными инструментами.",
+          "action": "passive"
+        },
+        {
+          "id": "artificer_flash_genius",
+          "name": "Вспышка гениальности",
+          "name_en": "Flash of Genius",
+          "level": 7,
+          "description": "Реакцией, когда вы или существо в пределах 30 футов совершает проверку характеристики или спасбросок, вы можете добавить модификатор Интеллекта к результату. Использований = модификатор Интеллекта (мин. 1), восстановление после продолжительного отдыха.",
+          "action": "reaction",
+          "range": "30 футов"
+        },
+        {
+          "id": "artificer_asi_8",
+          "name": "Увеличение характеристик",
+          "name_en": "Ability Score Improvement",
+          "level": 8,
+          "description": "Увеличьте одну характеристику на 2 или две характеристики на 1. Вместо этого можно выбрать черту, если правила вашей игры разрешают черты.",
+          "action": "other"
+        },
+        {
+          "id": "artificer_specialist_feature_9",
+          "name": "Особенность специализации",
+          "name_en": "Artificer Specialist Feature",
+          "level": 9,
+          "description": "Вы получаете особенность выбранной специализации на 9-м уровне. Конкретный эффект определяется подклассом.",
+          "action": "passive"
+        },
+        {
+          "id": "artificer_improved_infusions",
+          "name": "Улучшенное наполнение предметов",
+          "name_en": "Improved Infusions",
+          "level": 10,
+          "description": "Вы изучаете дополнительные планы наполнения и можете поддерживать больше активных наполнений.",
+          "action": "passive"
+        },
+        {
+          "id": "artificer_magic_item_adept",
+          "name": "Магический предмет",
+          "name_en": "Magic Item Adept",
+          "level": 10,
+          "description": "Вы можете настраиваться на большее количество магических предметов, и создание магических предметов обычной и необычной редкости занимает у вас в четыре раза меньше времени.",
+          "action": "passive"
+        },
+        {
+          "id": "artificer_spell_storing_item",
+          "name": "Создание магических предметов",
+          "name_en": "Spell-Storing Item",
+          "level": 11,
+          "description": "После продолжительного отдыха вы можете коснуться предмета и поместить в него заклинание 1-го или 2-го уровня из списка изобретателя. Существо с предметом может активировать его, используя вашу характеристику заклинаний.",
+          "action": "other"
+        },
+        {
+          "id": "artificer_asi_12",
+          "name": "Увеличение характеристик",
+          "name_en": "Ability Score Improvement",
+          "level": 12,
+          "description": "Увеличьте одну характеристику на 2 или две характеристики на 1. Вместо этого можно выбрать черту, если правила вашей игры разрешают черты.",
+          "action": "other"
+        },
+        {
+          "id": "artificer_savant",
+          "name": "Учёный-ремесленник",
+          "name_en": "Magic Item Savant",
+          "level": 14,
+          "description": "Вы игнорируете все требования класса, расы, заклинаний и уровня при настройке на магические предметы.",
+          "action": "passive"
+        },
+        {
+          "id": "artificer_specialist_feature_15",
+          "name": "Особенность специализации",
+          "name_en": "Artificer Specialist Feature",
+          "level": 15,
+          "description": "Вы получаете особенность выбранной специализации на 15-м уровне. Конкретный эффект определяется подклассом.",
+          "action": "passive"
+        },
+        {
+          "id": "artificer_asi_16",
+          "name": "Увеличение характеристик",
+          "name_en": "Ability Score Improvement",
+          "level": 16,
+          "description": "Увеличьте одну характеристику на 2 или две характеристики на 1. Вместо этого можно выбрать черту, если правила вашей игры разрешают черты.",
+          "action": "other"
+        },
+        {
+          "id": "artificer_master",
+          "name": "Мастер предметов",
+          "name_en": "Magic Item Master",
+          "level": 18,
+          "description": "Вы можете настраиваться на шесть магических предметов одновременно.",
+          "action": "passive"
+        },
+        {
+          "id": "artificer_asi_19",
+          "name": "Увеличение характеристик",
+          "name_en": "Ability Score Improvement",
+          "level": 19,
+          "description": "Увеличьте одну характеристику на 2 или две характеристики на 1. Вместо этого можно выбрать черту, если правила вашей игры разрешают черты.",
+          "action": "other"
+        },
+        {
+          "id": "artificer_soul",
+          "name": "Душа изобретения",
+          "name_en": "Soul of Artifice",
+          "level": 20,
+          "description": "Вы получаете +1 к спасброскам за каждый активный магический предмет, на который вы настроены. Если вы падаете до 0 хитов, вы можете реакцией уничтожить одно из своих наполнений, чтобы остаться с 1 хитом.",
+          "action": "passive"
+        }
+      ],
+      "subclasses": [
+        {
+          "id": "artificer_alchemist",
+          "name": "Алхимик",
+          "name_en": "Alchemist",
+          "source": "Eberron: Rising from the Last War",
+          "summary": "Специалист по зельям, ядам и химии.",
+          "description": "Алхимик смешивает магию и химию, создавая целебные эликсиры и взрывчатые вещества.",
+          "features": [
+            {
+              "id": "artificer_alchemist_spells",
+              "name": "Заклинания специализации",
+              "name_en": "Tool Proficiency",
+              "level": 3,
+              "description": "Вы получаете владение набором алхимика. Если вы уже владеете, вы получаете другой набор ремесленника.",
+              "action": "passive"
+            },
+            {
+              "id": "artificer_alchemist_savant",
+              "name": "Знаток алхимии",
+              "name_en": "Alchemist Savant",
+              "level": 3,
+              "description": "Вы можете использовать набор алхимика как фокусировку для заклинаний. Вы также можете за 10 минут создать экспериментальный эликсир, который даёт случайный эффект.",
+              "action": "other"
+            },
+            {
+              "id": "artificer_alchemist_elixir",
+              "name": "Эликсиры",
+              "name_en": "Alchemical Homunculus",
+              "level": 5,
+              "description": "Вы создаёте гомункула-алхимика, который может атаковать и наносить урон кислотой или ядом.",
+              "action": "action"
+            },
+            {
+              "id": "artificer_alchemist_restorative",
+              "name": "Восстанавливающие реагенты",
+              "name_en": "Restorative Reagents",
+              "level": 9,
+              "description": "Существа, которые пьют ваши экспериментальные эликсиры, получают временные хиты.",
+              "action": "passive"
+            },
+            {
+              "id": "artificer_alchemist_mastery",
+              "name": "Мастерство алхимии",
+              "name_en": "Chemical Mastery",
+              "level": 15,
+              "description": "Вы получаете сопротивление урону кислотой и ядом, а также иммунитет к состоянию отравления. Ваш гомункул наносит удвоенный урон.",
+              "action": "passive"
+            }
+          ]
+        },
+        {
+          "id": "artificer_artillerist",
+          "name": "Артиллерист",
+          "name_en": "Artillerist",
+          "source": "Eberron: Rising from the Last War",
+          "summary": "Специалист по взрывчатке и магическим орудиям.",
+          "description": "Артиллерист создаёт магические пушки и взрывные устройства для контроля поля боя.",
+          "features": [
+            {
+              "id": "artificer_artillerist_proficiency",
+              "name": "Дополнительное владение",
+              "name_en": "Tool Proficiency",
+              "level": 3,
+              "description": "Вы получаете владение набором резчика по дереву. Вы также получаете владение набором ремонтника.",
+              "action": "passive"
+            },
+            {
+              "id": "artificer_artillerist_spells",
+              "name": "Заклинания артиллериста",
+              "name_en": "Artillerist Spells",
+              "level": 3,
+              "description": "Вы получаете дополнительные заклинания, которые всегда подготовлены.",
+              "action": "passive"
+            },
+            {
+              "id": "artificer_artillerist_cannon",
+              "name": "Магическая пушка",
+              "name_en": "Eldritch Cannon",
+              "level": 3,
+              "description": "Действием вы можете создать магическую пушку (размером с кулак или с тележку). Пушка может стрелять огнём, силовым полем или лечить союзников. Длится 1 час.",
+              "action": "action"
+            },
+            {
+              "id": "artificer_artillerist_arc",
+              "name": "Дуговой выстрел",
+              "name_en": "Arcane Firearm",
+              "level": 5,
+              "description": "Вы можете превратить посох, жезл или палочку в магическое оружие, добавляющее 1к8 к урону заклинаний.",
+              "action": "passive"
+            },
+            {
+              "id": "artificer_artillerist_explosive",
+              "name": "Взрывной выстрел",
+              "name_en": "Explosive Cannon",
+              "level": 9,
+              "description": "Ваша пушка получает дополнительный урон (2к8 вместо 1к8). Вы также можете действием взорвать пушку, нанеся урон по площади.",
+              "action": "action"
+            },
+            {
+              "id": "artificer_artillerist_master",
+              "name": "Мастер-артиллерист",
+              "name_en": "Fortified Position",
+              "level": 15,
+              "description": "Вы получаете преимущество на спасброски Ловкости от взрывов. Вы можете иметь две пушки одновременно, и они дают укрытие наполовину.",
+              "action": "passive"
+            }
+          ]
+        },
+        {
+          "id": "artificer_battle_smith",
+          "name": "Кузнец боевых искусств",
+          "name_en": "Battle Smith",
+          "source": "Eberron: Rising from the Last War",
+          "summary": "Боевой изобретатель с механическим защитником.",
+          "description": "Кузнец боевых искусств сочетает магию с боевыми навыками, используя стального защитника и усиленное оружие.",
+          "features": [
+            {
+              "id": "artificer_battlesmith_proficiency",
+              "name": "Дополнительное владение",
+              "name_en": "Tool Proficiency",
+              "level": 3,
+              "description": "Вы получаете владение набором кузнеца и боевым оружием.",
+              "action": "passive"
+            },
+            {
+              "id": "artificer_battlesmith_spells",
+              "name": "Заклинания кузнеца",
+              "name_en": "Battle Smith Spells",
+              "level": 3,
+              "description": "Вы получаете дополнительные заклинания, которые всегда подготовлены.",
+              "action": "passive"
+            },
+            {
+              "id": "artificer_battlesmith_steel",
+              "name": "Стальной защитник",
+              "name_en": "Steel Defender",
+              "level": 3,
+              "description": "Вы создаёте механического защитника. Он действует в ваш ход, подчиняясь командам, и может атаковать. Вы можете потратить ячейку заклинаний, чтобы восстановить его хиты.",
+              "action": "action"
+            },
+            {
+              "id": "artificer_battlesmith_weapon",
+              "name": "Магическое оружие",
+              "name_en": "Battle Ready",
+              "level": 3,
+              "description": "Вы используете модификатор Интеллекта вместо Силы или Ловкости для атак и урона магическим оружием.",
+              "action": "passive"
+            },
+            {
+              "id": "artificer_battlesmith_extra",
+              "name": "Дополнительная атака",
+              "name_en": "Extra Attack",
+              "level": 5,
+              "description": "При действии Атака вы можете атаковать дважды.",
+              "action": "passive"
+            },
+            {
+              "id": "artificer_battlesmith_arcane",
+              "name": "Тайный удар",
+              "name_en": "Arcane Jolt",
+              "level": 9,
+              "description": "Когда вы или ваш защитник попадаете магической атакой, вы можете нанести дополнительный урон силовым полем или восстановить хиты.",
+              "action": "other"
+            },
+            {
+              "id": "artificer_battlesmith_improved",
+              "name": "Улучшенный защитник",
+              "name_en": "Improved Defender",
+              "level": 15,
+              "description": "Ваш защитник получает +2 к КД и дополнительные хиты. Его атаки наносят дополнительный урон силовым полем.",
+              "action": "passive"
+            }
+          ]
+        },
+        {
+          "id": "artificer_armorer",
+          "name": "Бронник",
+          "name_en": "Armorer",
+          "source": "Tasha's Cauldron of Everything",
+          "summary": "Изобретатель, превращающий доспехи в оружие.",
+          "description": "Бронник модифицирует доспехи, превращая их в мощное оружие и инструмент поддержки.",
+          "features": [
+            {
+              "id": "artificer_armorer_proficiency",
+              "name": "Дополнительное владение",
+              "name_en": "Tools of the Trade",
+              "level": 3,
+              "description": "Вы получаете владение тяжёлыми доспехами и набором кузнеца.",
+              "action": "passive"
+            },
+            {
+              "id": "artificer_armorer_spells",
+              "name": "Заклинания бронника",
+              "name_en": "Armorer Spells",
+              "level": 3,
+              "description": "Вы получаете дополнительные заклинания, которые всегда подготовлены.",
+              "action": "passive"
+            },
+            {
+              "id": "artificer_armorer_model",
+              "name": "Модель доспеха",
+              "name_en": "Arcane Armor",
+              "level": 3,
+              "description": "Вы превращаете доспех в магический. Вы выбираете модель: Защитник (урон) или Инфильтратор (скрытность и скорость).",
+              "action": "other"
+            },
+            {
+              "id": "artificer_armorer_gauntlets",
+              "name": "Силовые перчатки",
+              "name_en": "Armor Model",
+              "level": 3,
+              "description": "Ваш доспех даёт вам оружие, зависящее от модели: силовые перчатки (урон) или молниеносная пусковая установка (дальний бой).",
+              "action": "passive"
+            },
+            {
+              "id": "artificer_armorer_extra",
+              "name": "Дополнительная атака",
+              "name_en": "Extra Attack",
+              "level": 5,
+              "description": "При действии Атака вы можете атаковать дважды.",
+              "action": "passive"
+            },
+            {
+              "id": "artificer_armorer_perfected",
+              "name": "Совершенный доспех",
+              "name_en": "Perfected Armor",
+              "level": 9,
+              "description": "Ваша модель получает дополнительные бонусы. Защитник отталкивает врагов, Инфильтратор даёт полёт.",
+              "action": "passive"
+            },
+            {
+              "id": "artificer_armorer_infiltrator",
+              "name": "Улучшенный доспех",
+              "name_en": "Armor Modifications",
+              "level": 15,
+              "description": "Вы можете настроить доспех на большее количество наполнений.",
+              "action": "passive"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "subclasses": []
+}
