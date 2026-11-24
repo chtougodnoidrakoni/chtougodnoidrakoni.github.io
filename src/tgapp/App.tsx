@@ -12,6 +12,15 @@ const LINKS = [
   { t: 'Чат клуба', u: 'https://t.me/+a1t_Jic-Wpc1ZDIy' },
   { t: 'Instagram', u: 'https://www.instagram.com/chto_ugodno_i_drakoni' },
 ];
+/** Кому писать по записи и предоплате. */
+export const ADMIN = 'oh_katiakaterina';
+export const PREPAY = 700;
+const adminLink = (text: string) => `https://t.me/${ADMIN}?text=${encodeURIComponent(text)}`;
+/** Цена игры числом из текстового поля «Стоимость» («1200 ₽ за игру…» → 1200). */
+export function priceOf(g: { price: string }): number | null {
+  const m = g.price.replace(/(\d)[\s\u00a0](?=\d{3}\b)/g, '$1').match(/\d+/);
+  return m ? Number(m[0]) : null;
+}
 export const SYSTEMS = ['D&D 2014', 'D&D 2024', 'Зов Ктулху', 'Клинки во тьме', 'Киберпанк RED'];
 
 type View = { name: 'list' } | { name: 'game'; id: number } | { name: 'my' } | { name: 'admin' } | { name: 'edit'; id?: number; copy?: number; day?: string; room?: 'red' | 'green' };
@@ -287,22 +296,37 @@ function GamePage({ id, say, role }: { id: number; say: (t: string) => void; rol
     if (role === 'guest') { say('Откройте приложение из Telegram, чтобы записаться'); return; }
     setBusy(true);
     try {
-      if (g.mine) { if (!(await confirmBox(g.mine === 'main' ? 'Отменить запись? Место отдадим следующему из очереди.' : 'Выйти из листа ожидания?'))) return; await api.leave(g.id); haptic('light'); say('Запись отменена'); }
-      else { const r = await api.join(g.id); haptic('success'); say(r.status === 'main' ? 'Вы записаны! Бот напомнит об игре.' : `Мест нет — вы в листе ожидания, место ${r.position}`); }
+      if (g.mine) {
+        const late = Date.parse(g.starts_at) - Date.now() < 24 * 3600e3;
+        const msg = g.mine === 'main' ? `Отменить запись?${late ? ' До игры меньше суток — предоплата не вернётся и не перейдёт в депозит.' : ' Предоплата вернётся или перейдёт в депозит.'}` : 'Выйти из листа ожидания?';
+        if (!(await confirmBox(msg))) return; await api.leave(g.id); haptic('light'); say('Запись отменена'); }
+      else if (!free(g)) { haptic('warning'); setSheet('full'); return; }
+      else { setSheet('rules'); return; }
       await load();
     } catch (e) { haptic('error'); say((e as Error).message); } finally { setBusy(false); }
   }, [g, busy, role, say, load]);
-  const label = !g ? '' : g.mine === 'main' ? 'Отменить запись' : g.mine === 'wait' ? 'Выйти из очереди' : free(g) ? 'Записаться' : 'В лист ожидания';
+  const [sheet, setSheet] = useState<null | 'full' | 'rules' | 'done'>(null);
+  const confirmJoin = async () => {
+    if (!g || busy) return;
+    setBusy(true);
+    try {
+      const r = await api.join(g.id);
+      if (r.status === 'main') { haptic('success'); setSheet('done'); }
+      else { await api.leave(g.id).catch(() => undefined); haptic('warning'); setSheet('full'); }
+      await load();
+    } catch (e) { haptic('error'); say((e as Error).message); setSheet(null); } finally { setBusy(false); }
+  };
+  const label = !g ? '' : g.mine === 'main' ? 'Отменить запись' : g.mine === 'wait' ? 'Выйти из очереди' : free(g) ? 'Записаться' : 'Мест нет';
   // большая нижняя кнопка Telegram
   const act = useRef(action); act.current = action;
   useEffect(() => {
     if (!tg || !g) return;
     const f = () => void act.current();
-    if (closed) { tg.MainButton.hide(); return; }
+    if (closed || sheet) { tg.MainButton.hide(); return; }
     tg.MainButton.setParams({ text: label, color: g.mine ? '#3a4a40' : '#aa9173', text_color: g.mine ? '#e8dfcf' : '#1f2521' }).show().onClick(f);
     if (busy) tg.MainButton.showProgress(); else tg.MainButton.hideProgress();
     return () => { tg?.MainButton.offClick(f); tg?.MainButton.hide(); };
-  }, [g, closed, label, busy]);
+  }, [g, closed, label, busy, sheet]);
   if (!d || !g) return <div className="py-16 text-center text-cream/60">Загружаю…</div>;
   const main = d.players.filter((p) => p.status === 'main'); const wait = d.players.filter((p) => p.status === 'wait');
   const toggleAtt = async (p: Player) => { await api.act(g.id, 'attended', { user_id: p.user_id, value: !p.attended }); void load(); };
@@ -347,6 +371,7 @@ function GamePage({ id, say, role }: { id: number; say: (t: string) => void; rol
           <Btn className="text-sm" onClick={() => openLink(SITES.builder)}><Sparkles size={16} />Собрать персонажа</Btn>
           <Btn className="text-sm" onClick={() => openLink(SITES.sheet)}><ScrollText size={16} />Заполнить лист</Btn>
         </div>
+        {sheet && <Booking kind={sheet} g={g} busy={busy} onClose={() => setSheet(null)} onJoin={confirmJoin} />}
         {d.canEdit && (
           <div className="mt-6 rounded-2xl border border-moss-light p-3 grid gap-2">
             <div className="text-sm text-sand-light inline-flex items-center gap-1.5"><Crown size={15} />Управление игрой</div>
@@ -407,7 +432,7 @@ async function compress(file: File): Promise<{ mime: string; data: string; url: 
 }
 
 function Edit({ id, copy, day, room, say }: { id?: number; copy?: number; day?: string; room?: 'red' | 'green'; say: (t: string) => void }) {
-  const [f, setF] = useState<Partial<Game>>({ room: room ?? 'red', seats: 6, duration_min: 240, system: 'D&D 2014' });
+  const [f, setF] = useState<Partial<Game>>({ room: room ?? 'red', seats: 6, duration_min: 240, system: 'D&D 2014', price: '1200 ₽' });
   const [when, setWhen] = useState(day ? `${day}T18:00` : '');
   const [preview, setPreview] = useState('');
   const [busy, setBusy] = useState(false);
@@ -464,10 +489,69 @@ function Edit({ id, copy, day, room, say }: { id?: number; copy?: number; day?: 
         <div className="grid grid-cols-3 gap-2">
           <Field label="Мест"><TextIn inputMode="numeric" value={String(f.seats ?? 6)} onChange={(e) => set({ seats: Math.max(1, Math.min(30, parseInt(e.target.value, 10) || 1)) })} /></Field>
           <Field label="Уровень"><TextIn value={f.level ?? ''} placeholder="3" onChange={(e) => set({ level: e.target.value })} /></Field>
-          <Field label="Цена"><TextIn value={f.price ?? ''} placeholder="бесплатно" onChange={(e) => set({ price: e.target.value })} /></Field>
+          <Field label="Цена"><TextIn value={f.price ?? ''} placeholder="1200 ₽" onChange={(e) => set({ price: e.target.value })} /></Field>
         </div>
         <Field label="Описание"><textarea value={f.description ?? ''} onChange={(e) => set({ description: e.target.value })} className="w-full min-h-36 p-3 rounded-xl bg-moss-deep border border-moss-light outline-none text-[15px]" /></Field>
         <Btn tone="gold" className="h-12" disabled={busy} onClick={save}>{busy ? 'Сохраняю…' : id ? 'Сохранить' : 'Опубликовать игру'}</Btn>
+      </div>
+    </div>
+  );
+}
+
+const when = (g: Game) => `${fmtDay(g.starts_at)}, ${fmtTime(g.starts_at)}`;
+
+/** Окно записи: мест нет / правила и оплата / записались — внесите предоплату. */
+function Booking({ kind, g, busy, onClose, onJoin }: { kind: 'full' | 'rules' | 'done'; g: Game; busy: boolean; onClose: () => void; onJoin: () => void }) {
+  const total = priceOf(g);
+  const pre = total !== null ? Math.min(PREPAY, total) : PREPAY;
+  const rest = total !== null ? total - pre : null;
+  const write = (t: string) => openLink(adminLink(t));
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60" onClick={onClose}>
+      <div role="dialog" aria-modal="true" aria-label={kind === 'full' ? 'Мест нет' : kind === 'rules' ? 'Правила записи' : 'Вы записаны'} onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-xl rounded-t-3xl bg-[#1f2521] border-t border-sand/40 px-5 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] max-h-[88dvh] overflow-y-auto">
+        <div className="mx-auto w-10 h-1 rounded-full bg-cream/25 mb-4" />
+        {kind === 'full' && (
+          <>
+            <h2 className="font-display-sc text-2xl text-sand-light">Мест нет</h2>
+            <p className="mt-2 text-[15px] text-cream/85 leading-relaxed">Извините, на «{g.title}» все места заняты. Попробуйте записаться на другое время или напишите администратору — подберём вам подходящую игру.</p>
+            <div className="grid gap-2 mt-5">
+              <Btn tone="gold" className="h-12" onClick={() => write(`Здравствуйте! Хотел(а) на «${g.title}» (${when(g)}), но мест нет. Подберите, пожалуйста, другое время.`)}>Написать администратору</Btn>
+              <Btn className="h-12" onClick={() => { onClose(); go(''); }}>Другие игры</Btn>
+            </div>
+          </>
+        )}
+        {kind === 'rules' && (
+          <>
+            <h2 className="font-display-sc text-2xl text-sand-light">Перед записью</h2>
+            <div className="text-sm text-cream/65 mt-1">{g.title} · {when(g)}</div>
+            <div className="mt-4 rounded-2xl bg-moss-deep/70 border border-moss-light/60 divide-y divide-moss-light/50 text-[15px]">
+              <div className="flex justify-between px-4 py-3"><span className="text-cream/75">Стоимость игры</span><span className="text-cream">{total !== null ? `${total} ₽` : g.price || 'уточните у администратора'}</span></div>
+              <div className="flex justify-between px-4 py-3"><span className="text-cream/75">Предоплата сейчас</span><span className="text-sand-light font-semibold">{pre} ₽</span></div>
+              {rest !== null && rest > 0 && <div className="flex justify-between px-4 py-3"><span className="text-cream/75">Остаток на игре</span><span className="text-cream">{rest} ₽</span></div>}
+            </div>
+            <ul className="mt-4 grid gap-2 text-sm text-cream/80 leading-relaxed list-disc pl-5">
+              <li>Место закрепляется за вами после предоплаты {pre} ₽.</li>
+              {rest !== null && rest > 0 && <li>Оставшиеся {rest} ₽ оплачиваете на самой игре.</li>}
+              <li>Предоплата вернётся или перейдёт в депозит, если предупредите, что не придёте, не позднее чем за сутки до начала.</li>
+              <li>Ходите на кампанию стабильно? Абонемент на 4 игры — 3900 ₽, выходит 975 ₽ за игру, время и место закреплены за вами.</li>
+            </ul>
+            <div className="grid gap-2 mt-5">
+              <Btn tone="gold" className="h-12" disabled={busy} onClick={onJoin}>{busy ? '…' : 'Согласен, записаться'}</Btn>
+              <Btn className="h-12" onClick={onClose}>Отмена</Btn>
+            </div>
+          </>
+        )}
+        {kind === 'done' && (
+          <>
+            <h2 className="font-display-sc text-2xl text-sand-light">Вы записаны!</h2>
+            <p className="mt-2 text-[15px] text-cream/85 leading-relaxed">Чтобы место осталось за вами, внесите предоплату {pre} ₽. Напишите администратору — он пришлёт, куда перевести. Бот напомнит об игре накануне.</p>
+            <div className="grid gap-2 mt-5">
+              <Btn tone="gold" className="h-12" onClick={() => write(`Здравствуйте! Записался(-ась) на «${g.title}» (${when(g)}). Хочу внести предоплату ${pre} ₽.`)}>Написать администратору</Btn>
+              <Btn className="h-12" onClick={onClose}>Готово</Btn>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

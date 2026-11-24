@@ -20,7 +20,7 @@ export function setupTelegram() {
   tg.ready(); tg.expand();
   try { tg.setHeaderColor('#1f2521'); tg.setBackgroundColor('#1f2521'); tg.disableVerticalSwipes?.(); } catch { /* старый клиент */ }
 }
-export const haptic = (t: 'success' | 'error' | 'light') => { try { if (t === 'light') tg?.HapticFeedback?.impactOccurred('light'); else tg?.HapticFeedback?.notificationOccurred(t); } catch { /* нет вибрации */ } };
+export const haptic = (t: 'success' | 'error' | 'warning' | 'light') => { try { if (t === 'light') tg?.HapticFeedback?.impactOccurred('light'); else tg?.HapticFeedback?.notificationOccurred(t); } catch { /* нет вибрации */ } };
 export const confirmBox = (m: string) => new Promise<boolean>((res) => (tg ? tg.showConfirm(m, res) : res(window.confirm(m))));
 export function openLink(u: string) {
   if (/^https:\/\/t\.me\//.test(u) && tg) tg.openTelegramLink(u);

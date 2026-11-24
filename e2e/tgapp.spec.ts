@@ -46,7 +46,14 @@ test('Telegram-приложение: администратор создаёт �
   await player.screenshot({ path: 'e2e/shots/t1-list.png', fullPage: true });
   await card.click();
   await player.getByRole('button', { name: 'Записаться' }).click();
-  await expect(player.getByRole('status')).toContainText('Вы записаны');
+  const rules = player.getByRole('dialog', { name: 'Правила записи' });
+  await expect(rules).toContainText('Предоплата сейчас');
+  await expect(rules).toContainText('700 ₽');
+  await player.screenshot({ path: 'e2e/shots/t2-rules.png' });
+  await rules.getByRole('button', { name: 'Согласен, записаться' }).click();
+  const done = player.getByRole('dialog', { name: 'Вы записаны' });
+  await expect(done.getByRole('button', { name: 'Написать администратору' })).toBeVisible();
+  await done.getByRole('button', { name: 'Готово' }).click();
   await expect(player.getByText('Лиса')).toBeVisible();
   await player.screenshot({ path: 'e2e/shots/t2-game.png', fullPage: true });
   await player.goto('./app/');
@@ -67,6 +74,20 @@ test('Telegram-приложение: администратор создаёт �
   await player.goto('./app/#game/1');
   await player.getByRole('button', { name: 'Отменить запись' }).click();
   await expect(player.getByRole('status')).toContainText('Запись отменена');
+  // все места заняты — записаться нельзя, предлагаем написать администратору
+  await admin.goto('./app/#game/1');
+  for (let i = 1; i <= 6; i++) {
+    await admin.getByLabel('Имя гостя').fill(`Гость ${i}`);
+    await admin.getByLabel('Имя гостя').press('Tab');
+    await admin.locator('button:has(svg.lucide-plus)').last().click();
+    await expect(admin.getByText(`Гость ${i}`, { exact: true })).toBeVisible();
+  }
+  await player.reload();
+  await player.getByRole('button', { name: 'Мест нет' }).click();
+  const full = player.getByRole('dialog', { name: 'Мест нет' });
+  await expect(full).toContainText('Попробуйте записаться на другое время');
+  await expect(full.getByRole('button', { name: 'Написать администратору' })).toBeVisible();
+  await player.screenshot({ path: 'e2e/shots/t3-full.png' });
   const [w, h] = await player.evaluate(() => [document.documentElement.clientWidth, document.documentElement.scrollWidth]);
   expect(h).toBeLessThanOrEqual(w + 1);
   expect(errors).toEqual([]);
