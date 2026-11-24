@@ -32,10 +32,16 @@ test('Telegram-приложение: администратор создаёт �
   const p = await browser.newContext({ ...test.info().project.use });
   const player = await p.newPage(); player.on('pageerror', (e) => errors.push(e.message));
   await as(player, 'id=100&name=Лиса');
-  await player.goto('./app/');
+  await player.goto(`./app/?week=${local.slice(0, 10)}`);
   const card = player.getByRole('button', { name: 'Тени Драккенхейма' });
-  await expect(card).toContainText('Зелёная комната');
-  await expect(card).toContainText('Свободно 6 из 6');
+  await expect(card).toContainText('18:30');
+  await expect(card).toContainText('Мастер: Катя');
+  await expect(card).toContainText('6 св.');
+  // в тот же день красная комната пустая — заглушка; игроку поставить игру нельзя
+  const day = player.locator('section', { has: card });
+  await expect(day.getByText('Свободно — игра не запланирована')).toBeVisible();
+  await expect(player.getByText('Поставить игру')).toHaveCount(0);
+  await expect(player.locator('section[aria-label]')).toHaveCount(7);
   await expect(player.getByRole('button', { name: 'Управление' })).toHaveCount(0);
   await player.screenshot({ path: 'e2e/shots/t1-list.png', fullPage: true });
   await card.click();
@@ -43,10 +49,18 @@ test('Telegram-приложение: администратор создаёт �
   await expect(player.getByRole('status')).toContainText('Вы записаны');
   await expect(player.getByText('Лиса')).toBeVisible();
   await player.screenshot({ path: 'e2e/shots/t2-game.png', fullPage: true });
+  await player.goto('./app/');
+  await player.getByRole('button', { name: 'Следующая неделя' }).first().click();
+  await expect(player.locator('section[aria-label]')).toHaveCount(7);
   await player.goto('./app/#my');
   await expect(player.getByRole('button', { name: 'Тени Драккенхейма' })).toContainText('Вы записаны');
+  // администратор: пустая клетка открывает новую игру с датой и комнатой
+  await admin.goto(`./app/?week=${local.slice(0, 10)}`);
+  await admin.getByRole('button', { name: /^Поставить игру:/ }).first().click();
+  await expect(admin.getByRole('heading', { name: 'Новая игра' })).toBeVisible();
+  await expect(admin.getByLabel('Дата и время')).toHaveValue(/T18:00$/);
   // мастер видит игрока и может отметить
-  await admin.reload();
+  await admin.goto('./app/#game/1');
   await expect(admin.getByRole('button', { name: 'Пришёл: Лиса' })).toBeVisible();
   // отмена записи
   player.on('dialog', (dlg) => dlg.accept());

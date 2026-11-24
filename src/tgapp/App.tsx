@@ -14,13 +14,13 @@ const LINKS = [
 ];
 export const SYSTEMS = ['D&D 2014', 'D&D 2024', 'Зов Ктулху', 'Клинки во тьме', 'Киберпанк RED'];
 
-type View = { name: 'list' } | { name: 'game'; id: number } | { name: 'my' } | { name: 'admin' } | { name: 'edit'; id?: number; copy?: number };
+type View = { name: 'list' } | { name: 'game'; id: number } | { name: 'my' } | { name: 'admin' } | { name: 'edit'; id?: number; copy?: number; day?: string; room?: 'red' | 'green' };
 const parseHash = (): View => {
   const h = location.hash.replace(/^#/, '');
   const g = h.match(/^game\/(\d+)/); if (g) return { name: 'game', id: +g[1]! };
   const e = h.match(/^edit\/(\d+)/); if (e) return { name: 'edit', id: +e[1]! };
   const c = h.match(/^copy\/(\d+)/); if (c) return { name: 'edit', copy: +c[1]! };
-  if (h === 'new') return { name: 'edit' };
+  const n = h.match(/^new(?:\/(\d{4}-\d{2}-\d{2})\/(red|green))?$/); if (n) return { name: 'edit', day: n[1], room: n[2] as 'red' | 'green' | undefined };
   if (h === 'my') return { name: 'my' };
   if (h === 'admin') return { name: 'admin' };
   return { name: 'list' };
@@ -67,11 +67,11 @@ export function App() {
         ) : null}
         {ready === 'load' && <div className="py-16 text-center text-cream/60">Загружаю…</div>}
         {ready === 'noapi' && <div className="mt-6 rounded-2xl border border-amber-300/50 bg-amber-300/10 p-4 text-sm text-amber-100">Сервер записей ещё не подключён. Как только администратор его включит, здесь появятся игры.</div>}
-        {ready === 'ok' && view.name === 'list' && <List say={say} />}
+        {ready === 'ok' && view.name === 'list' && <Week say={say} staff={staff} />}
         {ready === 'ok' && view.name === 'my' && <My />}
         {ready === 'ok' && view.name === 'game' && <GamePage id={view.id} say={say} role={role} />}
         {ready === 'ok' && view.name === 'admin' && staff && <Admin role={role} say={say} />}
-        {ready === 'ok' && view.name === 'edit' && staff && <Edit id={view.id} copy={view.copy} say={say} />}
+        {ready === 'ok' && view.name === 'edit' && staff && <Edit id={view.id} copy={view.copy} day={view.day} room={view.room} say={say} />}
         {(view.name === 'list' || view.name === 'my') && <Links />}
         <div className="text-center text-[11px] text-cream/35 mt-8">Разработано inst: zamir.digital</div>
       </div>
@@ -117,6 +117,99 @@ function Card({ g }: { g: Game }) {
         <div className="flex items-center justify-between mt-3"><Seats g={g} /><span className={cx('text-xs', g.mine ? 'text-sand-light font-medium' : free(g) ? 'text-cream/70' : 'text-amber-200/80')}>{seatText(g)}</span></div>
       </div>
     </button>
+  );
+}
+
+// ------------------------------------------------------------------ расписание недели
+const TZ = 'Europe/Astrakhan';
+const dayKey = (d: Date | string) => new Date(d).toLocaleDateString('en-CA', { timeZone: TZ }); // 2026-11-24
+const addDays = (key: string, n: number) => new Date(Date.parse(`${key}T12:00:00Z`) + n * 86400000).toISOString().slice(0, 10);
+function mondayOf(key: string) { const wd = new Date(`${key}T12:00:00Z`).getUTCDay(); return addDays(key, -((wd + 6) % 7)); }
+const dayTitle = (key: string) => { const t = new Date(`${key}T12:00:00Z`).toLocaleDateString('ru-RU', { timeZone: 'UTC', weekday: 'long', day: 'numeric', month: 'long' }); return t[0]!.toUpperCase() + t.slice(1); };
+const rangeTitle = (a: string, b: string) => {
+  const f = (k: string, o: Intl.DateTimeFormatOptions) => new Date(`${k}T12:00:00Z`).toLocaleDateString('ru-RU', { timeZone: 'UTC', ...o });
+  return a.slice(5, 7) === b.slice(5, 7) ? `${f(a, { day: 'numeric' })}–${f(b, { day: 'numeric', month: 'long' })}` : `${f(a, { day: 'numeric', month: 'short' })} – ${f(b, { day: 'numeric', month: 'short' })}`;
+};
+
+function Tile({ g }: { g: Game }) {
+  return (
+    <button onClick={() => go(`game/${g.id}`)} aria-label={g.title} className={cx('text-left rounded-2xl border p-2.5 min-h-[7.5rem] flex flex-col', g.room === 'green' ? 'bg-emerald-950/50 border-emerald-500/50' : 'bg-red-950/40 border-red-500/45', g.mine && 'ring-2 ring-sand', g.status === 'cancelled' && 'opacity-55')}>
+      <div className="flex items-center justify-between gap-1">
+        <span className="text-lg font-semibold text-cream leading-none">{fmtTime(g.starts_at)}</span>
+        <span className={cx('w-2.5 h-2.5 rounded-full shrink-0', g.room === 'green' ? 'bg-emerald-400' : 'bg-red-400')} />
+      </div>
+      <div className="font-display-sc text-[15px] text-sand-light leading-tight mt-1.5 line-clamp-2">{g.title}</div>
+      <div className="text-[11px] text-cream/65 mt-0.5 truncate">{g.master_name ? `Мастер: ${g.master_name}` : g.system}</div>
+      <div className="mt-auto pt-1.5 flex items-center justify-between gap-1">
+        <Seats g={g} />
+        <span className={cx('text-[10px]', g.mine ? 'text-sand-light font-medium' : 'text-cream/55')}>{g.status === 'cancelled' ? 'отменена' : g.mine === 'main' ? 'вы идёте' : g.mine === 'wait' ? 'в очереди' : free(g) ? `${free(g)} св.` : 'мест нет'}</span>
+      </div>
+    </button>
+  );
+}
+function EmptyTile({ room, day, past, staff }: { room: 'red' | 'green'; day: string; past: boolean; staff: boolean }) {
+  const can = staff && !past;
+  const body = (
+    <>
+      <div className={cx('text-[11px] font-medium inline-flex items-center gap-1.5', room === 'green' ? 'text-emerald-300/70' : 'text-red-300/70')}><span className={cx('w-2 h-2 rounded-full', room === 'green' ? 'bg-emerald-400/60' : 'bg-red-400/60')} />{room === 'green' ? 'Зелёная' : 'Красная'}</div>
+      <div className="text-xs text-cream/40 mt-2 leading-snug">{past ? 'День прошёл' : 'Свободно — игра не запланирована'}</div>
+      {can && <div className="mt-auto text-[11px] text-sand-light/80 inline-flex items-center gap-1"><Plus size={12} />Поставить игру</div>}
+    </>
+  );
+  const cls = 'text-left rounded-2xl border border-dashed border-moss-light/60 bg-moss-deep/30 p-2.5 min-h-[7.5rem] flex flex-col';
+  return can ? <button aria-label={`Поставить игру: ${dayTitle(day)}, ${room === 'green' ? 'зелёная' : 'красная'}`} onClick={() => go(`new/${day}/${room}`)} className={cls}>{body}</button> : <div className={cls}>{body}</div>;
+}
+
+function Week({ say, staff }: { say: (t: string) => void; staff: boolean }) {
+  const [games, setGames] = useState<Game[] | null>(null);
+  const today = dayKey(new Date());
+  const [start, setStart] = useState(() => { const w = new URLSearchParams(location.search).get('week'); return w && /^\d{4}-\d{2}-\d{2}$/.test(w) ? mondayOf(w) : mondayOf(today); });
+  useEffect(() => { api.games().then((r) => setGames(r.games)).catch((e) => { say((e as Error).message); setGames([]); }); }, [say]);
+  const days = Array.from({ length: 7 }, (_, i) => addDays(start, i));
+  const thisWeek = mondayOf(today);
+  const byDay = new Map<string, Game[]>();
+  for (const g of games ?? []) { const k = dayKey(g.starts_at); (byDay.get(k) ?? byDay.set(k, []).get(k)!).push(g); }
+  const weekCount = days.reduce((t, d) => t + (byDay.get(d)?.length ?? 0), 0);
+  const shift = (n: number) => { setStart(addDays(start, n * 7)); scrollTo({ top: 0, behavior: 'smooth' }); };
+  const nav = (
+    <div className="flex items-center gap-2">
+      <button aria-label="Прошлая неделя" disabled={start <= thisWeek} onClick={() => shift(-1)} className="h-11 w-11 shrink-0 rounded-xl border border-moss-light grid place-items-center disabled:opacity-30"><ArrowLeft size={18} /></button>
+      <div className="flex-1 text-center">
+        <div className="text-sand-light font-medium">{rangeTitle(days[0]!, days[6]!)}</div>
+        <div className="text-[11px] text-cream/55">{start === thisWeek ? 'эта неделя' : start === addDays(thisWeek, 7) ? 'следующая неделя' : 'через ' + Math.round((Date.parse(start) - Date.parse(thisWeek)) / 604800000) + ' нед.'} · игр: {games ? weekCount : '…'}</div>
+      </div>
+      <button aria-label="Следующая неделя" onClick={() => shift(1)} className="h-11 w-11 shrink-0 rounded-xl border border-moss-light grid place-items-center rotate-180"><ArrowLeft size={18} /></button>
+    </div>
+  );
+  return (
+    <>
+      <div className="mt-4">{nav}</div>
+      <div className="grid gap-4 mt-4">
+        {days.map((d) => {
+          const list = (byDay.get(d) ?? []).sort((a, b) => a.starts_at.localeCompare(b.starts_at));
+          const past = d < today;
+          const rooms = (['red', 'green'] as const).filter((r) => !list.some((g) => g.room === r));
+          return (
+            <section key={d} aria-label={dayTitle(d)} className={cx(past && 'opacity-50')}>
+              <div className="flex items-baseline gap-2 mb-1.5">
+                <h2 className={cx('text-[15px] font-semibold', d === today ? 'text-sand-light' : 'text-cream')}>{dayTitle(d)}</h2>
+                {d === today && <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded-md bg-sand text-moss-deep font-semibold">сегодня</span>}
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {games === null ? [0, 1].map((i) => <div key={i} className="min-h-[7.5rem] rounded-2xl bg-moss-deep/50 animate-pulse" />) : (
+                  <>
+                    {/* красная комната всегда слева, зелёная справа */}
+                    {[...list.map((g) => ({ room: g.room, t: g.starts_at, el: <Tile key={g.id} g={g} /> })), ...rooms.map((r) => ({ room: r, t: '~', el: <EmptyTile key={r} room={r} day={d} past={past} staff={staff} /> }))]
+                      .sort((a, b) => (a.room === b.room ? a.t.localeCompare(b.t) : a.room === 'red' ? -1 : 1)).map((x) => x.el)}
+                  </>
+                )}
+              </div>
+            </section>
+          );
+        })}
+      </div>
+      <button onClick={() => shift(1)} className="w-full h-12 mt-5 rounded-2xl border border-sand/60 text-sand-light font-medium inline-flex items-center justify-center gap-2">Следующая неделя<ArrowLeft size={17} className="rotate-180" /></button>
+    </>
   );
 }
 
@@ -313,9 +406,9 @@ async function compress(file: File): Promise<{ mime: string; data: string; url: 
   return { mime: 'image/jpeg', data: url.split(',')[1]!, url };
 }
 
-function Edit({ id, copy, say }: { id?: number; copy?: number; say: (t: string) => void }) {
-  const [f, setF] = useState<Partial<Game>>({ room: 'red', seats: 6, duration_min: 240, system: 'D&D 2014' });
-  const [when, setWhen] = useState('');
+function Edit({ id, copy, day, room, say }: { id?: number; copy?: number; day?: string; room?: 'red' | 'green'; say: (t: string) => void }) {
+  const [f, setF] = useState<Partial<Game>>({ room: room ?? 'red', seats: 6, duration_min: 240, system: 'D&D 2014' });
+  const [when, setWhen] = useState(day ? `${day}T18:00` : '');
   const [preview, setPreview] = useState('');
   const [busy, setBusy] = useState(false);
   const [other, setOther] = useState(false);
