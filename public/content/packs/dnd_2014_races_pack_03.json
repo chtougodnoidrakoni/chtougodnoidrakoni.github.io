@@ -1,0 +1,485 @@
+{
+  "format": "dnd-content-pack",
+  "format_version": 1,
+  "ruleset": "5e-2014",
+  "pack_id": "dnd_2014_races_pack_03",
+  "pack_name": "D&D 5e (2014) — Виды (Часть 3)",
+  "pack_version": 1,
+  "language": "ru",
+  "author": "Авторский структурированный справочник механик",
+  "description": "Третья часть пакета видов для правил 2014 года: Полуэльф, Полуорк, Тифлинг.",
+  "sources": [
+    {
+      "id": "phb_2014",
+      "name": "Player's Handbook (2014)"
+    },
+    {
+      "id": "scag",
+      "name": "Sword Coast Adventurer's Guide"
+    }
+  ],
+  "classes": [],
+  "subclasses": [],
+  "races": [
+    {
+      "id": "half_elf",
+      "name": "Полуэльф",
+      "name_en": "Half-Elf",
+      "source": "Player's Handbook (2014)",
+      "summary": "Сочетает человеческую амбициозность и эльфийскую грацию.",
+      "description": "Полуэльфы — изгои в обоих мирах, но их смешанное наследие дарует им лучшие черты обеих рас: амбиции людей, любовь к природе эльфов и врождённое обаяние.",
+      "size": "Medium",
+      "speed": 30,
+      "ability_score_increase": {
+        "charisma": 2
+      },
+      "age": {
+        "adulthood": 20,
+        "lifespan": 180
+      },
+      "alignment": "Склонны к хаосу, но имеют доброе сердце.",
+      "languages": [
+        "Общий",
+        "Эльфийский",
+        "Один дополнительный на выбор"
+      ],
+      "proficiencies": {
+        "skills": [],
+        "weapons": [],
+        "armor": []
+      },
+      "subrace_title": "Наследие",
+      "traits": [
+        {
+          "id": "half_elf_darkvision",
+          "name": "Тёмное зрение",
+          "name_en": "Darkvision",
+          "description": "Вы видите в темноте на расстоянии 60 футов.",
+          "effects": [
+            {
+              "type": "darkvision",
+              "value": 60
+            }
+          ]
+        },
+        {
+          "id": "half_elf_fey_ancestry",
+          "name": "Наследие фей",
+          "name_en": "Fey Ancestry",
+          "description": "Вы получаете преимущество на спасброски от очарования и магия не может усыпить вас.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Преимущество на спасброски от очарования, иммунитет к магическому сну"
+            }
+          ]
+        },
+        {
+          "id": "half_elf_skills",
+          "name": "Универсальность навыков",
+          "name_en": "Skill Versatility",
+          "description": "Вы получаете владение двумя навыками на выбор.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Два навыка на выбор"
+            }
+          ]
+        }
+      ],
+      "subraces": [
+        {
+          "id": "half_elf_standard",
+          "name": "Стандартный полуэльф",
+          "name_en": "Standard Half-Elf",
+          "source": "Player's Handbook (2014)",
+          "summary": "Стандартные бонусы характеристик.",
+          "ability_score_increase": {
+            "dexterity": 1,
+            "wisdom": 1
+          },
+          "traits": []
+        },
+        {
+          "id": "half_elf_variant",
+          "name": "Вариант полуэльфа",
+          "name_en": "Variant Half-Elf",
+          "source": "Sword Coast Adventurer's Guide",
+          "summary": "Замена универсальности навыков на эльфийские черты.",
+          "ability_score_increase": {
+            "dexterity": 1,
+            "wisdom": 1
+          },
+          "traits": [
+            {
+              "id": "half_elf_variant_trait",
+              "name": "Эльфийское наследие",
+              "description": "Вместо Универсальности навыков вы получаете владение одним навыком и одну черту эльфов (например, Клинок фей или Магия дроу).",
+              "effects": [
+                {
+                  "type": "note",
+                  "text": "Выбор черты эльфов вместо навыков"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "half_orc",
+      "name": "Полуорк",
+      "name_en": "Half-Orc",
+      "source": "Player's Handbook (2014)",
+      "summary": "Сильный и выносливый воин с орочьей кровью.",
+      "description": "Полуорки сочетают грубую силу орков с человеческой хитростью. Они часто становятся великими воинами и лидерами.",
+      "size": "Medium",
+      "speed": 30,
+      "ability_score_increase": {
+        "strength": 2,
+        "constitution": 1
+      },
+      "age": {
+        "adulthood": 14,
+        "lifespan": 75
+      },
+      "alignment": "Склонны к хаосу, могут быть любыми.",
+      "languages": [
+        "Общий",
+        "Орочий"
+      ],
+      "proficiencies": {
+        "skills": [
+          "Запугивание"
+        ],
+        "weapons": [],
+        "armor": []
+      },
+      "subrace_title": "Наследие",
+      "traits": [
+        {
+          "id": "half_orc_darkvision",
+          "name": "Тёмное зрение",
+          "name_en": "Darkvision",
+          "description": "Вы видите в темноте на расстоянии 60 футов.",
+          "effects": [
+            {
+              "type": "darkvision",
+              "value": 60
+            }
+          ]
+        },
+        {
+          "id": "half_orc_menacing",
+          "name": "Угрожающий вид",
+          "name_en": "Menacing",
+          "description": "Вы получаете владение навыком Запугивание.",
+          "effects": [
+            {
+              "type": "skill_proficiency",
+              "value": [
+                "Запугивание"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "half_orc_endurance",
+          "name": "Непреклонная выносливость",
+          "name_en": "Relentless Endurance",
+          "description": "Если вы падаете до 0 хитов, но не умираете сразу, вы можете остаться с 1 хитом. Восстанавливается после продолжительного отдыха.",
+          "uses": 1,
+          "recharge": "long",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Остаться с 1 хитом вместо 0 (1 раз в долгий отдых)"
+            }
+          ]
+        },
+        {
+          "id": "half_orc_savage",
+          "name": "Свирепые атаки",
+          "name_en": "Savage Attacks",
+          "description": "При критическом попадании рукопашным оружием вы добавляете ещё одну кость урона.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Доп. кость урона при крите"
+            }
+          ]
+        }
+      ],
+      "subraces": []
+    },
+    {
+      "id": "tiefling",
+      "name": "Тифлинг",
+      "name_en": "Tiefling",
+      "source": "Player's Handbook (2014)",
+      "summary": "Наследие дьяволов в смертном теле.",
+      "description": "Тифлинги рождаются с дьявольским наследием, которое проявляется в рогах, хвосте и огненной магии. Они часто сталкиваются с недоверием, но обладают сильной волей и харизмой.",
+      "size": "Medium",
+      "speed": 30,
+      "ability_score_increase": {
+        "charisma": 2,
+        "intelligence": 1
+      },
+      "age": {
+        "adulthood": 20,
+        "lifespan": 100
+      },
+      "alignment": "Склонны к хаосу и злу, но могут быть любыми.",
+      "languages": [
+        "Общий",
+        "Инфернальный"
+      ],
+      "proficiencies": {
+        "skills": [],
+        "weapons": [],
+        "armor": []
+      },
+      "subrace_title": "Дьявольское наследие",
+      "traits": [
+        {
+          "id": "tiefling_darkvision",
+          "name": "Тёмное зрение",
+          "name_en": "Darkvision",
+          "description": "Вы видите в темноте на расстоянии 60 футов.",
+          "effects": [
+            {
+              "type": "darkvision",
+              "value": 60
+            }
+          ]
+        },
+        {
+          "id": "tiefling_resistance",
+          "name": "Адское сопротивление",
+          "name_en": "Hellish Resistance",
+          "description": "Вы получаете сопротивление урону огнём.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Сопротивление огню"
+            }
+          ]
+        },
+        {
+          "id": "tiefling_magic",
+          "name": "Адское наследие",
+          "name_en": "Infernal Legacy",
+          "description": "Вы знаете заговор Чудотворство. С 3-го уровня можете накладывать Адское возмездие, с 5-го — Тьма. Харизма — базовая характеристика.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Чудотворство; Адское возмездие (3 ур.); Тьма (5 ур.)"
+            }
+          ]
+        }
+      ],
+      "subraces": [
+        {
+          "id": "tiefling_asmodeus",
+          "name": "Наследие Асмодея",
+          "name_en": "Bloodline of Asmodeus",
+          "source": "Sword Coast Adventurer's Guide",
+          "summary": "Стандартное дьявольское наследие.",
+          "traits": []
+        },
+        {
+          "id": "tiefling_baalzebul",
+          "name": "Наследие Баалзебула",
+          "name_en": "Bloodline of Baalzebul",
+          "source": "Sword Coast Adventurer's Guide",
+          "summary": "Наследие повелителя мух.",
+          "ability_score_increase": {
+            "intelligence": 1,
+            "charisma": 2
+          },
+          "traits": [
+            {
+              "id": "tiefling_baalzebul_legacy",
+              "name": "Наследие Баалзебула",
+              "description": "Вы знаете заговор Малая иллюзия. С 3-го уровня — Огонь фей, с 5-го — Облако смерти (вместо стандартных).",
+              "effects": [
+                {
+                  "type": "note",
+                  "text": "Малая иллюзия; Огонь фей (3 ур.); Облако смерти (5 ур.)"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "tiefling_dispater",
+          "name": "Наследие Диспатера",
+          "name_en": "Bloodline of Dispater",
+          "source": "Sword Coast Adventurer's Guide",
+          "summary": "Наследие железного герцога.",
+          "ability_score_increase": {
+            "dexterity": 1,
+            "charisma": 2
+          },
+          "traits": [
+            {
+              "id": "tiefling_dispater_legacy",
+              "name": "Наследие Диспатера",
+              "description": "Вы знаете заговор Малая иллюзия. С 3-го уровня — Маскировка, с 5-го — Обнаружение мыслей.",
+              "effects": [
+                {
+                  "type": "note",
+                  "text": "Малая иллюзия; Маскировка (3 ур.); Обнаружение мыслей (5 ур.)"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "tiefling_fierna",
+          "name": "Наследие Фиерны",
+          "name_en": "Bloodline of Fierna",
+          "source": "Sword Coast Adventurer's Guide",
+          "summary": "Наследие леди огня.",
+          "ability_score_increase": {
+            "wisdom": 1,
+            "charisma": 2
+          },
+          "traits": [
+            {
+              "id": "tiefling_fierna_legacy",
+              "name": "Наследие Фиерны",
+              "description": "Вы знаете заговор Дружба. С 3-го уровня — Очарование личности, с 5-го — Внушение.",
+              "effects": [
+                {
+                  "type": "note",
+                  "text": "Дружба; Очарование личности (3 ур.); Внушение (5 ур.)"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "tiefling_glasya",
+          "name": "Наследие Гласии",
+          "name_en": "Bloodline of Glasya",
+          "source": "Sword Coast Adventurer's Guide",
+          "summary": "Наследие дочери Асмодея.",
+          "ability_score_increase": {
+            "dexterity": 1,
+            "charisma": 2
+          },
+          "traits": [
+            {
+              "id": "tiefling_glasya_legacy",
+              "name": "Наследие Гласии",
+              "description": "Вы знаете заговор Малая иллюзия. С 3-го уровня — Маскировка, с 5-го — Невидимость.",
+              "effects": [
+                {
+                  "type": "note",
+                  "text": "Малая иллюзия; Маскировка (3 ур.); Невидимость (5 ур.)"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "tiefling_levistus",
+          "name": "Наследие Левистуса",
+          "name_en": "Bloodline of Levistus",
+          "source": "Sword Coast Adventurer's Guide",
+          "summary": "Наследие ледяного герцога.",
+          "ability_score_increase": {
+            "constitution": 1,
+            "charisma": 2
+          },
+          "traits": [
+            {
+              "id": "tiefling_levistus_legacy",
+              "name": "Наследие Левистуса",
+              "description": "Вы знаете заговор Луч холода. С 3-го уровня — Доспехи Агатиса, с 5-го — Метель.",
+              "effects": [
+                {
+                  "type": "note",
+                  "text": "Луч холода; Доспехи Агатиса (3 ур.); Метель (5 ур.)"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "tiefling_mammon",
+          "name": "Наследие Маммона",
+          "name_en": "Bloodline of Mammon",
+          "source": "Sword Coast Adventurer's Guide",
+          "summary": "Наследие жадного герцога.",
+          "ability_score_increase": {
+            "intelligence": 1,
+            "charisma": 2
+          },
+          "traits": [
+            {
+              "id": "tiefling_mammon_legacy",
+              "name": "Наследие Маммона",
+              "description": "Вы знаете заговор Волшебная рука. С 3-го уровня — Притворное серебро, с 5-го — Запертая дверь.",
+              "effects": [
+                {
+                  "type": "note",
+                  "text": "Волшебная рука; Притворное серебро (3 ур.); Запертая дверь (5 ур.)"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "tiefling_mephistopheles",
+          "name": "Наследие Мефистофеля",
+          "name_en": "Bloodline of Mephistopheles",
+          "source": "Sword Coast Adventurer's Guide",
+          "summary": "Наследие адского учёного.",
+          "ability_score_increase": {
+            "intelligence": 1,
+            "charisma": 2
+          },
+          "traits": [
+            {
+              "id": "tiefling_mephistopheles_legacy",
+              "name": "Наследие Мефистофеля",
+              "description": "Вы знаете заговор Малая иллюзия. С 3-го уровня — Огненные ладони, с 5-го — Пылающий шар.",
+              "effects": [
+                {
+                  "type": "note",
+                  "text": "Малая иллюзия; Огненные ладони (3 ур.); Пылающий шар (5 ур.)"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "tiefling_zariel",
+          "name": "Наследие Зариэль",
+          "name_en": "Bloodline of Zariel",
+          "source": "Sword Coast Adventurer's Guide",
+          "summary": "Наследие падшего ангела.",
+          "ability_score_increase": {
+            "strength": 1,
+            "charisma": 2
+          },
+          "traits": [
+            {
+              "id": "tiefling_zariel_legacy",
+              "name": "Наследие Зариэль",
+              "description": "Вы знаете заговор Чудотворство. С 3-го уровня — Опаляющий удар, с 5-го — Пламенный удар.",
+              "effects": [
+                {
+                  "type": "note",
+                  "text": "Чудотворство; Опаляющий удар (3 ур.); Пламенный удар (5 ур.)"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
