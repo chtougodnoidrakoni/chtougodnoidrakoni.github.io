@@ -1,0 +1,1146 @@
+{
+  "format": "dnd-content-pack",
+  "format_version": 1,
+  "ruleset": "5e-2014",
+  "pack_id": "dnd_2014_cleric_volume_01",
+  "pack_name": "D&D 5e (2014) — Жрец и божественные домены",
+  "pack_version": 1,
+  "language": "ru",
+  "author": "Авторский структурированный справочник механик",
+  "description": "Том контентной библиотеки: класс Жрец и его официальные подклассы, опубликованные для правил 2014 года. Описания механик сформулированы своими словами; это не дословная копия книг.",
+  "sources": [
+    {
+      "id": "phb_2014",
+      "name": "Player's Handbook (2014)"
+    },
+    {
+      "id": "scag",
+      "name": "Sword Coast Adventurer's Guide"
+    },
+    {
+      "id": "xgte",
+      "name": "Xanathar's Guide to Everything"
+    },
+    {
+      "id": "ggtr",
+      "name": "Guildmasters' Guide to Ravnica"
+    },
+    {
+      "id": "tce",
+      "name": "Tasha's Cauldron of Everything"
+    },
+    {
+      "id": "dmg_2014",
+      "name": "Dungeon Master's Guide (2014)"
+    }
+  ],
+  "classes": [
+    {
+      "id": "cleric",
+      "name": "Жрец",
+      "name_en": "Cleric",
+      "source": "Player's Handbook (2014)",
+      "summary": "Проводник божественной воли, сочетающий магию поддержки, лечения и боевые заклинания.",
+      "description": "Жрец — смертный посредник между смертными и божеством. Он черпает магию из своей веры, получая доступ к заклинаниям, зависящим от выбранного домена. Жрец может лечить раны, воскрешать павших и призывать гнев своего бога на врагов.",
+      "role": "Поддержка, лечение, контроль, боец",
+      "primary_abilities": [
+        "wisdom"
+      ],
+      "hit_die": 8,
+      "saving_throws": [
+        "wisdom",
+        "charisma"
+      ],
+      "armor_proficiencies": [
+        "light",
+        "medium",
+        "shields"
+      ],
+      "armor_text": "Лёгкие и средние доспехи, щиты",
+      "weapon_proficiencies": {
+        "simple": true,
+        "martial": false,
+        "list": []
+      },
+      "tool_proficiencies": null,
+      "skills": {
+        "choose": 2,
+        "from": [
+          "История",
+          "Проницательность",
+          "Медицина",
+          "Убеждение",
+          "Религия"
+        ]
+      },
+      "starting_equipment": [
+        "Булава или боевой молот (если есть владение)",
+        "Чешуйчатый доспех, кожаный доспех или кольчуга (если есть владение)",
+        "Лёгкий арбалет с 20 болтами или простое оружие",
+        "Набор священника или исследователя подземелий",
+        "Щит и священный символ"
+      ],
+      "subclass_level": 1,
+      "subclass_title": "Божественный домен",
+      "asi_levels": [
+        4,
+        8,
+        12,
+        16,
+        19
+      ],
+      "spellcasting": {
+        "ability": "wisdom",
+        "kind": "prepared",
+        "progression": "full",
+        "prepared": {
+          "base": "level",
+          "min": 1
+        },
+        "spell_list": "cleric"
+      },
+      "progression": [
+        {
+          "level": 1,
+          "notes": "Использование заклинаний; Божественный домен."
+        },
+        {
+          "level": 2,
+          "notes": "Божественный канал (1)."
+        },
+        {
+          "level": 3,
+          "notes": "—"
+        },
+        {
+          "level": 4,
+          "notes": "Увеличение характеристик."
+        },
+        {
+          "level": 5,
+          "notes": "Уничтожение нежити (ПО 1/2)."
+        },
+        {
+          "level": 6,
+          "notes": "Божественный канал (2); Особенность домена."
+        },
+        {
+          "level": 7,
+          "notes": "—"
+        },
+        {
+          "level": 8,
+          "notes": "Увеличение характеристик; Особенность домена; Уничтожение нежити (ПО 1)."
+        },
+        {
+          "level": 9,
+          "notes": "—"
+        },
+        {
+          "level": 10,
+          "notes": "Божественное вмешательство."
+        },
+        {
+          "level": 11,
+          "notes": "Уничтожение нежити (ПО 2)."
+        },
+        {
+          "level": 12,
+          "notes": "Увеличение характеристик."
+        },
+        {
+          "level": 13,
+          "notes": "—"
+        },
+        {
+          "level": 14,
+          "notes": "Уничтожение нежити (ПО 3)."
+        },
+        {
+          "level": 15,
+          "notes": "—"
+        },
+        {
+          "level": 16,
+          "notes": "Увеличение характеристик."
+        },
+        {
+          "level": 17,
+          "notes": "Особенность домена; Уничтожение нежити (ПО 4)."
+        },
+        {
+          "level": 18,
+          "notes": "Божественный канал (3)."
+        },
+        {
+          "level": 19,
+          "notes": "Увеличение характеристик."
+        },
+        {
+          "level": 20,
+          "notes": "Улучшенное божественное вмешательство."
+        }
+      ],
+      "features": [
+        {
+          "id": "cleric_spellcasting",
+          "name": "Использование заклинаний",
+          "name_en": "Spellcasting",
+          "level": 1,
+          "description": "Мудрость — базовая характеристика заклинаний жреца. Вы подготавливаете заклинания после продолжительного отдыха: количество равно модификатору Мудрости + уровень жреца (минимум 1). Доменные заклинания всегда подготовлены и не входят в лимит. Священный символ используется как фокусировка.",
+          "action": "passive",
+          "formula": "Подготовленные заклинания = модификатор Мудрости + уровень жреца (мин. 1)"
+        },
+        {
+          "id": "cleric_divine_domain",
+          "name": "Божественный домен",
+          "name_en": "Divine Domain",
+          "level": 1,
+          "description": "Вы выбираете божественный домен — подкласс, определяющий сферу влияния вашего божества. Домен даёт доменные заклинания и особенности на 1, 2, 6, 8 и 17 уровнях жреца.",
+          "action": "other"
+        },
+        {
+          "id": "cleric_channel_divinity",
+          "name": "Божественный канал",
+          "name_en": "Channel Divinity",
+          "level": 2,
+          "description": "Вы направляете божественную энергию на один из доступных эффектов. 1 использование, с 6-го уровня 2, с 18-го — 3. Восстанавливается после короткого или продолжительного отдыха.",
+          "action": "other",
+          "uses": {
+            "by_level": {
+              "2": 1,
+              "6": 2,
+              "18": 3
+            }
+          },
+          "recharge": "short"
+        },
+        {
+          "id": "cleric_turn_undead",
+          "name": "Изгнание нежити",
+          "name_en": "Turn Undead",
+          "level": 2,
+          "description": "Действием вы предъявляете символ. Нежить, видящая или слышащая вас в пределах 30 футов, совершает спасбросок Мудрости. Провалившие испуганы на 1 минуту или пока не получат урон; они вынуждены тратить ходы, удаляясь от вас, и не могут добровольно приближаться.",
+          "action": "action",
+          "range": "30 футов"
+        },
+        {
+          "id": "cleric_destroy_undead",
+          "name": "Уничтожение нежити",
+          "name_en": "Destroy Undead",
+          "level": 5,
+          "description": "Нежить, провалившая спасбросок против Изгнания нежити, уничтожается, если её ПО не выше порога: 1/2 на 5-м уровне, 1 на 8-м, 2 на 11-м, 3 на 14-м, 4 на 17-м.",
+          "action": "passive"
+        },
+        {
+          "id": "cleric_asi_4",
+          "name": "Увеличение характеристик",
+          "name_en": "Ability Score Improvement",
+          "level": 4,
+          "description": "Увеличьте одну характеристику на 2 или две характеристики на 1. Вместо этого можно выбрать черту, если правила вашей игры разрешают черты.",
+          "action": "other"
+        },
+        {
+          "id": "cleric_domain_feature_6",
+          "name": "Особенность домена",
+          "name_en": "Divine Domain Feature",
+          "level": 6,
+          "description": "Вы получаете особенность выбранного домена на 6-м уровне. Конкретный эффект определяется подклассом.",
+          "action": "passive"
+        },
+        {
+          "id": "cleric_asi_8",
+          "name": "Увеличение характеристик",
+          "name_en": "Ability Score Improvement",
+          "level": 8,
+          "description": "Увеличьте одну характеристику на 2 или две характеристики на 1. Вместо этого можно выбрать черту, если правила вашей игры разрешают черты.",
+          "action": "other"
+        },
+        {
+          "id": "cleric_domain_feature_8",
+          "name": "Особенность домена (Усиление)",
+          "name_en": "Divine Domain Feature",
+          "level": 8,
+          "description": "Вы получаете особенность выбранного домена на 8-м уровне (обычно усиление урона оружием или заговорами). Конкретный эффект определяется подклассом.",
+          "action": "passive"
+        },
+        {
+          "id": "cleric_divine_intervention",
+          "name": "Божественное вмешательство",
+          "name_en": "Divine Intervention",
+          "level": 10,
+          "description": "Действием вы просите божество о помощи. Шанс успеха равен уровню жреца в процентах. После успеха повторное использование недоступно 7 дней; после провала можно повторить после продолжительного отдыха.",
+          "action": "action",
+          "recharge": "long"
+        },
+        {
+          "id": "cleric_asi_12",
+          "name": "Увеличение характеристик",
+          "name_en": "Ability Score Improvement",
+          "level": 12,
+          "description": "Увеличьте одну характеристику на 2 или две характеристики на 1. Вместо этого можно выбрать черту, если правила вашей игры разрешают черты.",
+          "action": "other"
+        },
+        {
+          "id": "cleric_asi_16",
+          "name": "Увеличение характеристик",
+          "name_en": "Ability Score Improvement",
+          "level": 16,
+          "description": "Увеличьте одну характеристику на 2 или две характеристики на 1. Вместо этого можно выбрать черту, если правила вашей игры разрешают черты.",
+          "action": "other"
+        },
+        {
+          "id": "cleric_domain_feature_17",
+          "name": "Особенность домена",
+          "name_en": "Divine Domain Feature",
+          "level": 17,
+          "description": "Вы получаете финальную особенность выбранного домена на 17-м уровне. Конкретный эффект определяется подклассом.",
+          "action": "passive"
+        },
+        {
+          "id": "cleric_asi_19",
+          "name": "Увеличение характеристик",
+          "name_en": "Ability Score Improvement",
+          "level": 19,
+          "description": "Увеличьте одну характеристику на 2 или две характеристики на 1. Вместо этого можно выбрать черту, если правила вашей игры разрешают черты.",
+          "action": "other"
+        },
+        {
+          "id": "cleric_improved_divine_intervention",
+          "name": "Улучшенное божественное вмешательство",
+          "name_en": "Improved Divine Intervention",
+          "level": 20,
+          "description": "Ваше Божественное вмешательство автоматически успешно; после успеха действует обычное ограничение в 7 дней.",
+          "action": "passive"
+        }
+      ],
+      "subclasses": [
+        {
+          "id": "cleric_knowledge",
+          "name": "Домен знаний",
+          "name_en": "Knowledge Domain",
+          "source": "Player's Handbook (2014)",
+          "summary": "Боги знаний и тайн.",
+          "description": "Домен знаний дарует понимание, пророчества и умение читать мысли.",
+          "features": [
+            {
+              "id": "cleric_knowledge_blessings",
+              "name": "Благословение знаний",
+              "name_en": "Blessings of Knowledge",
+              "level": 1,
+              "description": "Вы изучаете два языка. Вы также получаете владение двумя навыками из списка: История, Аркана, Природа, Религия. Ваш бонус мастерства для этих навыков удваивается.",
+              "action": "passive"
+            },
+            {
+              "id": "cleric_knowledge_channel",
+              "name": "Божественный канал: Знание веков",
+              "name_en": "Channel Divinity: Knowledge of the Ages",
+              "level": 2,
+              "description": "Действием вы получаете владение одним навыком или инструментом на 10 минут.",
+              "action": "action"
+            },
+            {
+              "id": "cleric_knowledge_reading",
+              "name": "Чтение мыслей",
+              "name_en": "Channel Divinity: Read Thoughts",
+              "level": 6,
+              "description": "Действием вы читаете поверхностные мысли видимого существа в пределах 60 футов. Вы можете наложить на него Внушение, пока эффект активен. Использование Божественного канала.",
+              "action": "action",
+              "range": "60 футов"
+            },
+            {
+              "id": "cleric_knowledge_potent",
+              "name": "Мощные заговоры",
+              "name_en": "Potent Spellcasting",
+              "level": 8,
+              "description": "Вы добавляете модификатор Мудрости к урону заговоров жреца.",
+              "action": "passive"
+            },
+            {
+              "id": "cleric_knowledge_visions",
+              "name": "Видения прошлого",
+              "name_en": "Visions of the Past",
+              "level": 17,
+              "description": "Действием вы можете медитировать, чтобы узнать прошлое места или предмета.",
+              "action": "action"
+            }
+          ]
+        },
+        {
+          "id": "cleric_life",
+          "name": "Домен жизни",
+          "name_en": "Life Domain",
+          "source": "Player's Handbook (2014)",
+          "summary": "Боги исцеления и vitality.",
+          "description": "Домен жизни фокусируется на лечении и защите живых.",
+          "features": [
+            {
+              "id": "cleric_life_proficiency",
+              "name": "Бонусное владение",
+              "name_en": "Bonus Proficiency",
+              "level": 1,
+              "description": "Вы получаете владение тяжёлыми доспехами.",
+              "action": "passive"
+            },
+            {
+              "id": "cleric_life_disciple",
+              "name": "Ученик жизни",
+              "name_en": "Disciple of Life",
+              "level": 1,
+              "description": "Ваши лечебные заклинания 1-го уровня и выше восстанавливают дополнительные хиты: 2 + уровень заклинания.",
+              "action": "passive"
+            },
+            {
+              "id": "cleric_life_channel",
+              "name": "Божественный канал: Сохранение жизни",
+              "name_en": "Channel Divinity: Preserve Life",
+              "level": 2,
+              "description": "Божественным каналом вы распределяете лечение до 5 × уровень жреца между существами в пределах 30 футов. Нельзя поднять выше половины максимума и лечить нежить/конструктов.",
+              "action": "action",
+              "range": "30 футов"
+            },
+            {
+              "id": "cleric_life_healer",
+              "name": "Благословенный целитель",
+              "name_en": "Blessed Healer",
+              "level": 6,
+              "description": "При лечении другого существа заклинанием вы восстанавливаете себе 2 + уровень заклинания хитов.",
+              "action": "passive"
+            },
+            {
+              "id": "cleric_life_strike",
+              "name": "Божественный удар",
+              "name_en": "Divine Strike",
+              "level": 8,
+              "description": "Раз за ход оружейное попадание наносит +1к8 урона излучением; на 14-м уровне +2к8.",
+              "action": "passive"
+            },
+            {
+              "id": "cleric_life_supreme",
+              "name": "Высшее исцеление",
+              "name_en": "Supreme Healing",
+              "level": 17,
+              "description": "Ваши лечебные заклинания восстанавливают максимум костей вместо броска.",
+              "action": "passive"
+            }
+          ]
+        },
+        {
+          "id": "cleric_light",
+          "name": "Домен света",
+          "name_en": "Light Domain",
+          "source": "Player's Handbook (2014)",
+          "summary": "Боги света и огня.",
+          "description": "Домен света дарует силу огня и сияния.",
+          "features": [
+            {
+              "id": "cleric_light_cantrip",
+              "name": "Бонусный заговор",
+              "name_en": "Bonus Cantrip",
+              "level": 1,
+              "description": "Вы изучаете заговор Свет.",
+              "action": "passive"
+            },
+            {
+              "id": "cleric_light_warding",
+              "name": "Сияющий оберег",
+              "name_en": "Warding Flare",
+              "level": 1,
+              "description": "Реакцией вы можете дать помеху атаке по вам или союзнику в 30 футах. Применений = модификатор Мудрости (мин. 1), восстановление после продолжительного отдыха.",
+              "action": "reaction",
+              "range": "30 футов",
+              "uses": {
+                "ability": "wisdom",
+                "min": 1
+              },
+              "recharge": "long"
+            },
+            {
+              "id": "cleric_light_channel",
+              "name": "Божественный канал: Сияние",
+              "name_en": "Channel Divinity: Radiance of the Dawn",
+              "level": 2,
+              "description": "Божественным каналом вы рассеиваете магическую тьму и наносите врагам в радиусе 30 футов 2к10 + уровень жреца урона излучением.",
+              "action": "action",
+              "range": "30 футов"
+            },
+            {
+              "id": "cleric_light_flare",
+              "name": "Улучшенная вспышка",
+              "name_en": "Improved Flare",
+              "level": 6,
+              "description": "Сияющий оберег теперь также даёт преимущество союзнику, атакующему цель, по которой сработала вспышка.",
+              "action": "passive"
+            },
+            {
+              "id": "cleric_light_strike",
+              "name": "Божественный удар",
+              "name_en": "Divine Strike",
+              "level": 8,
+              "description": "Раз за ход оружейное попадание наносит +1к8 урона излучением; на 14-м уровне +2к8.",
+              "action": "passive"
+            },
+            {
+              "id": "cleric_light_corona",
+              "name": "Корона света",
+              "name_en": "Corona of Light",
+              "level": 17,
+              "description": "Действием вы создаёте ауру яркого света 60 футов на 1 минуту. Враги в ней имеют помеху на спасброски против ваших заклинаний огня и излучения.",
+              "action": "action",
+              "range": "60 футов",
+              "duration": "1 минута"
+            }
+          ]
+        },
+        {
+          "id": "cleric_nature",
+          "name": "Домен природы",
+          "name_en": "Nature Domain",
+          "source": "Player's Handbook (2014)",
+          "summary": "Боги природы и стихий.",
+          "description": "Домен природы даёт власть над флорой, фауной и стихиями.",
+          "features": [
+            {
+              "id": "cleric_nature_cantrip",
+              "name": "Бонусный заговор",
+              "name_en": "Acolyte of Nature",
+              "level": 1,
+              "description": "Вы изучаете один заговор друида. Вы также получаете владение одним навыком из списка: Обращение с животными, Природа, Выживание.",
+              "action": "passive"
+            },
+            {
+              "id": "cleric_nature_proficiency",
+              "name": "Бонусное владение",
+              "name_en": "Bonus Proficiency",
+              "level": 1,
+              "description": "Вы получаете владение тяжёлыми доспехами.",
+              "action": "passive"
+            },
+            {
+              "id": "cleric_nature_channel",
+              "name": "Божественный канал: Очарование животных и растений",
+              "name_en": "Channel Divinity: Charm Animals and Plants",
+              "level": 2,
+              "description": "Божественным каналом вы очаровываете зверей и растительных существ в 30 футах, проваливших спасбросок Мудрости.",
+              "action": "action",
+              "range": "30 футов"
+            },
+            {
+              "id": "cleric_nature_dampen",
+              "name": "Ослабление стихий",
+              "name_en": "Dampen Elements",
+              "level": 6,
+              "description": "Реакцией вы даёте сопротивление кислоте, холоду, огню, электричеству или звуку существу в 30 футах.",
+              "action": "reaction",
+              "range": "30 футов"
+            },
+            {
+              "id": "cleric_nature_strike",
+              "name": "Божественный удар",
+              "name_en": "Divine Strike",
+              "level": 8,
+              "description": "Раз за ход оружейное попадание наносит +1к8 холодом, огнём или электричеством; на 14-м уровне +2к8.",
+              "action": "passive"
+            },
+            {
+              "id": "cleric_nature_master",
+              "name": "Мастер природы",
+              "name_en": "Master of Nature",
+              "level": 17,
+              "description": "Очарованные вами звери и растения не могут совершать реакции и имеют помеху на атаки по другим существам.",
+              "action": "passive"
+            }
+          ]
+        },
+        {
+          "id": "cleric_tempest",
+          "name": "Домен бури",
+          "name_en": "Tempest Domain",
+          "source": "Player's Handbook (2014)",
+          "summary": "Боги бурь и молний.",
+          "description": "Домен бури дарует разрушительную силу шторма.",
+          "features": [
+            {
+              "id": "cleric_tempest_proficiency",
+              "name": "Бонусные владения",
+              "name_en": "Bonus Proficiencies",
+              "level": 1,
+              "description": "Вы получаете владение боевым оружием и тяжёлыми доспехами.",
+              "action": "passive"
+            },
+            {
+              "id": "cleric_tempest_wrath",
+              "name": "Гнев бури",
+              "name_en": "Wrath of the Storm",
+              "level": 1,
+              "description": "Реакцией вы наносите атакующему в 5 футах 2к8 урона электричеством или звуком (половина при успехе Ловкости). Применений = модификатор Мудрости (мин. 1), восстановление после продолжительного отдыха.",
+              "action": "reaction",
+              "range": "5 футов",
+              "uses": {
+                "ability": "wisdom",
+                "min": 1
+              },
+              "recharge": "long"
+            },
+            {
+              "id": "cleric_tempest_channel",
+              "name": "Божественный канал: Разрушительный гнев",
+              "name_en": "Channel Divinity: Destructive Wrath",
+              "level": 2,
+              "description": "Божественным каналом вы максимизируете урон электричеством или звуком вместо броска.",
+              "action": "action"
+            },
+            {
+              "id": "cleric_tempest_thunder",
+              "name": "Громовой удар",
+              "name_en": "Thunderbolt Strike",
+              "level": 6,
+              "description": "Нанося электрический урон существу не более чем на размер крупнее, вы отталкиваете его на 10 футов.",
+              "action": "passive"
+            },
+            {
+              "id": "cleric_tempest_strike",
+              "name": "Божественный удар",
+              "name_en": "Divine Strike",
+              "level": 8,
+              "description": "Раз за ход оружейное попадание наносит +1к8 звуком; на 14-м уровне +2к8.",
+              "action": "passive"
+            },
+            {
+              "id": "cleric_tempest_flight",
+              "name": "Грозовое возмездие",
+              "name_en": "Stormborn",
+              "level": 17,
+              "description": "Вы получаете скорость полёта, равную скорости ходьбы, вне помещений.",
+              "action": "passive"
+            }
+          ]
+        },
+        {
+          "id": "cleric_trickery",
+          "name": "Домен обмана",
+          "name_en": "Trickery Domain",
+          "source": "Player's Handbook (2014)",
+          "summary": "Боги обмана, иллюзий и хитрости.",
+          "description": "Домен обмана дарует способности к иллюзиям и маскировке.",
+          "features": [
+            {
+              "id": "cleric_trickery_blessing",
+              "name": "Благословение обманщика",
+              "name_en": "Blessing of the Trickster",
+              "level": 1,
+              "description": "Действием вы даёте согласному существу преимущество на проверки Скрытности на 1 час.",
+              "action": "action"
+            },
+            {
+              "id": "cleric_trickery_channel_duplicate",
+              "name": "Божественный канал: Двойник",
+              "name_en": "Channel Divinity: Invoke Duplicity",
+              "level": 2,
+              "description": "Божественным каналом вы создаёте иллюзорного двойника в 30 футах на 1 минуту. Заклинания можно накладывать из его пространства.",
+              "action": "action",
+              "range": "30 футов",
+              "duration": "1 минута"
+            },
+            {
+              "id": "cleric_trickery_channel_cloak",
+              "name": "Божественный канал: Плащ теней",
+              "name_en": "Channel Divinity: Cloak of Shadows",
+              "level": 6,
+              "description": "Божественным каналом вы становитесь невидимым до конца следующего хода или до атаки/заклинания.",
+              "action": "action"
+            },
+            {
+              "id": "cleric_trickery_strike",
+              "name": "Божественный удар",
+              "name_en": "Divine Strike",
+              "level": 8,
+              "description": "Раз за ход оружейное попадание наносит +1к8 урона ядом; на 14-м уровне +2к8.",
+              "action": "passive"
+            },
+            {
+              "id": "cleric_trickery_improved",
+              "name": "Улучшенный двойник",
+              "name_en": "Improved Duplicity",
+              "level": 17,
+              "description": "Вы можете создать до четырёх двойников. При атаке по цели, рядом с которой находитесь вы и двойник, атака имеет преимущество.",
+              "action": "passive"
+            }
+          ]
+        },
+        {
+          "id": "cleric_war",
+          "name": "Домен войны",
+          "name_en": "War Domain",
+          "source": "Player's Handbook (2014)",
+          "summary": "Боги войны и битвы.",
+          "description": "Домен войны делает жреца мастером оружия и тактики.",
+          "features": [
+            {
+              "id": "cleric_war_proficiency",
+              "name": "Бонусные владения",
+              "name_en": "Bonus Proficiencies",
+              "level": 1,
+              "description": "Вы получаете владение боевым оружием и тяжёлыми доспехами.",
+              "action": "passive"
+            },
+            {
+              "id": "cleric_war_priest",
+              "name": "Военный жрец",
+              "name_en": "War Priest",
+              "level": 1,
+              "description": "После действия Атака вы можете бонусным действием совершить одну оружейную атаку. Применений = модификатор Мудрости (мин. 1), восстановление после продолжительного отдыха.",
+              "action": "bonus",
+              "uses": {
+                "ability": "wisdom",
+                "min": 1
+              },
+              "recharge": "long"
+            },
+            {
+              "id": "cleric_war_channel",
+              "name": "Божественный канал: Направленный удар",
+              "name_en": "Channel Divinity: Guided Strike",
+              "level": 2,
+              "description": "Божественным каналом вы получаете +10 к броску атаки после броска, но до объявления результата.",
+              "action": "action"
+            },
+            {
+              "id": "cleric_war_blessing",
+              "name": "Благословение бога войны",
+              "name_en": "War God's Blessing",
+              "level": 6,
+              "description": "Реакцией вы даёте союзнику в 30 футах +10 к броску атаки, используя Божественный канал.",
+              "action": "reaction",
+              "range": "30 футов"
+            },
+            {
+              "id": "cleric_war_strike",
+              "name": "Божественный удар",
+              "name_en": "Divine Strike",
+              "level": 8,
+              "description": "Раз за ход оружейное попадание наносит +1к8 урона того же типа; на 14-м уровне +2к8.",
+              "action": "passive"
+            },
+            {
+              "id": "cleric_war_avatar",
+              "name": "Аватар войны",
+              "name_en": "Avatar of Battle",
+              "level": 17,
+              "description": "Вы получаете сопротивление дробящему, колющему и рубящему урону от немагических атак.",
+              "action": "passive"
+            }
+          ]
+        },
+        {
+          "id": "cleric_arcana",
+          "name": "Домен тайны",
+          "name_en": "Arcana Domain",
+          "source": "Sword Coast Adventurer's Guide",
+          "summary": "Боги магии и знаний.",
+          "description": "Домен тайны даёт доступ к магии волшебника.",
+          "features": [
+            {
+              "id": "cleric_arcana_cantrips",
+              "name": "Заговоры волшебника",
+              "name_en": "Arcane Initiate",
+              "level": 1,
+              "description": "Вы изучаете два заговора волшебника. Для вас они считаются заговорами жреца с Мудростью как базовой характеристикой.",
+              "action": "passive"
+            },
+            {
+              "id": "cleric_arcana_channel",
+              "name": "Божественный канал: Изгнание небожителей",
+              "name_en": "Channel Divinity: Arcane Abjuration",
+              "level": 2,
+              "description": "Божественным каналом вы изгоняете небожителя, элементаля, фею или исчадие, провалившее спасбросок Мудрости.",
+              "action": "action"
+            },
+            {
+              "id": "cleric_arcana_dispel",
+              "name": "Рассеивание магии",
+              "name_en": "Spell Breaker",
+              "level": 6,
+              "description": "Когда вы лечите существо заклинанием жреца, вы можете окончить на нём одно заклинание уровнем не выше использованной ячейки.",
+              "action": "passive"
+            },
+            {
+              "id": "cleric_arcana_potent",
+              "name": "Мощные заговоры",
+              "name_en": "Potent Spellcasting",
+              "level": 8,
+              "description": "Вы добавляете модификатор Мудрости к урону заговоров жреца.",
+              "action": "passive"
+            },
+            {
+              "id": "cleric_arcana_mastery",
+              "name": "Мастерство тайны",
+              "name_en": "Arcane Mastery",
+              "level": 17,
+              "description": "Вы добавляете по одному заклинанию волшебника 6-го, 7-го, 8-го и 9-го уровней в доменные заклинания; они всегда подготовлены.",
+              "action": "passive"
+            }
+          ]
+        },
+        {
+          "id": "cleric_forge",
+          "name": "Домен кузни",
+          "name_en": "Forge Domain",
+          "source": "Xanathar's Guide to Everything",
+          "summary": "Боги ремесла и созидания.",
+          "description": "Домен кузни дарует способность создавать и улучшать предметы.",
+          "features": [
+            {
+              "id": "cleric_forge_proficiency",
+              "name": "Бонусные владения",
+              "name_en": "Bonus Proficiencies",
+              "level": 1,
+              "description": "Вы получаете владение тяжёлыми доспехами и инструментами кузнеца.",
+              "action": "passive"
+            },
+            {
+              "id": "cleric_forge_blessing",
+              "name": "Благословение кузни",
+              "name_en": "Blessing of the Forge",
+              "level": 1,
+              "description": "После продолжительного отдыха вы можете сделать один немагический доспех (+1 КД) или оружие (+1 к атакам и урону) магическим до следующего продолжительного отдыха.",
+              "action": "other",
+              "recharge": "long"
+            },
+            {
+              "id": "cleric_forge_channel",
+              "name": "Божественный канал: Создание",
+              "name_en": "Channel Divinity: Artisan's Blessing",
+              "level": 2,
+              "description": "Часовым ритуалом вы создаёте немагический металлический предмет стоимостью до 100 зм, расходуя материалы той же стоимости.",
+              "action": "action"
+            },
+            {
+              "id": "cleric_forge_soul",
+              "name": "Душа кузни",
+              "name_en": "Soul of the Forge",
+              "level": 6,
+              "description": "Вы получаете сопротивление огню; в металлических тяжёлых доспехах +1 КД.",
+              "action": "passive"
+            },
+            {
+              "id": "cleric_forge_strike",
+              "name": "Божественный удар",
+              "name_en": "Divine Strike",
+              "level": 8,
+              "description": "Раз за ход оружейное попадание наносит +1к8 урона огнём; на 14-м уровне +2к8.",
+              "action": "passive"
+            },
+            {
+              "id": "cleric_forge_master",
+              "name": "Мастер кузни",
+              "name_en": "Saint of Forge and Fire",
+              "level": 17,
+              "description": "Вы получаете иммунитет к огню и сопротивление немагическому дробящему, колющему и рубящему урону.",
+              "action": "passive"
+            }
+          ]
+        },
+        {
+          "id": "cleric_grave",
+          "name": "Домен могилы",
+          "name_en": "Grave Domain",
+          "source": "Xanathar's Guide to Everything",
+          "summary": "Боги смерти и загробной жизни.",
+          "description": "Домен могилы защищает грань между жизнью и смертью.",
+          "features": [
+            {
+              "id": "cleric_grave_circle",
+              "name": "Круг смертности",
+              "name_en": "Circle of Mortality",
+              "level": 1,
+              "description": "При лечении существа с 0 хитов кости лечения дают максимум. Вы изучаете заговор Пощада умирающим.",
+              "action": "passive"
+            },
+            {
+              "id": "cleric_grave_eyes",
+              "name": "Глаза могилы",
+              "name_en": "Eyes of the Grave",
+              "level": 1,
+              "description": "Действием вы обнаруживаете нежить в пределах 60 футов. Применений = модификатор Мудрости (мин. 1), восстановление после продолжительного отдыха.",
+              "action": "action",
+              "range": "60 футов",
+              "uses": {
+                "ability": "wisdom",
+                "min": 1
+              },
+              "recharge": "long"
+            },
+            {
+              "id": "cleric_grave_channel",
+              "name": "Божественный канал: Путь к могиле",
+              "name_en": "Channel Divinity: Path to the Grave",
+              "level": 2,
+              "description": "Божественным каналом вы проклинаете видимую цель в 30 футах. До конца вашего следующего хода она уязвима ко всему урону от следующей атаки.",
+              "action": "action",
+              "range": "30 футов"
+            },
+            {
+              "id": "cleric_grave_sentinel",
+              "name": "Страж душ",
+              "name_en": "Sentinel at Death's Door",
+              "level": 6,
+              "description": "Реакцией вы отменяете критическое попадание по вам или союзнику в 30 футах.",
+              "action": "reaction",
+              "range": "30 футов"
+            },
+            {
+              "id": "cleric_grave_potent",
+              "name": "Мощные заговоры",
+              "name_en": "Potent Spellcasting",
+              "level": 8,
+              "description": "Вы добавляете модификатор Мудрости к урону заговоров жреца.",
+              "action": "passive"
+            },
+            {
+              "id": "cleric_grave_keeper",
+              "name": "Хранитель душ",
+              "name_en": "Keeper of Souls",
+              "level": 17,
+              "description": "Когда враг умирает в 60 футах, вы или союзник в 60 футах восстанавливает хиты, равные костям хитов врага.",
+              "action": "passive"
+            }
+          ]
+        },
+        {
+          "id": "cleric_order",
+          "name": "Домен порядка",
+          "name_en": "Order Domain",
+          "source": "Guildmasters' Guide to Ravnica / Tasha's Cauldron of Everything",
+          "summary": "Боги закона и порядка.",
+          "description": "Домен порядка дарует силу командовать и направлять союзников.",
+          "features": [
+            {
+              "id": "cleric_order_proficiency",
+              "name": "Бонусные владения",
+              "name_en": "Bonus Proficiencies",
+              "level": 1,
+              "description": "Вы получаете владение тяжёлыми доспехами и навыком Запугивание или Убеждение.",
+              "action": "passive"
+            },
+            {
+              "id": "cleric_order_voice",
+              "name": "Голос власти",
+              "name_en": "Voice of Authority",
+              "level": 1,
+              "description": "Когда вы накладываете заклинание 1-го уровня или выше на союзника, он может реакцией совершить оружейную атаку.",
+              "action": "passive"
+            },
+            {
+              "id": "cleric_order_channel",
+              "name": "Божественный канал: Приказ",
+              "name_en": "Channel Divinity: Order's Demand",
+              "level": 2,
+              "description": "Божественным каналом вы заставляете выбранных слышащих существ в 30 футах совершить спасбросок Мудрости. Провалившие очарованы до конца вашего следующего хода и роняют предметы.",
+              "action": "action",
+              "range": "30 футов"
+            },
+            {
+              "id": "cleric_order_strike",
+              "name": "Божественный удар",
+              "name_en": "Divine Strike",
+              "level": 8,
+              "description": "Раз за ход оружейное попадание наносит +1к8 психического урона; на 14-м уровне +2к8.",
+              "action": "passive"
+            },
+            {
+              "id": "cleric_order_avatar",
+              "name": "Аватар порядка",
+              "name_en": "Order's Wrath",
+              "level": 17,
+              "description": "Цель, получившая урон Божественным ударом, уязвима к следующему удару союзника, который добавляет 2к8 психического урона.",
+              "action": "passive"
+            }
+          ]
+        },
+        {
+          "id": "cleric_peace",
+          "name": "Домен мира",
+          "name_en": "Peace Domain",
+          "source": "Tasha's Cauldron of Everything",
+          "summary": "Боги мира и гармонии.",
+          "description": "Домен мира дарует силу связывать союзников и защищать их.",
+          "features": [
+            {
+              "id": "cleric_peace_emboldening",
+              "name": "Воодушевляющая связь",
+              "name_en": "Emboldening Bond",
+              "level": 1,
+              "description": "Действием вы связываете согласных существ в 30 футах на 10 минут. Раз за ход связанный может добавить 1к4 к проверке, атаке или спасброску.",
+              "action": "action",
+              "range": "30 футов",
+              "duration": "10 минут"
+            },
+            {
+              "id": "cleric_peace_channel",
+              "name": "Божественный канал: Баланс",
+              "name_en": "Channel Divinity: Balm of Peace",
+              "level": 2,
+              "description": "Божественным каналом вы перемещаетесь на скорость без провоцирования атак и лечите существ рядом (2к6 + Мудрость).",
+              "action": "action"
+            },
+            {
+              "id": "cleric_peace_protective",
+              "name": "Защитная связь",
+              "name_en": "Protective Bond",
+              "level": 6,
+              "description": "Когда связанный союзник получает урон, другой связанный участник в 30 футах может реакцией телепортироваться рядом и принять урон.",
+              "action": "reaction",
+              "range": "30 футов"
+            },
+            {
+              "id": "cleric_peace_potent",
+              "name": "Мощные заговоры",
+              "name_en": "Potent Spellcasting",
+              "level": 8,
+              "description": "Вы добавляете модификатор Мудрости к урону заговоров жреца.",
+              "action": "passive"
+            },
+            {
+              "id": "cleric_peace_expansive",
+              "name": "Расширение связи",
+              "name_en": "Expansive Bond",
+              "level": 17,
+              "description": "Связанные существа могут добавлять к4 к урону, и получают сопротивление урону, когда принимают его за другого.",
+              "action": "passive"
+            }
+          ]
+        },
+        {
+          "id": "cleric_twilight",
+          "name": "Домен сумрака",
+          "name_en": "Twilight Domain",
+          "source": "Tasha's Cauldron of Everything",
+          "summary": "Боги сумерек и переходов.",
+          "description": "Домен сумрака дарует силу защищать в темноте.",
+          "features": [
+            {
+              "id": "cleric_twilight_proficiency",
+              "name": "Бонусные владения",
+              "name_en": "Bonus Proficiencies",
+              "level": 1,
+              "description": "Вы получаете владение тяжёлыми доспехами и боевым оружием.",
+              "action": "passive"
+            },
+            {
+              "id": "cleric_twilight_eyes",
+              "name": "Глаза ночи",
+              "name_en": "Eyes of Night",
+              "level": 1,
+              "description": "Вы получаете тёмное зрение 300 футов и можете делиться им с союзниками.",
+              "action": "passive"
+            },
+            {
+              "id": "cleric_twilight_vigil",
+              "name": "Благословение ночного стража",
+              "name_en": "Vigilant Blessing",
+              "level": 1,
+              "description": "Действием вы даёте согласному существу преимущество на следующую инициативу.",
+              "action": "action"
+            },
+            {
+              "id": "cleric_twilight_channel",
+              "name": "Божественный канал: Сумеречное святилище",
+              "name_en": "Channel Divinity: Twilight Sanctuary",
+              "level": 2,
+              "description": "Божественным каналом вы создаёте сферу 30 футов на 1 минуту. В конце хода существа внутри получают временные хиты (1к6 + уровень жреца) или снимают испуг/очарование.",
+              "action": "action",
+              "range": "30 футов",
+              "duration": "1 минута"
+            },
+            {
+              "id": "cleric_twilight_steps",
+              "name": "Шаги ночи",
+              "name_en": "Steps of Night",
+              "level": 6,
+              "description": "В тусклом свете/темноте бонусным действием вы получаете полёт на 1 минуту. Применений = бонус мастерства, восстановление после продолжительного отдыха.",
+              "action": "bonus",
+              "recharge": "long"
+            },
+            {
+              "id": "cleric_twilight_strike",
+              "name": "Божественный удар",
+              "name_en": "Divine Strike",
+              "level": 8,
+              "description": "Раз за ход оружейное попадание наносит +1к8 урона излучением; на 14-м уровне +2к8.",
+              "action": "passive"
+            },
+            {
+              "id": "cleric_twilight_shroud",
+              "name": "Сумеречный покров",
+              "name_en": "Twilight Shroud",
+              "level": 17,
+              "description": "Существа внутри вашего Сумеречного святилища получают укрытие наполовину.",
+              "action": "passive"
+            }
+          ]
+        },
+        {
+          "id": "cleric_death",
+          "name": "Домен смерти",
+          "name_en": "Death Domain",
+          "source": "Dungeon Master's Guide (2014)",
+          "summary": "Боги смерти и некромантии.",
+          "description": "Домен смерти дарует силу убивать и поднимать нежить. Опциональный подкласс.",
+          "restrictions": "Опциональный подкласс из DMG; требует разрешения ведущего.",
+          "features": [
+            {
+              "id": "cleric_death_reaper",
+              "name": "Жнец",
+              "name_en": "Reaper",
+              "level": 1,
+              "description": "Вы изучаете один заговор некромантии из списка любого класса. Ваши заговоры некромантии могут нацеливаться на двух существ.",
+              "action": "passive"
+            },
+            {
+              "id": "cleric_death_proficiency",
+              "name": "Бонусное владение",
+              "name_en": "Bonus Proficiency",
+              "level": 1,
+              "description": "Вы получаете владение боевым оружием.",
+              "action": "passive"
+            },
+            {
+              "id": "cleric_death_channel",
+              "name": "Божественный канал: Прикосновение смерти",
+              "name_en": "Channel Divinity: Touch of Death",
+              "level": 2,
+              "description": "При попадании рукопашной атакой Божественным каналом вы наносите дополнительно 5 + удвоенный уровень жреца некротического урона.",
+              "action": "action"
+            },
+            {
+              "id": "cleric_death_inescapable",
+              "name": "Неотвратимое разрушение",
+              "name_en": "Inescapable Destruction",
+              "level": 6,
+              "description": "Заклинания некромантии и Божественный канал игнорируют сопротивление некротическому урону.",
+              "action": "passive"
+            },
+            {
+              "id": "cleric_death_strike",
+              "name": "Божественный удар",
+              "name_en": "Divine Strike",
+              "level": 8,
+              "description": "Раз за ход оружейное попадание наносит +1к8 некротического урона; на 14-м уровне +2к8.",
+              "action": "passive"
+            },
+            {
+              "id": "cleric_death_improved",
+              "name": "Улучшенный жнец",
+              "name_en": "Improved Reaper",
+              "level": 17,
+              "description": "Ваши заклинания некромантии 1-5 уровня, нацеленные на одно существо, могут нацеливаться на двух.",
+              "action": "passive"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "subclasses": []
+}
