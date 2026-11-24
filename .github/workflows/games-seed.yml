@@ -1,0 +1,41 @@
+name: Игры в расписание (из файлов)
+
+# Заливает в базу записей игры из папки db-seed/. Файлы можно запускать повторно — дубликатов не будет.
+on:
+  push:
+    branches: [main]
+    paths: ['db-seed/**', '.github/workflows/games-seed.yml']
+  workflow_dispatch:
+
+concurrency:
+  group: games-server
+  cancel-in-progress: false
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || 'ea02390c0a20b131134814fbd0121c16' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Заливка
+        working-directory: worker
+        run: |
+          ID=$(npx -y wrangler@3 d1 list --json | node -e "const l=JSON.parse(require('fs').readFileSync(0,'utf8'));const d=l.find(x=>x.name==='chd-games');process.stdout.write(d?d.uuid:'')")
+          [ -n "$ID" ] || { echo "::error::База chd-games не найдена"; exit 1; }
+          sed -i "s/__D1_ID__/$ID/" wrangler.toml
+          if [ "${{ github.event_name }}" = "push" ]; then
+            FILES=$(git diff --name-only --diff-filter=AM HEAD~1 HEAD -- ../db-seed/ | sed 's#^#../#')
+          else
+            FILES=$(ls ../db-seed/*.sql)
+          fi
+          for f in $FILES; do
+            echo "== $f"
+            npx -y wrangler@3 d1 execute chd-games --remote --file="$f" -y
+          done
