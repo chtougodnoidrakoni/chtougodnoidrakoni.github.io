@@ -1,0 +1,491 @@
+{
+  "format": "dnd-content-pack",
+  "format_version": 1,
+  "ruleset": "5e-2014",
+  "pack_id": "dnd_2014_races_test_01",
+  "pack_name": "D&D 5e (2014) — Тестовый пакет видов",
+  "pack_version": 1,
+  "language": "ru",
+  "author": "Тестовый импорт",
+  "description": "Тестовый пакет с тремя базовыми видами из Player's Handbook (2014).",
+  "sources": [
+    {
+      "id": "phb_2014",
+      "name": "Player's Handbook (2014)"
+    }
+  ],
+  "classes": [],
+  "subclasses": [],
+  "races": [
+    {
+      "id": "dwarf",
+      "name": "Дварф",
+      "name_en": "Dwarf",
+      "source": "Player's Handbook (2014)",
+      "summary": "Крепкий и выносливый народ подгорных кузнецов и воинов.",
+      "description": "Дварфы — коренастые и выносливые существа, известные своей любовью к камню, металлу и пиву. Они живут в подземных городах и славятся мастерством ремесленников и стойкостью в бою.",
+      "size": "Medium",
+      "speed": 25,
+      "ability_score_increase": {
+        "constitution": 2
+      },
+      "age": {
+        "adulthood": 50,
+        "lifespan": 350
+      },
+      "alignment": "Склонны к законопослушанию и добру.",
+      "languages": [
+        "Общий",
+        "Дварфийский"
+      ],
+      "proficiencies": {
+        "skills": [],
+        "weapons": [
+          "Боевой топор",
+          "Ручной топор",
+          "Лёгкий молот",
+          "Боевой молот"
+        ],
+        "armor": []
+      },
+      "subrace_title": "Подраса",
+      "traits": [
+        {
+          "id": "dwarf_darkvision",
+          "name": "Тёмное зрение",
+          "name_en": "Darkvision",
+          "description": "Вы видите в темноте на расстоянии 60 футов.",
+          "effects": [
+            {
+              "type": "darkvision",
+              "value": 60
+            }
+          ]
+        },
+        {
+          "id": "dwarf_resilience",
+          "name": "Дварфская стойкость",
+          "name_en": "Dwarven Resilience",
+          "description": "Вы получаете преимущество на спасброски от яда и сопротивление урону ядом.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Преимущество на спасброски от яда, сопротивление яду"
+            }
+          ]
+        },
+        {
+          "id": "dwarf_combat_training",
+          "name": "Боевая тренировка дварфов",
+          "name_en": "Dwarven Combat Training",
+          "description": "Вы владеете боевым топором, ручным топором, лёгким молотом и боевым молотом.",
+          "effects": [
+            {
+              "type": "weapon_proficiency",
+              "value": [
+                "Боевой топор",
+                "Ручной топор",
+                "Лёгкий молот",
+                "Боевой молот"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "dwarf_stonecunning",
+          "name": "Знание камня",
+          "name_en": "Stonecunning",
+          "description": "Вы добавляете удвоенный бонус мастерства к проверкам Истории, связанным с каменной кладкой.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Удвоенный бонус мастерства к Истории (каменная кладка)"
+            }
+          ]
+        }
+      ],
+      "subraces": [
+        {
+          "id": "hill_dwarf",
+          "name": "Горный дварф",
+          "name_en": "Hill Dwarf",
+          "source": "Player's Handbook (2014)",
+          "summary": "Дварфы с обострённым чутьём и крепким здоровьем.",
+          "ability_score_increase": {
+            "wisdom": 1
+          },
+          "traits": [
+            {
+              "id": "hill_dwarf_toughness",
+              "name": "Дварфская выносливость",
+              "name_en": "Dwarven Toughness",
+              "description": "Ваш максимум хитов увеличивается на 1 за каждый уровень.",
+              "effects": [
+                {
+                  "type": "hp_per_level",
+                  "value": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "mountain_dwarf",
+          "name": "Горный дварф",
+          "name_en": "Mountain Dwarf",
+          "source": "Player's Handbook (2014)",
+          "summary": "Сильные и выносливые дварфы, привыкшие к тяжёлым доспехам.",
+          "ability_score_increase": {
+            "strength": 2
+          },
+          "traits": [
+            {
+              "id": "mountain_dwarf_armor",
+              "name": "Дварфская броня",
+              "name_en": "Dwarven Armor Training",
+              "description": "Вы получаете владение лёгкими и средними доспехами.",
+              "effects": [
+                {
+                  "type": "armor_proficiency",
+                  "value": [
+                    "light",
+                    "medium"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "elf",
+      "name": "Эльф",
+      "name_en": "Elf",
+      "source": "Player's Handbook (2014)",
+      "summary": "Изящный и долгоживущий народ лесов и звёзд.",
+      "description": "Эльфы — стройные и грациозные существа, живущие в гармонии с природой. Они известны своей долгой жизнью, острым зрением и любовью к магии.",
+      "size": "Medium",
+      "speed": 30,
+      "ability_score_increase": {
+        "dexterity": 2
+      },
+      "age": {
+        "adulthood": 100,
+        "lifespan": 750
+      },
+      "alignment": "Склонны к хаосу, но в целом добрые.",
+      "languages": [
+        "Общий",
+        "Эльфийский"
+      ],
+      "proficiencies": {
+        "skills": [
+          "Внимательность"
+        ],
+        "weapons": [],
+        "armor": []
+      },
+      "subrace_title": "Подраса",
+      "traits": [
+        {
+          "id": "elf_darkvision",
+          "name": "Тёмное зрение",
+          "name_en": "Darkvision",
+          "description": "Вы видите в темноте на расстоянии 60 футов.",
+          "effects": [
+            {
+              "type": "darkvision",
+              "value": 60
+            }
+          ]
+        },
+        {
+          "id": "elf_keen_senses",
+          "name": "Острые чувства",
+          "name_en": "Keen Senses",
+          "description": "Вы владеете навыком Внимательность.",
+          "effects": [
+            {
+              "type": "skill_proficiency",
+              "value": [
+                "Внимательность"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "elf_fey_ancestry",
+          "name": "Наследие фей",
+          "name_en": "Fey Ancestry",
+          "description": "Вы получаете преимущество на спасброски от очарования и магия не может усыпить вас.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Преимущество на спасброски от очарования, иммунитет к магическому сну"
+            }
+          ]
+        },
+        {
+          "id": "elf_trance",
+          "name": "Транс",
+          "name_en": "Trance",
+          "description": "Вы не спите, а медитируете 4 часа вместо 8 часов сна.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Медитация 4 часа вместо сна"
+            }
+          ]
+        }
+      ],
+      "subraces": [
+        {
+          "id": "high_elf",
+          "name": "Высший эльф",
+          "name_en": "High Elf",
+          "source": "Player's Handbook (2014)",
+          "summary": "Эльфы, изучающие магию и живущие в городах.",
+          "ability_score_increase": {
+            "intelligence": 1
+          },
+          "traits": [
+            {
+              "id": "high_elf_cantrip",
+              "name": "Заговор",
+              "name_en": "Cantrip",
+              "description": "Вы знаете один заговор волшебника.",
+              "effects": [
+                {
+                  "type": "note",
+                  "text": "Один заговор из списка волшебника (Интеллект)"
+                }
+              ]
+            },
+            {
+              "id": "high_elf_weapons",
+              "name": "Дополнительное владение оружием",
+              "name_en": "Elf Weapon Training",
+              "description": "Вы владеете длинным мечом, коротким мечом, коротким луком и длинным луком.",
+              "effects": [
+                {
+                  "type": "weapon_proficiency",
+                  "value": [
+                    "Длинный меч",
+                    "Короткий меч",
+                    "Короткий лук",
+                    "Длинный лук"
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "wood_elf",
+          "name": "Лесной эльф",
+          "name_en": "Wood Elf",
+          "source": "Player's Handbook (2014)",
+          "summary": "Эльфы лесов, быстрые и скрытные.",
+          "ability_score_increase": {
+            "wisdom": 1
+          },
+          "traits": [
+            {
+              "id": "wood_elf_speed",
+              "name": "Скорость",
+              "name_en": "Fleet of Foot",
+              "description": "Ваша скорость увеличивается до 35 футов.",
+              "effects": [
+                {
+                  "type": "speed",
+                  "value": 5
+                }
+              ]
+            },
+            {
+              "id": "wood_elf_mask",
+              "name": "Маска дикой природы",
+              "name_en": "Mask of the Wild",
+              "description": "Вы можете скрываться, даже если вас лишь слегка заслоняют листва, дождь, снег, туман или другие природные явления.",
+              "effects": [
+                {
+                  "type": "note",
+                  "text": "Скрытность в природных условиях"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "drow",
+          "name": "Дроу (тёмный эльф)",
+          "name_en": "Drow",
+          "source": "Player's Handbook (2014)",
+          "summary": "Подземные эльфы с тёмной кожей и магией.",
+          "ability_score_increase": {
+            "charisma": 1
+          },
+          "traits": [
+            {
+              "id": "drow_darkvision",
+              "name": "Улучшенное тёмное зрение",
+              "name_en": "Superior Darkvision",
+              "description": "Вы видите в темноте на расстоянии 120 футов.",
+              "effects": [
+                {
+                  "type": "darkvision",
+                  "value": 120
+                }
+              ]
+            },
+            {
+              "id": "drow_magic",
+              "name": "Магия дроу",
+              "name_en": "Drow Magic",
+              "description": "Вы знаете заговор Танцующие огни. С 3-го уровня можете накладывать Огонь фей, с 5-го — Тьма. Харизма — базовая характеристика.",
+              "effects": [
+                {
+                  "type": "note",
+                  "text": "Танцующие огни; Огонь фей (3 ур.); Тьма (5 ур.)"
+                }
+              ]
+            },
+            {
+              "id": "drow_weapons",
+              "name": "Дополнительное владение оружием",
+              "name_en": "Drow Weapon Training",
+              "description": "Вы владеете рапирой, коротким мечом и ручным арбалетом.",
+              "effects": [
+                {
+                  "type": "weapon_proficiency",
+                  "value": [
+                    "Рапира",
+                    "Короткий меч",
+                    "Ручной арбалет"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "halfling",
+      "name": "Полурослик",
+      "name_en": "Halfling",
+      "source": "Player's Handbook (2014)",
+      "summary": "Маленький и удачливый народ, любящий уют и приключения.",
+      "description": "Полурослики — небольшие существа, известные своей удачливостью, ловкостью и любовью к домашнему уюту. Они отважны и любопытны.",
+      "size": "Small",
+      "speed": 25,
+      "ability_score_increase": {
+        "dexterity": 2
+      },
+      "age": {
+        "adulthood": 20,
+        "lifespan": 150
+      },
+      "alignment": "Склонны к добру и законопослушанию.",
+      "languages": [
+        "Общий",
+        "Полуросликов"
+      ],
+      "proficiencies": {
+        "skills": [],
+        "weapons": [],
+        "armor": []
+      },
+      "subrace_title": "Подраса",
+      "traits": [
+        {
+          "id": "halfling_lucky",
+          "name": "Удачливый",
+          "name_en": "Lucky",
+          "description": "Когда вы выбрасываете 1 на d20 для атаки, проверки характеристики или спасброска, вы можете перебросить и должны использовать новый результат.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Переброс 1 на d20"
+            }
+          ]
+        },
+        {
+          "id": "halfling_brave",
+          "name": "Храбрый",
+          "name_en": "Brave",
+          "description": "Вы получаете преимущество на спасброски от испуга.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Преимущество на спасброски от испуга"
+            }
+          ]
+        },
+        {
+          "id": "halfling_nimbleness",
+          "name": "Проворство полурослика",
+          "name_en": "Halfling Nimbleness",
+          "description": "Вы можете перемещаться через пространство существ, которые больше вас по размеру.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Проход через пространство крупных существ"
+            }
+          ]
+        }
+      ],
+      "subraces": [
+        {
+          "id": "lightfoot",
+          "name": "Легконогий",
+          "name_en": "Lightfoot",
+          "source": "Player's Handbook (2014)",
+          "summary": "Общительные и скрытные полурослики.",
+          "ability_score_increase": {
+            "charisma": 1
+          },
+          "traits": [
+            {
+              "id": "lightfoot_naturally_stealthy",
+              "name": "Прирождённая скрытность",
+              "name_en": "Naturally Stealthy",
+              "description": "Вы можете скрываться, даже если вас заслоняет существо, которое больше вас по размеру.",
+              "effects": [
+                {
+                  "type": "note",
+                  "text": "Скрытность при заслоне существом"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "stout",
+          "name": "Крепкий",
+          "name_en": "Stout",
+          "source": "Player's Handbook (2014)",
+          "summary": "Более крепкие полурослики с дварфийской кровью.",
+          "ability_score_increase": {
+            "constitution": 1
+          },
+          "traits": [
+            {
+              "id": "stout_resilience",
+              "name": "Дварфская стойкость",
+              "name_en": "Stout Resilience",
+              "description": "Вы получаете преимущество на спасброски от яда и сопротивление урону ядом.",
+              "effects": [
+                {
+                  "type": "note",
+                  "text": "Преимущество на спасброски от яда, сопротивление яду"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
