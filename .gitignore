@@ -3,3 +3,4 @@ dist/
 test-results/
 playwright-report/
 e2e/shots/
+tools/.games-dev.mjs

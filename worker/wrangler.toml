@@ -1,0 +1,16 @@
+# Сервер записей клуба. database_id подставляет GitHub Actions при выкладке.
+name = "chd-games"
+main = "src/index.ts"
+compatibility_date = "2024-11-01"
+
+[triggers]
+crons = ["*/15 * * * *"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "chd-games"
+database_id = "__D1_ID__"
+
+[vars]
+ADMIN_USERNAMES = "astrakhan_trener"
+APP_URL = "https://chtougodnoidrakoni.github.io/app/"
