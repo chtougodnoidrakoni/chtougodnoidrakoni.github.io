@@ -1,0 +1,732 @@
+{
+  "format": "dnd-content-pack",
+  "format_version": 1,
+  "ruleset": "5e-2014",
+  "pack_id": "dnd_2014_races_pack_06",
+  "pack_name": "D&D 5e (2014) — Экзотические виды (Эберрон, Ревника)",
+  "pack_version": 1,
+  "language": "ru",
+  "author": "Авторский структурированный справочник механик",
+  "description": "Пакет видов из сеттингов Эберрон и Ревника: Чейнджлинг, Шифтер, Варфорджед, Каллашта, Минотавр, Центавр, Локсидон, Ведалкен, Симик-Гибрид.",
+  "sources": [
+    {
+      "id": "erlw",
+      "name": "Eberron: Rising from the Last War"
+    },
+    {
+      "id": "ggtr",
+      "name": "Guildmasters' Guide to Ravnica"
+    }
+  ],
+  "classes": [],
+  "subclasses": [],
+  "races": [
+    {
+      "id": "changeling",
+      "name": "Чейнджлинг",
+      "name_en": "Changeling",
+      "source": "Eberron: Rising from the Last War",
+      "summary": "Меняющие облик потомки фей.",
+      "description": "Чейнджлинги — существа с фейской кровью, способные менять свою внешность по желанию. Они часто становятся шпионами, актёрами или авантюристами.",
+      "size": "Medium",
+      "speed": 30,
+      "ability_score_increase": {
+        "charisma": 2
+      },
+      "age": {
+        "adulthood": 20,
+        "lifespan": 100
+      },
+      "alignment": "Склонны к хаосу.",
+      "languages": [
+        "Общий",
+        "Два дополнительных на выбор"
+      ],
+      "proficiencies": {
+        "skills": [],
+        "weapons": [],
+        "armor": []
+      },
+      "subrace_title": "Наследие",
+      "traits": [
+        {
+          "id": "changeling_shapechanger",
+          "name": "Меняющий облик",
+          "name_en": "Shapechanger",
+          "description": "Действием вы можете изменить свою внешность (рост, вес, цвет кожи, одежду). Вы не можете изменить базовое строение тела.",
+          "action": "action",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Смена внешности (действие)"
+            }
+          ]
+        },
+        {
+          "id": "changeling_instincts",
+          "name": "Инстинкты чейнджлинга",
+          "name_en": "Changeling Instincts",
+          "description": "Вы получаете владение двумя навыками из списка: Обман, Проницательность, Запугивание, Убеждение.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Два навыка социального взаимодействия"
+            }
+          ]
+        }
+      ],
+      "subraces": []
+    },
+    {
+      "id": "shifter",
+      "name": "Шифтер",
+      "name_en": "Shifter",
+      "source": "Eberron: Rising from the Last War",
+      "summary": "Потомки людей и вервольфов.",
+      "description": "Шифтеры несут в себе звериную кровь. Они могут временно усиливать свои звериные черты.",
+      "size": "Medium",
+      "speed": 30,
+      "ability_score_increase": {
+        "dexterity": 1
+      },
+      "age": {
+        "adulthood": 15,
+        "lifespan": 80
+      },
+      "alignment": "Склонны к нейтралитету.",
+      "languages": [
+        "Общий",
+        "Один дополнительный на выбор"
+      ],
+      "proficiencies": {
+        "skills": [],
+        "weapons": [],
+        "armor": []
+      },
+      "subrace_title": "Наследие",
+      "traits": [
+        {
+          "id": "shifter_darkvision",
+          "name": "Тёмное зрение",
+          "name_en": "Darkvision",
+          "description": "Вы видите в темноте на расстоянии 60 футов.",
+          "effects": [
+            {
+              "type": "darkvision",
+              "value": 60
+            }
+          ]
+        },
+        {
+          "id": "shifter_shifting",
+          "name": "Сдвиг",
+          "name_en": "Shifting",
+          "description": "Бонусным действием вы можете принять звериный облик на 1 минуту. Вы получаете временные хиты и особую способность (зависит от подрасы). Восстанавливается после короткого или продолжительного отдыха.",
+          "action": "bonus",
+          "uses": 1,
+          "recharge": "short",
+          "duration": "1 минута",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Временные хиты и звериная черта (1/короткий отдых)"
+            }
+          ]
+        }
+      ],
+      "subraces": [
+        {
+          "id": "shifter_beasthide",
+          "name": "Шифтер-зверошкурый",
+          "name_en": "Beasthide",
+          "source": "Eberron: Rising from the Last War",
+          "summary": "Выносливые и крепкие.",
+          "ability_score_increase": {
+            "constitution": 2
+          },
+          "traits": [
+            {
+              "id": "shifter_beasthide_trait",
+              "name": "Зверошкурый сдвиг",
+              "description": "При сдвиге вы получаете +1к6 временных хитов и +1 к КД.",
+              "effects": [
+                {
+                  "type": "note",
+                  "text": "+1к6 временных хитов, +1 КД при сдвиге"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "shifter_longtooth",
+          "name": "Шифтер-длиннозубый",
+          "name_en": "Longtooth",
+          "source": "Eberron: Rising from the Last War",
+          "summary": "Свирепые и агрессивные.",
+          "ability_score_increase": {
+            "strength": 2
+          },
+          "traits": [
+            {
+              "id": "shifter_longtooth_trait",
+              "name": "Длиннозубый сдвиг",
+              "description": "При сдвиге вы получаете естественное оружие (укус 1к6) и можете атаковать бонусным действием.",
+              "effects": [
+                {
+                  "type": "note",
+                  "text": "Укус 1к6 и бонусная атака при сдвиге"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "shifter_swiftstride",
+          "name": "Шифтер-быстроногий",
+          "name_en": "Swiftstride",
+          "source": "Eberron: Rising from the Last War",
+          "summary": "Быстрые и грациозные.",
+          "ability_score_increase": {
+            "charisma": 2
+          },
+          "traits": [
+            {
+              "id": "shifter_swiftstride_trait",
+              "name": "Быстроногий сдвиг",
+              "description": "При сдвиге ваша скорость увеличивается на 10 футов, и вы можете перемещаться без провоцированных атак.",
+              "effects": [
+                {
+                  "type": "note",
+                  "text": "+10 фт скорости и безопасное перемещение при сдвиге"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "shifter_wildhunt",
+          "name": "Шифтер-дикий охотник",
+          "name_en": "Wildhunt",
+          "source": "Eberron: Rising from the Last War",
+          "summary": "Чувствительные к запахам.",
+          "ability_score_increase": {
+            "wisdom": 2
+          },
+          "traits": [
+            {
+              "id": "shifter_wildhunt_trait",
+              "name": "Дикий сдвиг",
+              "description": "При сдвиге вы получаете преимущество на проверки Внимательности и не можете быть застигнуты врасплох.",
+              "effects": [
+                {
+                  "type": "note",
+                  "text": "Преимущество на Внимательность при сдвиге"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "warforged",
+      "name": "Варфорджед",
+      "name_en": "Warforged",
+      "source": "Eberron: Rising from the Last War",
+      "summary": "Живые конструкции, созданные для войны.",
+      "description": "Варфорджеды — разумные боевые машины из дерева и металла. Они ищут своё место в мире после войны.",
+      "size": "Medium",
+      "speed": 30,
+      "ability_score_increase": {
+        "constitution": 2,
+        "intelligence": 1
+      },
+      "age": {
+        "adulthood": 2,
+        "lifespan": 200
+      },
+      "alignment": "Склонны к закону.",
+      "languages": [
+        "Общий",
+        "Один дополнительный на выбор"
+      ],
+      "proficiencies": {
+        "skills": [],
+        "weapons": [],
+        "armor": []
+      },
+      "subrace_title": "Наследие",
+      "traits": [
+        {
+          "id": "warforged_construct",
+          "name": "Конструкт",
+          "name_en": "Constructed Resilience",
+          "description": "Вы получаете преимущество на спасброски от яда и сопротивление яду, иммунитет к болезням и магическому сну.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Сопротивление яду, иммунитет к болезням и сну"
+            }
+          ]
+        },
+        {
+          "id": "warforged_armor",
+          "name": "Встроенная защита",
+          "name_en": "Integrated Protection",
+          "description": "Вы получаете +1 к КД. Вы можете носить доспех поверх встроенной защиты.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "+1 к КД"
+            }
+          ]
+        },
+        {
+          "id": "warforged_sleep",
+          "name": "Сенсорная медитация",
+          "name_en": "Sentry's Rest",
+          "description": "Вы не спите, а медитируете 6 часов, оставаясь в сознании.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Медитация 6 часов, не спите"
+            }
+          ]
+        }
+      ],
+      "subraces": []
+    },
+    {
+      "id": "kalashtar",
+      "name": "Каллашта",
+      "name_en": "Kalashtar",
+      "source": "Eberron: Rising from the Last War",
+      "summary": "Люди, связанные с добрыми духами снов.",
+      "description": "Каллашта — люди, чьи предки слились с духами из мира снов. Они обладают телепатией и устойчивостью к психической магии.",
+      "size": "Medium",
+      "speed": 30,
+      "ability_score_increase": {
+        "wisdom": 2,
+        "charisma": 1
+      },
+      "age": {
+        "adulthood": 20,
+        "lifespan": 100
+      },
+      "alignment": "Склонны к закону и добру.",
+      "languages": [
+        "Общий",
+        "Каллаштар",
+        "Один дополнительный на выбор"
+      ],
+      "proficiencies": {
+        "skills": [],
+        "weapons": [],
+        "armor": []
+      },
+      "subrace_title": "Наследие",
+      "traits": [
+        {
+          "id": "kalashtar_telepathy",
+          "name": "Телепатия",
+          "name_en": "Dual Mind",
+          "description": "Вы можете телепатически общаться с любым существом в пределах 60 футов.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Телепатия 60 футов"
+            }
+          ]
+        },
+        {
+          "id": "kalashtar_resistance",
+          "name": "Ментальная устойчивость",
+          "name_en": "Mental Discipline",
+          "description": "Вы получаете преимущество на спасброски Мудрости и сопротивление психическому урону.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Преимущество на МДР, сопротивление психике"
+            }
+          ]
+        },
+        {
+          "id": "kalashtar_sleep",
+          "name": "Сон без снов",
+          "name_en": "Severed from Dreams",
+          "description": "Вы не видите снов и имеете иммунитет к магии, влияющей на сны.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Иммунитет к магии снов"
+            }
+          ]
+        }
+      ],
+      "subraces": []
+    },
+    {
+      "id": "minotaur",
+      "name": "Минотавр",
+      "name_en": "Minotaur",
+      "source": "Guildmasters' Guide to Ravnica",
+      "summary": "Мощные быкоголовые воины.",
+      "description": "Минотавры — гордые и сильные существа с бычьими головами. Они известны своей честью и боевым мастерством.",
+      "size": "Medium",
+      "speed": 30,
+      "ability_score_increase": {
+        "strength": 2,
+        "constitution": 1
+      },
+      "age": {
+        "adulthood": 15,
+        "lifespan": 80
+      },
+      "alignment": "Склонны к закону.",
+      "languages": [
+        "Общий",
+        "Минотаврийский"
+      ],
+      "proficiencies": {
+        "skills": [],
+        "weapons": [],
+        "armor": []
+      },
+      "subrace_title": "Наследие",
+      "traits": [
+        {
+          "id": "minotaur_horns",
+          "name": "Рога",
+          "name_en": "Horns",
+          "description": "Ваши рога — естественное оружие (1к6 дробящего урона).",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Атака рогами 1к6"
+            }
+          ]
+        },
+        {
+          "id": "minotaur_charge",
+          "name": "Натиск",
+          "name_en": "Goring Rush",
+          "description": "При действии Рывок вы можете бонусным действием атаковать рогами.",
+          "action": "bonus",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Атака рогами после Рывка"
+            }
+          ]
+        },
+        {
+          "id": "minotaur_hammering",
+          "name": "Сокрушающий удар",
+          "name_en": "Hammering Horns",
+          "description": "При попадании рукопашной атакой вы можете попытаться оттолкнуть цель на 10 футов.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Отталкивание на 10 футов при попадании"
+            }
+          ]
+        }
+      ],
+      "subraces": []
+    },
+    {
+      "id": "centaur",
+      "name": "Центавр",
+      "name_en": "Centaur",
+      "source": "Guildmasters' Guide to Ravnica",
+      "summary": "Полулюди-полукони, быстрые и гордые.",
+      "description": "Центавры — существа с телом лошади и торсом гуманоида. Они известны своей скоростью и связью с природой.",
+      "size": "Medium",
+      "speed": 40,
+      "ability_score_increase": {
+        "strength": 2,
+        "wisdom": 1
+      },
+      "age": {
+        "adulthood": 20,
+        "lifespan": 100
+      },
+      "alignment": "Склонны к нейтралитету.",
+      "languages": [
+        "Общий",
+        "Сильван"
+      ],
+      "proficiencies": {
+        "skills": [
+          "Выживание"
+        ],
+        "weapons": [],
+        "armor": []
+      },
+      "subrace_title": "Наследие",
+      "traits": [
+        {
+          "id": "centaur_charge",
+          "name": "Натиск",
+          "name_en": "Charge",
+          "description": "Если вы перемещаетесь на 30 футов по прямой к цели и атакуете, вы наносите дополнительный урон 1к4.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "+1к4 урона при натиске"
+            }
+          ]
+        },
+        {
+          "id": "centaur_hooves",
+          "name": "Копыта",
+          "name_en": "Hooves",
+          "description": "Ваши копыта — естественное оружие (1к6 дробящего урона).",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Атака копытами 1к6"
+            }
+          ]
+        },
+        {
+          "id": "centaur_equine_build",
+          "name": "Лошадиное телосложение",
+          "name_en": "Equine Build",
+          "description": "Вы можете нести больше груза, но с трудом взбираетесь по лестницам.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Увеличенная грузоподъёмность"
+            }
+          ]
+        }
+      ],
+      "subraces": []
+    },
+    {
+      "id": "loxodon",
+      "name": "Локсидон",
+      "name_en": "Loxodon",
+      "source": "Guildmasters' Guide to Ravnica",
+      "summary": "Мудрые слоны-гуманоиды.",
+      "description": "Локсидоны — спокойные и мудрые существа с чертами слона. Они ценят мир и порядок.",
+      "size": "Medium",
+      "speed": 30,
+      "ability_score_increase": {
+        "constitution": 2,
+        "wisdom": 1
+      },
+      "age": {
+        "adulthood": 20,
+        "lifespan": 450
+      },
+      "alignment": "Склонны к закону и добру.",
+      "languages": [
+        "Общий",
+        "Локсидонский"
+      ],
+      "proficiencies": {
+        "skills": [],
+        "weapons": [],
+        "armor": []
+      },
+      "subrace_title": "Наследие",
+      "traits": [
+        {
+          "id": "loxodon_serenity",
+          "name": "Безмятежность",
+          "name_en": "Serenity",
+          "description": "Вы получаете преимущество на спасброски от очарования и испуга.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Преимущество на спасброски от очарования и испуга"
+            }
+          ]
+        },
+        {
+          "id": "loxodon_armor",
+          "name": "Природная броня",
+          "name_en": "Loxodon Serenity",
+          "description": "Ваш КД без доспехов равен 12 + модификатор Телосложения.",
+          "effects": [
+            {
+              "type": "unarmored_ac",
+              "base": 12,
+              "abilities": [
+                "constitution"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "loxodon_trunk",
+          "name": "Хобот",
+          "name_en": "Trunk",
+          "description": "Вы можете использовать хобот для захвата и манипулирования предметами.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Манипуляции хоботом"
+            }
+          ]
+        }
+      ],
+      "subraces": []
+    },
+    {
+      "id": "vedalken",
+      "name": "Ведалкен",
+      "name_en": "Vedalken",
+      "source": "Guildmasters' Guide to Ravnica",
+      "summary": "Логичные и холодные синекожие гуманоиды.",
+      "description": "Ведалкены — рациональные и любознательные существа, стремящиеся к совершенству.",
+      "size": "Medium",
+      "speed": 30,
+      "ability_score_increase": {
+        "intelligence": 2,
+        "wisdom": 1
+      },
+      "age": {
+        "adulthood": 20,
+        "lifespan": 500
+      },
+      "alignment": "Склонны к закону.",
+      "languages": [
+        "Общий",
+        "Ведалкенский"
+      ],
+      "proficiencies": {
+        "skills": [],
+        "weapons": [],
+        "armor": []
+      },
+      "subrace_title": "Наследие",
+      "traits": [
+        {
+          "id": "vedalken_dispassion",
+          "name": "Бесстрастие",
+          "name_en": "Vedalken Dispassion",
+          "description": "Вы получаете преимущество на спасброски Интеллекта, Мудрости и Харизмы.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Преимущество на спасброски ИНТ, МДР, ХАР"
+            }
+          ]
+        },
+        {
+          "id": "vedalken_tireless",
+          "name": "Неутомимость",
+          "name_en": "Tireless Precision",
+          "description": "Вы добавляете 1к4 к проверкам, использующим владения инструментами.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "+1к4 к инструментам"
+            }
+          ]
+        },
+        {
+          "id": "vedalken_partial_amphibious",
+          "name": "Частичная амфибия",
+          "name_en": "Partially Amphibious",
+          "description": "Вы можете дышать под водой в течение 1 часа.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Дыхание под водой 1 час"
+            }
+          ]
+        }
+      ],
+      "subraces": []
+    },
+    {
+      "id": "simic_hybrid",
+      "name": "Симик-гибрид",
+      "name_en": "Simic Hybrid",
+      "source": "Guildmasters' Guide to Ravnica",
+      "summary": "Гуманоиды, изменённые магией Симик.",
+      "description": "Симик-гибриды — существа, изменённые биомантией для выполнения определённых задач. Они могут иметь жабры, крылья или другие модификации.",
+      "size": "Medium",
+      "speed": 30,
+      "ability_score_increase": {
+        "constitution": 2
+      },
+      "age": {
+        "adulthood": 20,
+        "lifespan": 100
+      },
+      "alignment": "Склонны к нейтралитету.",
+      "languages": [
+        "Общий",
+        "Один дополнительный на выбор"
+      ],
+      "proficiencies": {
+        "skills": [],
+        "weapons": [],
+        "armor": []
+      },
+      "subrace_title": "Модификация",
+      "traits": [
+        {
+          "id": "simic_hybrid_darkvision",
+          "name": "Тёмное зрение",
+          "name_en": "Darkvision",
+          "description": "Вы видите в темноте на расстоянии 60 футов.",
+          "effects": [
+            {
+              "type": "darkvision",
+              "value": 60
+            }
+          ]
+        }
+      ],
+      "subraces": [
+        {
+          "id": "simic_hybrid_air",
+          "name": "Воздушная модификация",
+          "name_en": "Air Adaptation",
+          "source": "Guildmasters' Guide to Ravnica",
+          "summary": "Вы можете летать.",
+          "traits": [
+            {
+              "id": "simic_hybrid_air_trait",
+              "name": "Крылья",
+              "description": "С 5-го уровня вы можете летать.",
+              "effects": [
+                {
+                  "type": "note",
+                  "text": "Полёт (5 ур.)"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "simic_hybrid_water",
+          "name": "Водная модификация",
+          "name_en": "Water Adaptation",
+          "source": "Guildmasters' Guide to Ravnica",
+          "summary": "Вы можете дышать под водой.",
+          "traits": [
+            {
+              "id": "simic_hybrid_water_trait",
+              "name": "Жабры",
+              "description": "Вы можете дышать под водой и получаете скорость плавания 30 футов.",
+              "effects": [
+                {
+                  "type": "note",
+                  "text": "Дыхание под водой, скорость плавания 30"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
