@@ -1,0 +1,493 @@
+{
+  "format": "dnd-content-pack",
+  "format_version": 1,
+  "ruleset": "5e-2014",
+  "pack_id": "dnd_2014_races_pack_04",
+  "pack_name": "D&D 5e (2014) — Виды (Часть 4)",
+  "pack_version": 1,
+  "language": "ru",
+  "author": "Авторский структурированный справочник механик",
+  "description": "Четвёртая часть пакета видов для правил 2014 года: Аасимар, Голиаф, Кенку, Табакси, Тритон.",
+  "sources": [
+    {
+      "id": "dmg_2014",
+      "name": "Dungeon Master's Guide (2014)"
+    },
+    {
+      "id": "eepc",
+      "name": "Elemental Evil Player's Companion"
+    },
+    {
+      "id": "scag",
+      "name": "Sword Coast Adventurer's Guide"
+    },
+    {
+      "id": "vgtm",
+      "name": "Volo's Guide to Monsters"
+    }
+  ],
+  "classes": [],
+  "subclasses": [],
+  "races": [
+    {
+      "id": "aasimar",
+      "name": "Аасимар",
+      "name_en": "Aasimar",
+      "source": "Dungeon Master's Guide (2014)",
+      "summary": "Смертные с небесным наследием.",
+      "description": "Аасимары рождаются с искрой света в душе, унаследованной от небожителей. Они несут в мир добро и надежду, но их сила может быть разрушительной.",
+      "size": "Medium",
+      "speed": 30,
+      "ability_score_increase": {
+        "charisma": 2,
+        "wisdom": 1
+      },
+      "age": {
+        "adulthood": 20,
+        "lifespan": 160
+      },
+      "alignment": "Склонны к добру.",
+      "languages": [
+        "Общий",
+        "Небесный"
+      ],
+      "proficiencies": {
+        "skills": [],
+        "weapons": [],
+        "armor": []
+      },
+      "subrace_title": "Наследие",
+      "traits": [
+        {
+          "id": "aasimar_darkvision",
+          "name": "Тёмное зрение",
+          "name_en": "Darkvision",
+          "description": "Вы видите в темноте на расстоянии 60 футов.",
+          "effects": [
+            {
+              "type": "darkvision",
+              "value": 60
+            }
+          ]
+        },
+        {
+          "id": "aasimar_resistance",
+          "name": "Небесное сопротивление",
+          "name_en": "Celestial Resistance",
+          "description": "Вы получаете сопротивление урону некротической энергией и излучением.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Сопротивление некротическому урону и излучению"
+            }
+          ]
+        },
+        {
+          "id": "aasimar_healing",
+          "name": "Целительные руки",
+          "name_en": "Healing Hands",
+          "description": "Действием вы касаетесь существа и восстанавливаете ему хиты, равные вашему уровню. Восстанавливается после продолжительного отдыха.",
+          "action": "action",
+          "uses": 1,
+          "recharge": "long",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Лечение = уровень персонажа (1 раз в долгий отдых)"
+            }
+          ]
+        },
+        {
+          "id": "aasimar_light",
+          "name": "Светоносность",
+          "name_en": "Light Bearer",
+          "description": "Вы знаете заговор Свет. Харизма — базовая характеристика.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Заговор Свет (Харизма)"
+            }
+          ]
+        }
+      ],
+      "subraces": [
+        {
+          "id": "aasimar_fallen",
+          "name": "Падший",
+          "name_en": "Fallen",
+          "source": "Volo's Guide to Monsters",
+          "summary": "Аасимар с тёмным наследием.",
+          "traits": [
+            {
+              "id": "aasimar_fallen_necrotic",
+              "name": "Некротическая аура",
+              "description": "С 3-го уровня вы можете действием на 1 минуту окружить себя аурой страха. Враги в ауре испуганы.",
+              "uses": 1,
+              "recharge": "long",
+              "effects": [
+                {
+                  "type": "note",
+                  "text": "Аура страха (1/долгий отдых)"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "aasimar_scourge",
+          "name": "Каратель",
+          "name_en": "Scourge",
+          "source": "Volo's Guide to Monsters",
+          "summary": "Аасимар, несущий очищающий свет.",
+          "traits": [
+            {
+              "id": "aasimar_scourge_aura",
+              "name": "Аура света",
+              "description": "С 3-го уровня вы можете действием на 1 минуту излучать свет, наносящий урон врагам.",
+              "uses": 1,
+              "recharge": "long",
+              "effects": [
+                {
+                  "type": "note",
+                  "text": "Аура света (1/долгий отдых)"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "aasimar_protector",
+          "name": "Защитник",
+          "name_en": "Protector",
+          "source": "Volo's Guide to Monsters",
+          "summary": "Аасимар с крыльями.",
+          "traits": [
+            {
+              "id": "aasimar_protector_wings",
+              "name": "Крылья",
+              "description": "С 3-го уровня вы можете действием получить крылья и скорость полёта на 1 минуту.",
+              "uses": 1,
+              "recharge": "long",
+              "effects": [
+                {
+                  "type": "note",
+                  "text": "Полёт (1/долгий отдых)"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "goliath",
+      "name": "Голиаф",
+      "name_en": "Goliath",
+      "source": "Elemental Evil Player's Companion",
+      "summary": "Огромные и сильные горные воины.",
+      "description": "Голиафы — потомки великанов, живущие в суровых горах. Они известны своей силой, выносливостью и любовью к соревнованиям.",
+      "size": "Medium",
+      "speed": 30,
+      "ability_score_increase": {
+        "strength": 2,
+        "constitution": 1
+      },
+      "age": {
+        "adulthood": 15,
+        "lifespan": 100
+      },
+      "alignment": "Склонны к закону и добру.",
+      "languages": [
+        "Общий",
+        "Великаний"
+      ],
+      "proficiencies": {
+        "skills": [
+          "Атлетика"
+        ],
+        "weapons": [],
+        "armor": []
+      },
+      "subrace_title": "Наследие",
+      "traits": [
+        {
+          "id": "goliath_natural_athlete",
+          "name": "Прирождённый атлет",
+          "name_en": "Natural Athlete",
+          "description": "Вы получаете владение навыком Атлетика.",
+          "effects": [
+            {
+              "type": "skill_proficiency",
+              "value": [
+                "Атлетика"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "goliath_stone_endurance",
+          "name": "Каменная выносливость",
+          "name_en": "Stone's Endurance",
+          "description": "Реакцией при получении урона вы можете уменьшить его на 1к12 + модификатор Телосложения. Восстанавливается после короткого или продолжительного отдыха.",
+          "action": "reaction",
+          "uses": 1,
+          "recharge": "short",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Уменьшение урона 1к12 + ТЕЛ (1/короткий отдых)"
+            }
+          ]
+        },
+        {
+          "id": "goliath_powerful_build",
+          "name": "Мощное телосложение",
+          "name_en": "Powerful Build",
+          "description": "Вы считаетесь на один размер больше при определении грузоподъёмности и подъёма.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Считаетесь на размер больше для грузоподъёмности"
+            }
+          ]
+        },
+        {
+          "id": "goliath_mountain_born",
+          "name": "Рождённый в горах",
+          "name_en": "Mountain Born",
+          "description": "Вы получаете сопротивление урону холодом и акклиматизацию к большим высотам.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Сопротивление холоду, акклиматизация к высоте"
+            }
+          ]
+        }
+      ],
+      "subraces": []
+    },
+    {
+      "id": "kenku",
+      "name": "Кенку",
+      "name_en": "Kenku",
+      "source": "Volo's Guide to Monsters",
+      "summary": "Птицелюди, лишённые собственного голоса и полёта.",
+      "description": "Кенку — потомки птиц, проклятые за древнюю жадность. Они не могут летать и говорить своим голосом, но могут идеально имитировать любые звуки.",
+      "size": "Medium",
+      "speed": 30,
+      "ability_score_increase": {
+        "dexterity": 2,
+        "wisdom": 1
+      },
+      "age": {
+        "adulthood": 12,
+        "lifespan": 60
+      },
+      "alignment": "Склонны к хаосу и нейтралитету.",
+      "languages": [
+        "Общий",
+        "Ауран (понимание)"
+      ],
+      "proficiencies": {
+        "skills": [
+          "Ловкость рук",
+          "Скрытность"
+        ],
+        "weapons": [],
+        "armor": []
+      },
+      "subrace_title": "Наследие",
+      "traits": [
+        {
+          "id": "kenku_ambusher",
+          "name": "Мастер засад",
+          "name_en": "Ambusher",
+          "description": "Вы получаете преимущество на броски атаки по существам, которые ещё не действовали в этом бою.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Преимущество на атаки по не действовавшим существам"
+            }
+          ]
+        },
+        {
+          "id": "kenku_forgery",
+          "name": "Подделка",
+          "name_en": "Expert Forgery",
+          "description": "Вы получаете преимущество на проверки Обмана и Ловкости рук при создании подделок.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Преимущество на подделки"
+            }
+          ]
+        },
+        {
+          "id": "kenku_mimicry",
+          "name": "Мимикрия",
+          "name_en": "Kenku Training",
+          "description": "Вы можете имитировать любые звуки, которые слышали. Слушатели могут распознать подделку проверкой Проницательности против вашего Обмана.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Имитация звуков"
+            }
+          ]
+        }
+      ],
+      "subraces": []
+    },
+    {
+      "id": "tabaxi",
+      "name": "Табакси",
+      "name_en": "Tabaxi",
+      "source": "Volo's Guide to Monsters",
+      "summary": "Кошачьи гуманоиды с неуёмным любопытством.",
+      "description": "Табакси — стройные и ловкие существа с кошачьими чертами. Они любопытны, быстры и обожают приключения.",
+      "size": "Medium",
+      "speed": 30,
+      "ability_score_increase": {
+        "dexterity": 2,
+        "charisma": 1
+      },
+      "age": {
+        "adulthood": 15,
+        "lifespan": 80
+      },
+      "alignment": "Склонны к хаосу.",
+      "languages": [
+        "Общий",
+        "Один дополнительный на выбор"
+      ],
+      "proficiencies": {
+        "skills": [
+          "Внимательность",
+          "Скрытность"
+        ],
+        "weapons": [],
+        "armor": []
+      },
+      "subrace_title": "Наследие",
+      "traits": [
+        {
+          "id": "tabaxi_darkvision",
+          "name": "Тёмное зрение",
+          "name_en": "Darkvision",
+          "description": "Вы видите в темноте на расстоянии 60 футов.",
+          "effects": [
+            {
+              "type": "darkvision",
+              "value": 60
+            }
+          ]
+        },
+        {
+          "id": "tabaxi_claws",
+          "name": "Кошачьи когти",
+          "name_en": "Cat's Claws",
+          "description": "Ваши когти — естественное оружие (1к4 рубящего урона). Вы также получаете скорость лазания 20 футов.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Когти (1к4), скорость лазания 20 фт"
+            }
+          ]
+        },
+        {
+          "id": "tabaxi_feline_agility",
+          "name": "Кошачья ловкость",
+          "name_en": "Feline Agility",
+          "description": "В бою вы можете удвоить свою скорость до конца хода. Восстанавливается, если вы не перемещались в свой ход.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Удвоение скорости на ход"
+            }
+          ]
+        }
+      ],
+      "subraces": []
+    },
+    {
+      "id": "triton",
+      "name": "Тритон",
+      "name_en": "Triton",
+      "source": "Volo's Guide to Monsters",
+      "summary": "Стражи глубин, защищающие моря.",
+      "description": "Тритоны — гордые и благородные существа, живущие в подводных городах. Они защищают океаны от зла.",
+      "size": "Medium",
+      "speed": 30,
+      "ability_score_increase": {
+        "strength": 1,
+        "constitution": 1,
+        "charisma": 1
+      },
+      "age": {
+        "adulthood": 15,
+        "lifespan": 200
+      },
+      "alignment": "Склонны к закону и добру.",
+      "languages": [
+        "Общий",
+        "Первичный"
+      ],
+      "proficiencies": {
+        "skills": [],
+        "weapons": [],
+        "armor": []
+      },
+      "subrace_title": "Наследие",
+      "traits": [
+        {
+          "id": "triton_amphibious",
+          "name": "Амфибия",
+          "name_en": "Amphibious",
+          "description": "Вы можете дышать воздухом и под водой.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Дыхание под водой"
+            }
+          ]
+        },
+        {
+          "id": "triton_control_air_water",
+          "name": "Контроль воздуха и воды",
+          "name_en": "Control Air and Water",
+          "description": "Вы можете накладывать заклинания, связанные с водой и воздухом, с 3-го и 5-го уровней.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Заклинания воды и воздуха"
+            }
+          ]
+        },
+        {
+          "id": "triton_darkvision",
+          "name": "Тёмное зрение",
+          "name_en": "Darkvision",
+          "description": "Вы видите в темноте на расстоянии 60 футов.",
+          "effects": [
+            {
+              "type": "darkvision",
+              "value": 60
+            }
+          ]
+        },
+        {
+          "id": "triton_resistance",
+          "name": "Сопротивление холоду",
+          "name_en": "Emissary of the Sea",
+          "description": "Вы получаете сопротивление урону холодом и можете общаться с водными существами.",
+          "effects": [
+            {
+              "type": "note",
+              "text": "Сопротивление холоду, общение с морскими существами"
+            }
+          ]
+        }
+      ],
+      "subraces": []
+    }
+  ]
+}
