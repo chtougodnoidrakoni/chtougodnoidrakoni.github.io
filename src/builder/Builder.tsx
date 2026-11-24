@@ -35,9 +35,13 @@ export function Builder() {
   const [busy, setBusy] = useState(false);
   const [packs, setPacks] = useState<{ local: StoredPack[]; club: StoredPack[] }>({ local: [], club: [] });
   const [lib, setLib] = useState(() => location.hash === '#library');
-  useEffect(() => { void Promise.all([loadLocal(), loadClub(import.meta.env.BASE_URL)]).then(([local, club]) => { setActive([...club, ...local]); setPacks({ local, club }); }); }, []);
+  // сначала свои пакеты (быстро, из телефона), потом общие с сайта — и общие не затирают то, что успели импортировать
+  useEffect(() => {
+    void loadLocal().then((local) => setPacks((p) => { setActive([...p.club, ...local]); return { ...p, local }; }));
+    void loadClub(import.meta.env.BASE_URL).then((club) => setPacks((p) => { setActive([...club, ...p.local]); return { ...p, club }; }));
+  }, []);
   useEffect(() => { const f = () => setLib(location.hash === '#library'); addEventListener('hashchange', f); return () => removeEventListener('hashchange', f); }, []);
-  const onPacks = (local: StoredPack[]) => { setActive([...packs.club, ...local]); setPacks((p) => ({ ...p, local })); };
+  const onPacks = (local: StoredPack[]) => setPacks((p) => { setActive([...p.club, ...local]); return { ...p, local }; });
   useEffect(() => { try { localStorage.setItem(DRAFT, JSON.stringify({ b, step })); } catch { /* приватный режим */ } }, [b, step]);
   useEffect(() => { fetch(`${import.meta.env.BASE_URL}spells.json`).then((r) => r.json()).then(setDb).catch(() => {}); }, []);
   const up = (p: Partial<Build>) => setB((x) => ({ ...x, ...p }));

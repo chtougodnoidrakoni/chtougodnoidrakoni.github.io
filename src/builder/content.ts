@@ -288,7 +288,7 @@ export function validate(raw: unknown, existing: StoredPack[] = []): Report {
     stats.backgrounds++;
     takeId(g.id, where, 'предыстории');
     req(g as unknown as Record<string, unknown>, ['name', 'name_en', 'source', 'description'], where);
-    const skills = (list: unknown, w: string) => { if (list === undefined) return; if (!Array.isArray(list)) { errors.push(`${w}: skill_proficiencies — список навыков`); return; } for (const x of list) if (!SKILL_SET.has(String(x))) warnings.push(`${w}: навык «${String(x)}» не совпадает с названиями на листе`); };
+    const skills = (list: unknown, w: string) => { if (list === undefined) return; if (!Array.isArray(list)) { errors.push(`${w}: skill_proficiencies — список навыков`); return; } for (const x of list) if (!SKILL_SET.has(skillName(String(x)))) warnings.push(`${w}: навык «${String(x)}» не совпадает с названиями на листе`); };
     skills(g.skill_proficiencies, where);
     if (g.skill_choice && (!isNum(g.skill_choice.choose) || (g.skill_choice.from !== 'any' && !Array.isArray(g.skill_choice.from)))) errors.push(`${where}: skill_choice — { choose: число, from: [навыки] или "any" }`);
     for (const k of ['tool_proficiencies', 'languages', 'equipment'] as const) if (g[k] !== undefined && !Array.isArray(g[k])) errors.push(`${where}: ${k} — список строк`);
@@ -388,7 +388,7 @@ export function setActive(packs: StoredPack[]) { active = packs; cache = undefin
 export const activePacks = () => active;
 
 const toFeature = (f: FeatureIn, src: string): FeatureDef => ({
-  id: f.id, name: f.name, level: f.level, source: f.source ?? src, uses: f.uses, recharge: f.recharge, effects: f.effects ?? [], action: f.action,
+  id: f.id, name: f.name, level: f.level, source: f.source ?? src, uses: f.uses, recharge: f.recharge, effects: fixEffects(f.effects), action: f.action,
   text: [f.description, f.effect && f.effect !== f.description ? f.effect : '', f.range ? `Дальность: ${f.range}.` : '', f.duration ? `Длительность: ${f.duration}.` : '', f.limits ? `Ограничения: ${f.limits}.` : '', f.scaling ? `Рост: ${f.scaling}.` : ''].filter(Boolean).join(' '),
 });
 
@@ -404,7 +404,7 @@ function toClass(c: ClassIn, p: PackIn, ed: Ed): ClassDef {
   const src = c.source ?? p.pack_name;
   return {
     id: c.id, name: c.name, hd: c.hit_die, primary: (c.primary_abilities ?? []).map((a) => AB_NAME[abOf(a) ?? 'str']).join(' и ') || '—',
-    saves: c.saving_throws.map((a) => abOf(a)!), skills: { n: c.skills.choose, from: c.skills.from },
+    saves: c.saving_throws.map((a) => abOf(a)!), skills: { n: c.skills.choose, from: c.skills.from === 'any' ? 'any' : c.skills.from.map(skillName) },
     armor: c.armor_text ?? ((c.armor_proficiencies ?? []).map((x) => ({ light: 'лёгкие', medium: 'средние', heavy: 'тяжёлые', shields: 'щиты' }[x])).join(', ') || 'нет'),
     shields: (c.armor_proficiencies ?? []).includes('shields'), armorKinds, weapons, weapons24: weapons === 'martial' ? 'martial' : weapons === 'simple' ? 'simple' : undefined,
     simpleToo: !!wp.simple && !!wp.list?.length,
@@ -418,6 +418,11 @@ function toClass(c: ClassIn, p: PackIn, ed: Ed): ClassDef {
   };
 }
 
+/** Другие названия навыков из переводов → названия на листе клуба. */
+const SKILL_ALIAS: Record<string, string> = { аркана: 'Магия', 'тайная магия': 'Магия', расследование: 'Анализ', восприятие: 'Внимательность', 'обращение с животными': 'Уход за животными', исполнение: 'Выступление', артистизм: 'Выступление', 'ловкость рук': 'Ловкость рук', запугивание: 'Запугивание', проницательность: 'Проницательность', скрытность: 'Скрытность' };
+export const skillName = (x: string) => SKILL_ALIAS[x.toLowerCase().trim()] ?? x.trim();
+const skills = (l?: string[]) => l?.map(skillName);
+const fixEffects = (l?: Effect[]): Effect[] => (l ?? []).map((e) => (e.type === 'skill_proficiency' ? { ...e, value: e.value.map(skillName) } : e));
 const SIZE_RU: Record<string, string> = { Tiny: 'Крошечный', Small: 'Маленький', Medium: 'Средний', Large: 'Большой' };
 const asiOf = (v?: Record<string, number>) => { const o: Partial<Record<Ab, number>> = {}; for (const [k, n] of Object.entries(v ?? {})) { const a = abOf(k); if (a) o[a] = (o[a] ?? 0) + n; } return Object.keys(o).length ? o : undefined; };
 const profEffects = (p?: RaceIn['proficiencies']): Effect[] => [
@@ -429,10 +434,10 @@ function toRace(r: RaceIn, p: PackIn): Race {
   const tr = (t: TraitIn) => ({ name: t.name, text: t.description });
   return {
     id: r.id, name: r.name, speed: r.speed, size: SIZE_RU[r.size] ?? r.size, asi: asiOf(r.ability_score_increase), langs: (r.languages ?? []).join(', ') || '—',
-    traits: r.traits.map(tr), skills: r.proficiencies?.skills, source: src, pack: p.pack_name, summary: r.summary,
-    effects: [...r.traits.flatMap((t) => t.effects ?? []), ...profEffects(r.proficiencies)],
+    traits: r.traits.map(tr), skills: skills(r.proficiencies?.skills), source: src, pack: p.pack_name, summary: r.summary,
+    effects: [...fixEffects(r.traits.flatMap((t) => t.effects ?? [])), ...profEffects(r.proficiencies)],
     subTitle: r.subrace_title ?? 'Подраса',
-    subs: r.subraces?.length ? r.subraces.map((x): Sub => ({ id: x.id, name: x.name, asi: asiOf(x.ability_score_increase), speed: x.speed, skills: x.proficiencies?.skills, traits: x.traits.map(tr), effects: [...x.traits.flatMap((t) => t.effects ?? []), ...profEffects(x.proficiencies)], source: x.source })) : undefined,
+    subs: r.subraces?.length ? r.subraces.map((x): Sub => ({ id: x.id, name: x.name, asi: asiOf(x.ability_score_increase), speed: x.speed, skills: skills(x.proficiencies?.skills), traits: x.traits.map(tr), effects: [...fixEffects(x.traits.flatMap((t) => t.effects ?? [])), ...profEffects(x.proficiencies)], source: x.source })) : undefined,
   };
 }
 
@@ -442,7 +447,11 @@ function build() {
   const races: Record<Ed, Race[]> = { '2014': [...RACES['2014']], '2024': [...RACES['2024']] };
   const feats: Record<Ed, FeatDef[]> = { '2014': [...BUILTIN_FEATS['2014']], '2024': [...BUILTIN_FEATS['2024']] };
   const bgs: Record<Ed, Background[]> = { '2014': BACKGROUNDS['2014'].filter((x) => !x.custom), '2024': BACKGROUNDS['2024'].filter((x) => !x.custom) };
-  const upsert = <T extends { id: string }>(list: T[], v: T) => { const i = list.findIndex((x) => x.id === v.id); if (i >= 0) list[i] = v; else list.push(v); };
+  // одна и та же запись под разными id (например, «Полуэльф» встроенный и из пакета) — остаётся та, что загружена позже
+  const upsert = <T extends { id: string; name: string }>(list: T[], v: T) => {
+    const i = list.findIndex((x) => x.id === v.id || x.name.toLowerCase() === v.name.toLowerCase());
+    if (i >= 0) { list[i] = v; for (let j = list.length - 1; j > i; j--) if (list[j]!.name.toLowerCase() === v.name.toLowerCase()) list.splice(j, 1); } else list.push(v);
+  };
   for (const s of active) {
     if (!s.enabled) continue;
     const ed: Ed = s.pack.ruleset === '5e-2014' ? '2014' : '2024';
@@ -464,11 +473,7 @@ function build() {
       // одинаковый подкласс из двух пакетов показываем один раз — побеждает пакет, загруженный позже
       subs[ed] = [...subs[ed].filter((x) => x.id !== d.id && !(x.classId === d.classId && x.name.toLowerCase() === d.name.toLowerCase())), d];
     }
-    for (const r of s.pack.races ?? []) {
-      const def = toRace(r, s.pack);
-      const i = races[ed].findIndex((x) => x.id === r.id);
-      if (i >= 0) races[ed][i] = def; else races[ed].push(def);
-    }
+    for (const r of s.pack.races ?? []) upsert(races[ed], toRace(r, s.pack));
     for (const f of s.pack.feats ?? []) upsert(feats[ed], toFeat(f, s.pack));
     for (const g of s.pack.backgrounds ?? []) { upsert(bgs[ed], toBg(g, s.pack)); for (const v of g.variants ?? []) upsert(bgs[ed], toBg({ ...g, ...v, name: v.name, variants: [] } as BackgroundIn, s.pack, g.name)); }
   }
@@ -479,15 +484,15 @@ function build() {
 function toFeat(f: FeatIn, p: PackIn): FeatDef {
   return {
     id: f.id, name: f.name, nameEn: f.name_en, source: f.source ?? p.pack_name, pack: p.pack_name, prereqText: f.prerequisite ?? undefined, prereq: f.prerequisites ?? [],
-    text: f.description, benefits: (f.benefits ?? []).map((x) => x.description ?? '').filter(Boolean), effects: f.effects ?? [], repeatable: !!f.repeatable,
+    text: f.description, benefits: (f.benefits ?? []).map((x) => x.description ?? '').filter(Boolean), effects: fixEffects(f.effects), repeatable: !!f.repeatable,
     asi: f.asi_included && f.asi_choice ? { abilities: f.asi_choice.abilities.map((a) => abOf(a)!).filter(Boolean), value: f.asi_choice.value ?? 1 } : undefined,
   };
 }
 function toBg(g: BackgroundIn, p: PackIn, parent?: string): Background {
   return {
-    id: g.id, name: parent ? `${g.name} (${parent})` : g.name, skills: g.skill_proficiencies ?? [], tool: (g.tool_proficiencies ?? []).join(', ') || undefined,
+    id: g.id, name: parent ? `${g.name} (${parent})` : g.name, skills: skills(g.skill_proficiencies) ?? [], tool: (g.tool_proficiencies ?? []).join(', ') || undefined,
     langs: (g.languages ?? []).join(', ') || undefined, gear: (g.equipment ?? []).join(', '), feature: g.feature?.name, featureText: g.feature?.description,
-    skillChoice: g.skill_choice, source: g.source ?? p.pack_name, pack: p.pack_name, description: g.description, chars: g.suggested_characteristics,
+    skillChoice: g.skill_choice && { choose: g.skill_choice.choose, from: g.skill_choice.from === 'any' ? 'any' : g.skill_choice.from.map(skillName) }, source: g.source ?? p.pack_name, pack: p.pack_name, description: g.description, chars: g.suggested_characteristics,
     abs: g.abilities?.map((a) => abOf(a)!).filter(Boolean), feat: g.feat,
   };
 }
