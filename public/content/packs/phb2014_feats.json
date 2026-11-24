@@ -1,0 +1,1117 @@
+{
+  "format": "dnd-content-pack",
+  "format_version": 1,
+  "ruleset": "5e-2014",
+  "pack_id": "phb2014_feats",
+  "pack_name": "D&D 5e (2014) — Черты (PHB)",
+  "pack_version": 1,
+  "language": "ru",
+  "author": "Авторский структурированный справочник механик",
+  "description": "Все официальные черты из Player's Handbook (2014).",
+  "feats": [
+    {
+      "id": "alert",
+      "name": "Бдительный",
+      "name_en": "Alert",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Вы всегда начеку. Вы получаете +5 к инициативе. Вы не можете быть застигнуты врасплох, пока находитесь в сознании. Скрытые существа не получают преимущества на броски атаки по вам.",
+      "benefits": [
+        {
+          "type": "initiative",
+          "description": "+5 к инициативе."
+        },
+        {
+          "type": "defense",
+          "description": "Вас нельзя застать врасплох."
+        },
+        {
+          "type": "defense",
+          "description": "Скрытые враги не получают преимущества на атаки по вам."
+        }
+      ],
+      "effects": [
+        {
+          "type": "initiative",
+          "value": 5
+        }
+      ],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "athlete",
+      "name": "Атлет",
+      "name_en": "Athlete",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Вы обладаете исключительной физической подготовкой. Вы увеличиваете Силу или Ловкость на 1. Вы можете вставать из положения лежа, используя только 5 футов перемещения. Лазание не стоит вам дополнительного перемещения. Вы можете прыгать с разбега на расстояние всего в 5 футов.",
+      "benefits": [
+        {
+          "type": "movement",
+          "description": "Вставание стоит 5 футов движения."
+        },
+        {
+          "type": "movement",
+          "description": "Лазание не замедляет."
+        },
+        {
+          "type": "movement",
+          "description": "Разбег для прыжка — 5 футов."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "strength",
+          "dexterity"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "actor",
+      "name": "Актёр",
+      "name_en": "Actor",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Вы мастер перевоплощения. Вы увеличиваете Харизму на 1. Вы получаете преимущество на проверки Обмана и Выступления, когда пытаетесь выдать себя за другого человека. Вы можете имитировать речь другого существа или звуки, которые слышали.",
+      "benefits": [
+        {
+          "type": "other",
+          "description": "Преимущество на Обман и Выступление при маскировке."
+        },
+        {
+          "type": "other",
+          "description": "Мимикрия голоса и звуков."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "charisma"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "charger",
+      "name": "Наездник",
+      "name_en": "Charger",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Когда вы используете действие Рывок, вы можете бонусным действием совершить одну рукопашную атаку оружием или толкнуть существо. Если вы переместились минимум на 10 футов по прямой до цели, вы либо получаете +5 к урону, либо толкаете цель на 10 футов.",
+      "benefits": [
+        {
+          "type": "attack_modifier",
+          "trigger": "После Рывка",
+          "description": "Бонусная атака или толчок."
+        },
+        {
+          "type": "damage_modifier",
+          "trigger": "Разбег 10 футов",
+          "description": "+5 к урону или толчок на 10 футов."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "crossbow_expert",
+      "name": "Эксперт по арбалетам",
+      "name_en": "Crossbow Expert",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Вы игнорируете свойство «перезарядка» у арбалетов. Нахождение в пределах 5 футов от враждебного существа не накладывает помеху на ваши броски дальнобойных атак. Когда вы используете действие Атака и атакуете одноручным оружием, вы можете бонусным действием атаковать ручным арбалетом.",
+      "benefits": [
+        {
+          "type": "attack_modifier",
+          "description": "Игнорирование перезарядки арбалета."
+        },
+        {
+          "type": "attack_modifier",
+          "description": "Нет помехи в ближнем бою."
+        },
+        {
+          "type": "attack_modifier",
+          "description": "Бонусная атака ручным арбалетом."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "defensive_duelist",
+      "name": "Оборонительный дуэлянт",
+      "name_en": "Defensive Duelist",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": "Ловкость 13 или выше",
+      "prerequisites": [
+        {
+          "type": "ability",
+          "ability": "dexterity",
+          "min": 13
+        }
+      ],
+      "description": "Когда вы используете фехтовальное оружие, которым владеете, вы можете реакцией добавить свой бонус мастерства к КД против одной рукопашной атаки.",
+      "benefits": [
+        {
+          "type": "defense",
+          "trigger": "Атака по вам",
+          "description": "+бонус мастерства к КД."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "dual_wielder",
+      "name": "Двуручный боец",
+      "name_en": "Dual Wielder",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Вы получаете +1 к КД, когда сражаетесь двумя оружиями. Вы можете использовать два оружия, даже если они не являются лёгкими. Вы можете доставать или убирать два одноручных оружия одним действием.",
+      "benefits": [
+        {
+          "type": "defense",
+          "description": "+1 к КД при бое двумя оружиями."
+        },
+        {
+          "type": "other",
+          "description": "Можно использовать нелёгкое оружие в обеих руках."
+        },
+        {
+          "type": "other",
+          "description": "Достать/убрать два оружия одним действием."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "dungeon_delver",
+      "name": "Исследователь подземелий",
+      "name_en": "Dungeon Delver",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Вы получаете преимущество на проверки Внимательности и Расследования для поиска секретных дверей. Вы получаете преимущество на спасброски от ловушек. Вы получаете сопротивление урону от ловушек. Вы можете искать ловушки на обычной скорости.",
+      "benefits": [
+        {
+          "type": "other",
+          "description": "Преимущество на поиск секретных дверей."
+        },
+        {
+          "type": "defense",
+          "description": "Преимущество на спасброски от ловушек."
+        },
+        {
+          "type": "defense",
+          "description": "Сопротивление урону от ловушек."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "durable",
+      "name": "Крепкий",
+      "name_en": "Durable",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Вы увеличиваете Телосложение на 1. Когда вы восстанавливаете хиты, минимум восстановления равен 2 × модификатор Телосложения.",
+      "benefits": [
+        {
+          "type": "other",
+          "description": "Минимум лечения = 2 × ТЕЛ."
+        }
+      ],
+      "effects": [
+        {
+          "type": "hp_per_level",
+          "value": 1
+        }
+      ],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "constitution"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "elemental_adept",
+      "name": "Стихийный адепт",
+      "name_en": "Elemental Adept",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": "Умение накладывать хотя бы одно заклинание",
+      "prerequisites": [
+        {
+          "type": "spellcasting"
+        }
+      ],
+      "description": "Выберите тип урона: кислота, холод, огонь, электричество или звук. Заклинания, которые вы накладываете, игнорируют сопротивление этому типу урона. Когда вы бросаете урон этого типа, вы можете считать 1 как 2.",
+      "benefits": [
+        {
+          "type": "spell",
+          "description": "Игнорирование сопротивления выбранной стихии."
+        },
+        {
+          "type": "spell",
+          "description": "1 на костях урона считается как 2."
+        }
+      ],
+      "effects": [],
+      "repeatable": true,
+      "asi_included": false
+    },
+    {
+      "id": "grappler",
+      "name": "Борец",
+      "name_en": "Grappler",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": "Сила 13 или выше",
+      "prerequisites": [
+        {
+          "type": "ability",
+          "ability": "strength",
+          "min": 13
+        }
+      ],
+      "description": "Вы получаете преимущество на броски атаки по существам, которых держите в захвате. Вы можете действием попытаться сковать схваченное существо.",
+      "benefits": [
+        {
+          "type": "attack_modifier",
+          "description": "Преимущество на атаки по схваченным."
+        },
+        {
+          "type": "other",
+          "description": "Действие для сковать существо."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "great_weapon_master",
+      "name": "Мастер двуручного оружия",
+      "name_en": "Great Weapon Master",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "При критическом ударе или убийстве существа вы можете бонусным действием совершить ещё одну рукопашную атаку. Перед атакой двуручным оружием или оружием со свойством «двуручное» вы можете получить -5 к броску атаки, но +10 к урону.",
+      "benefits": [
+        {
+          "type": "attack_modifier",
+          "description": "Бонусная атака при крите/убийстве."
+        },
+        {
+          "type": "attack_modifier",
+          "description": "-5 к атаке, +10 к урону."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "healer",
+      "name": "Лекарь",
+      "name_en": "Healer",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Вы можете действием использовать набор целителя, чтобы восстановить 1к6 + 4 + количество костей хитов существа. Вы можете стабилизировать существо и восстановить ему 1 хит.",
+      "benefits": [
+        {
+          "type": "other",
+          "description": "Лечение набором целителя."
+        },
+        {
+          "type": "other",
+          "description": "Стабилизация + 1 хит."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "heavily_armored",
+      "name": "Тяжёлая броня",
+      "name_en": "Heavily Armored",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": "Владение средними доспехами",
+      "prerequisites": [
+        {
+          "type": "proficiency",
+          "value": "medium"
+        }
+      ],
+      "description": "Вы получаете +1 к Силе. Вы получаете владение тяжёлыми доспехами.",
+      "benefits": [
+        {
+          "type": "proficiency",
+          "description": "Владение тяжёлыми доспехами."
+        }
+      ],
+      "effects": [
+        {
+          "type": "armor_proficiency",
+          "value": [
+            "heavy"
+          ]
+        }
+      ],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "strength"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "heavy_armor_master",
+      "name": "Мастер тяжёлой брони",
+      "name_en": "Heavy Armor Master",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": "Владение тяжёлыми доспехами",
+      "prerequisites": [
+        {
+          "type": "proficiency",
+          "value": "heavy"
+        }
+      ],
+      "description": "Вы получаете +1 к Силе. Пока вы носите тяжёлую броню, немагический урон, получаемый вами, уменьшается на 3.",
+      "benefits": [
+        {
+          "type": "defense",
+          "description": "Уменьшение немагического урона на 3 в тяжёлой броне."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "strength"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "inspiring_leader",
+      "name": "Вдохновляющий лидер",
+      "name_en": "Inspiring Leader",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": "Харизма 13 или выше",
+      "prerequisites": [
+        {
+          "type": "ability",
+          "ability": "charisma",
+          "min": 13
+        }
+      ],
+      "description": "Вы можете потратить 10 минут на речь, чтобы дать до 6 союзникам временные хиты, равные вашему уровню + модификатор Харизмы.",
+      "benefits": [
+        {
+          "type": "other",
+          "description": "Временные хиты союзникам."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "keen_mind",
+      "name": "Острый ум",
+      "name_en": "Keen Mind",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Вы получаете +1 к Интеллекту. Вы всегда знаете, где север. Вы всегда знаете, сколько часов до следующего рассвета или заката. Вы можете точно вспомнить всё, что видели или слышали за последний месяц.",
+      "benefits": [
+        {
+          "type": "other",
+          "description": "Знание севера и времени."
+        },
+        {
+          "type": "other",
+          "description": "Точная память за месяц."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "intelligence"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "lightly_armored",
+      "name": "Лёгкая броня",
+      "name_en": "Lightly Armored",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Вы получаете +1 к Силе или Ловкости. Вы получаете владение лёгкими доспехами.",
+      "benefits": [
+        {
+          "type": "proficiency",
+          "description": "Владение лёгкими доспехами."
+        }
+      ],
+      "effects": [
+        {
+          "type": "armor_proficiency",
+          "value": [
+            "light"
+          ]
+        }
+      ],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "strength",
+          "dexterity"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "linguist",
+      "name": "Лингвист",
+      "name_en": "Linguist",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Вы получаете +1 к Интеллекту. Вы изучаете три языка на выбор. Вы можете создавать письменные шифры, которые другие могут расшифровать только проверкой Интеллекта (Сл = ваш бонус мастерства + модификатор Интеллекта).",
+      "benefits": [
+        {
+          "type": "other",
+          "description": "Три языка."
+        },
+        {
+          "type": "other",
+          "description": "Создание шифров."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "intelligence"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "lucky",
+      "name": "Счастливчик",
+      "name_en": "Lucky",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Вы получаете 3 очка удачи. Вы можете тратить их на бросок атаки, проверку характеристики или спасбросок. Вы можете бросить дополнительный d20 и выбрать лучший результат. Также вы можете потратить очко, чтобы дать помеху атакующему вас.",
+      "benefits": [
+        {
+          "type": "other",
+          "description": "3 очка удачи для переброса d20 или наложения помехи."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "mage_slayer",
+      "name": "Убийца магов",
+      "name_en": "Mage Slayer",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Когда существо в пределах 5 футов накладывает заклинание, вы можете реакцией совершить по нему рукопашную атаку. Когда вы наносите урон существу, концентрирующемуся на заклинании, оно получает помеху на спасбросок для сохранения концентрации. Вы получаете преимущество на спасброски от заклинаний.",
+      "benefits": [
+        {
+          "type": "attack_modifier",
+          "description": "Реакционная атака по заклинателю."
+        },
+        {
+          "type": "defense",
+          "description": "Помеха на концентрацию врага."
+        },
+        {
+          "type": "defense",
+          "description": "Преимущество на спасброски от заклинаний."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "martial_adept",
+      "name": "Воинский адепт",
+      "name_en": "Martial Adept",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Вы изучаете два манёвра из списка Мастера боевых искусств. Вы получаете одну кость превосходства (d6).",
+      "benefits": [
+        {
+          "type": "other",
+          "description": "Два манёвра и одна кость превосходства (d6)."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "medium_armor_master",
+      "name": "Мастер средней брони",
+      "name_en": "Medium Armor Master",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": "Владение средними доспехами",
+      "prerequisites": [
+        {
+          "type": "proficiency",
+          "value": "medium"
+        }
+      ],
+      "description": "Ношение средней брони не накладывает помеху на Скрытность. Вы можете добавлять +3 к КД от Ловкости вместо +2 при ношении средней брони.",
+      "benefits": [
+        {
+          "type": "defense",
+          "description": "Нет помехи на Скрытность."
+        },
+        {
+          "type": "defense",
+          "description": "Максимальный бонус Ловкости к КД +3."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "mobile",
+      "name": "Подвижный",
+      "name_en": "Mobile",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Ваша скорость увеличивается на 10 футов. Вы можете использовать Рывок по труднопроходимой местности. Когда вы совершаете рукопашную атаку по существу, вы не провоцируете атаку от него до конца хода.",
+      "benefits": [
+        {
+          "type": "movement",
+          "description": "+10 футов скорости."
+        },
+        {
+          "type": "movement",
+          "description": "Рывок по труднопроходимой местности."
+        },
+        {
+          "type": "movement",
+          "description": "Без провокации от атакованного."
+        }
+      ],
+      "effects": [
+        {
+          "type": "speed",
+          "value": 10
+        }
+      ],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "moderately_armored",
+      "name": "Средняя броня",
+      "name_en": "Moderately Armored",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": "Владение лёгкими доспехами",
+      "prerequisites": [
+        {
+          "type": "proficiency",
+          "value": "light"
+        }
+      ],
+      "description": "Вы получаете +1 к Силе или Ловкости. Вы получаете владение средними доспехами и щитами.",
+      "benefits": [
+        {
+          "type": "proficiency",
+          "description": "Владение средними доспехами и щитами."
+        }
+      ],
+      "effects": [
+        {
+          "type": "armor_proficiency",
+          "value": [
+            "medium",
+            "shields"
+          ]
+        }
+      ],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "strength",
+          "dexterity"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "mounted_combatant",
+      "name": "Верховой боец",
+      "name_en": "Mounted Combatant",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Вы получаете преимущество на броски атаки по существам, которые меньше вашего скакуна. Вы можете заставить атаку, нацеленную на скакуна, попасть по вам. Если ваш скакун получает урон от эффекта, позволяющего спасбросок Ловкости, он получает половину урона при провале и ничего при успехе.",
+      "benefits": [
+        {
+          "type": "attack_modifier",
+          "description": "Преимущество на атаки по меньшим существам."
+        },
+        {
+          "type": "defense",
+          "description": "Перенаправление атаки на себя."
+        },
+        {
+          "type": "defense",
+          "description": "Уклонение скакуна."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "observant",
+      "name": "Наблюдательный",
+      "name_en": "Observant",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Вы получаете +1 к Интеллекту или Мудрости. Вы можете читать по губам. Вы получаете +5 к пассивной Внимательности и пассивному Анализу.",
+      "benefits": [
+        {
+          "type": "other",
+          "description": "Чтение по губам."
+        },
+        {
+          "type": "other",
+          "description": "+5 к пассивной Внимательности и Анализу."
+        }
+      ],
+      "effects": [
+        {
+          "type": "passive_perception",
+          "value": 5
+        }
+      ],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "intelligence",
+          "wisdom"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "polearm_master",
+      "name": "Мастер древкового оружия",
+      "name_en": "Polearm Master",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Когда вы используете действие Атака с древковым оружием, вы можете бонусным действием совершить атаку противоположным концом (1к4 дробящего). Другие существа провоцируют атаку от вас, когда входят в вашу досягаемость.",
+      "benefits": [
+        {
+          "type": "attack_modifier",
+          "description": "Бонусная атака вторым концом."
+        },
+        {
+          "type": "attack_modifier",
+          "description": "Провокация при входе в досягаемость."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "resilient",
+      "name": "Устойчивый",
+      "name_en": "Resilient",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Выберите характеристику. Вы получаете +1 к ней и владение спасбросками этой характеристики.",
+      "benefits": [
+        {
+          "type": "proficiency",
+          "description": "Владение спасбросками выбранной характеристики."
+        }
+      ],
+      "effects": [
+        {
+          "type": "note",
+          "text": "Владение спасбросками (выбор)"
+        }
+      ],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "strength",
+          "dexterity",
+          "constitution",
+          "intelligence",
+          "wisdom",
+          "charisma"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "ritual_caster",
+      "name": "Ритуальный заклинатель",
+      "name_en": "Ritual Caster",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": "Интеллект или Мудрость 13 или выше",
+      "prerequisites": [
+        {
+          "type": "ability_any",
+          "abilities": [
+            "intelligence",
+            "wisdom"
+          ],
+          "min": 13
+        }
+      ],
+      "description": "Вы получаете книгу ритуалов. Вы можете накладывать заклинания с меткой «ритуал» из списка выбранного класса, если они есть в книге. Вы изучаете два ритуала 1-го уровня.",
+      "benefits": [
+        {
+          "type": "spell",
+          "description": "Книга ритуалов и два ритуала 1-го уровня."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "savage_attacker",
+      "name": "Свирепый атакующий",
+      "name_en": "Savage Attacker",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Один раз за ход, когда вы наносите урон рукопашным оружием, вы можете перебросить кости урона и использовать лучший результат.",
+      "benefits": [
+        {
+          "type": "damage_modifier",
+          "description": "Переброс костей урона (1 раз за ход)."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "sentinel",
+      "name": "Страж",
+      "name_en": "Sentinel",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Когда вы попадаете по существу провоцированной атакой, его скорость становится 0 до конца хода. Вы можете игнорировать свойство «Отход» у существ. Когда существо в пределах 5 футов атакует не вас, вы можете реакцией совершить рукопашную атаку по нему.",
+      "benefits": [
+        {
+          "type": "attack_modifier",
+          "description": "Остановка движения при провокации."
+        },
+        {
+          "type": "attack_modifier",
+          "description": "Реакционная атака при атаке союзника."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "sharpshooter",
+      "name": "Меткий стрелок",
+      "name_en": "Sharpshooter",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Вы не получаете помеху на дальнобойные атаки на большой дистанции. Ваши дальнобойные атаки игнорируют укрытие наполовину и на три четверти. Перед дальней атакой вы можете получить -5 к броску, но +10 к урону.",
+      "benefits": [
+        {
+          "type": "attack_modifier",
+          "description": "Нет помехи на большой дистанции."
+        },
+        {
+          "type": "attack_modifier",
+          "description": "Игнорирование укрытия."
+        },
+        {
+          "type": "attack_modifier",
+          "description": "-5 к атаке, +10 к урону."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "shield_master",
+      "name": "Мастер щита",
+      "name_en": "Shield Master",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Вы можете бонусным действием толкнуть щитом. Вы добавляете бонус щита к спасброскам Ловкости от эффектов, нацеленных только на вас. Если вы преуспеваете в спасброске от эффекта, вы можете реакцией получить 0 урона вместо половины.",
+      "benefits": [
+        {
+          "type": "attack_modifier",
+          "description": "Бонусный толчок щитом."
+        },
+        {
+          "type": "defense",
+          "description": "+бонус щита к спасброскам Ловкости."
+        },
+        {
+          "type": "defense",
+          "description": "0 урона при успехе."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "skilled",
+      "name": "Умелый",
+      "name_en": "Skilled",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Вы получаете владение любыми тремя навыками или инструментами на выбор.",
+      "benefits": [
+        {
+          "type": "proficiency",
+          "description": "Три навыка или инструмента."
+        }
+      ],
+      "effects": [],
+      "repeatable": true,
+      "asi_included": false
+    },
+    {
+      "id": "skulker",
+      "name": "Скрытный",
+      "name_en": "Skulker",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": "Ловкость 13 или выше",
+      "prerequisites": [
+        {
+          "type": "ability",
+          "ability": "dexterity",
+          "min": 13
+        }
+      ],
+      "description": "Вы можете скрываться, даже если вас лишь слегка заслоняют. Когда вы скрыты и промахиваетесь дальней атакой, вы не раскрываете своё положение. Вы не получаете помеху на Внимательность в тусклом свете.",
+      "benefits": [
+        {
+          "type": "other",
+          "description": "Скрытность при слабом укрытии."
+        },
+        {
+          "type": "other",
+          "description": "Промах не раскрывает."
+        },
+        {
+          "type": "other",
+          "description": "Нет помехи в тусклом свете."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "spell_sniper",
+      "name": "Снайпер заклинаний",
+      "name_en": "Spell Sniper",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": "Умение накладывать хотя бы одно заклинание",
+      "prerequisites": [
+        {
+          "type": "spellcasting"
+        }
+      ],
+      "description": "Вы изучаете один заговор, требующий броска атаки. Ваши заклинания с броском атаки удваивают дистанцию. Ваши заклинания игнорируют укрытие наполовину и на три четверти.",
+      "benefits": [
+        {
+          "type": "spell",
+          "description": "Заговор с атакой."
+        },
+        {
+          "type": "spell",
+          "description": "Удвоенная дистанция заклинаний."
+        },
+        {
+          "type": "spell",
+          "description": "Игнорирование укрытия."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "tavern_brawler",
+      "name": "Драчун из таверны",
+      "name_en": "Tavern Brawler",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Вы получаете +1 к Силе или Телосложению. Вы владеете импровизированным оружием. Ваш безоружный удар наносит 1к4 урона. При попадании безоружным ударом или импровизированным оружием вы можете бонусным действием попытаться схватить цель.",
+      "benefits": [
+        {
+          "type": "attack_modifier",
+          "description": "Безоружный удар 1к4."
+        },
+        {
+          "type": "attack_modifier",
+          "description": "Захват после попадания."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "strength",
+          "constitution"
+        ],
+        "value": 1
+      }
+    },
+    {
+      "id": "tough",
+      "name": "Крепкий",
+      "name_en": "Tough",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Ваш максимум хитов увеличивается на 2 за каждый уровень.",
+      "benefits": [
+        {
+          "type": "defense",
+          "description": "+2 хита за уровень."
+        }
+      ],
+      "effects": [
+        {
+          "type": "hp_per_level",
+          "value": 2
+        }
+      ],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "war_caster",
+      "name": "Боевой заклинатель",
+      "name_en": "War Caster",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": "Умение накладывать хотя бы одно заклинание",
+      "prerequisites": [
+        {
+          "type": "spellcasting"
+        }
+      ],
+      "description": "Вы получаете преимущество на спасброски Телосложения для концентрации. Вы можете накладывать заклинания с соматическими компонентами, даже если в руках оружие или щит. Вы можете использовать заклинание вместо провоцированной атаки.",
+      "benefits": [
+        {
+          "type": "spell",
+          "description": "Преимущество на концентрацию."
+        },
+        {
+          "type": "spell",
+          "description": "Соматические компоненты с оружием/щитом."
+        },
+        {
+          "type": "spell",
+          "description": "Заклинание вместо провоцированной атаки."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": false
+    },
+    {
+      "id": "weapon_master",
+      "name": "Мастер оружия",
+      "name_en": "Weapon Master",
+      "source": "Player's Handbook (2014)",
+      "prerequisite": null,
+      "prerequisites": [],
+      "description": "Вы получаете +1 к Силе или Ловкости. Вы получаете владение четырьмя видами оружия на выбор.",
+      "benefits": [
+        {
+          "type": "proficiency",
+          "description": "Владение четырьмя видами оружия."
+        }
+      ],
+      "effects": [],
+      "repeatable": false,
+      "asi_included": true,
+      "asi_choice": {
+        "abilities": [
+          "strength",
+          "dexterity"
+        ],
+        "value": 1
+      }
+    }
+  ],
+  "backgrounds": []
+}
