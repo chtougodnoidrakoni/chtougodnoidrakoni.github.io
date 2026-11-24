@@ -305,17 +305,7 @@ function GamePage({ id, say, role }: { id: number; say: (t: string) => void; rol
       await load();
     } catch (e) { haptic('error'); say((e as Error).message); } finally { setBusy(false); }
   }, [g, busy, role, say, load]);
-  const [sheet, setSheet] = useState<null | 'full' | 'rules' | 'done'>(null);
-  const confirmJoin = async () => {
-    if (!g || busy) return;
-    setBusy(true);
-    try {
-      const r = await api.join(g.id);
-      if (r.status === 'main') { haptic('success'); setSheet('done'); }
-      else { await api.leave(g.id).catch(() => undefined); haptic('warning'); setSheet('full'); }
-      await load();
-    } catch (e) { haptic('error'); say((e as Error).message); setSheet(null); } finally { setBusy(false); }
-  };
+  const [sheet, setSheet] = useState<null | 'full' | 'rules'>(null);
   const label = !g ? '' : g.mine === 'main' ? 'Отменить запись' : g.mine === 'wait' ? 'Выйти из очереди' : free(g) ? 'Записаться' : 'Мест нет';
   // большая нижняя кнопка Telegram
   const act = useRef(action); act.current = action;
@@ -371,7 +361,7 @@ function GamePage({ id, say, role }: { id: number; say: (t: string) => void; rol
           <Btn className="text-sm" onClick={() => openLink(SITES.builder)}><Sparkles size={16} />Собрать персонажа</Btn>
           <Btn className="text-sm" onClick={() => openLink(SITES.sheet)}><ScrollText size={16} />Заполнить лист</Btn>
         </div>
-        {sheet && <Booking kind={sheet} g={g} busy={busy} onClose={() => setSheet(null)} onJoin={confirmJoin} />}
+        {sheet && <Booking kind={sheet} g={g} onClose={() => setSheet(null)} />}
         {d.canEdit && (
           <div className="mt-6 rounded-2xl border border-moss-light p-3 grid gap-2">
             <div className="text-sm text-sand-light inline-flex items-center gap-1.5"><Crown size={15} />Управление игрой</div>
@@ -500,15 +490,15 @@ function Edit({ id, copy, day, room, say }: { id?: number; copy?: number; day?: 
 
 const when = (g: Game) => `${fmtDay(g.starts_at)}, ${fmtTime(g.starts_at)}`;
 
-/** Окно записи: мест нет / правила и оплата / записались — внесите предоплату. */
-function Booking({ kind, g, busy, onClose, onJoin }: { kind: 'full' | 'rules' | 'done'; g: Game; busy: boolean; onClose: () => void; onJoin: () => void }) {
+/** Окно записи: мест нет / правила и оплата. Записывает администратор — человек пишет ему. */
+function Booking({ kind, g, onClose }: { kind: 'full' | 'rules'; g: Game; onClose: () => void }) {
   const total = priceOf(g);
   const pre = total !== null ? Math.min(PREPAY, total) : PREPAY;
   const rest = total !== null ? total - pre : null;
   const write = (t: string) => openLink(adminLink(t));
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60" onClick={onClose}>
-      <div role="dialog" aria-modal="true" aria-label={kind === 'full' ? 'Мест нет' : kind === 'rules' ? 'Правила записи' : 'Вы записаны'} onClick={(e) => e.stopPropagation()}
+      <div role="dialog" aria-modal="true" aria-label={kind === 'full' ? 'Мест нет' : 'Правила записи'} onClick={(e) => e.stopPropagation()}
         className="w-full max-w-xl rounded-t-3xl bg-[#1f2521] border-t border-sand/40 px-5 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] max-h-[88dvh] overflow-y-auto">
         <div className="mx-auto w-10 h-1 rounded-full bg-cream/25 mb-4" />
         {kind === 'full' && (
@@ -531,24 +521,14 @@ function Booking({ kind, g, busy, onClose, onJoin }: { kind: 'full' | 'rules' | 
               {rest !== null && rest > 0 && <div className="flex justify-between px-4 py-3"><span className="text-cream/75">Остаток на игре</span><span className="text-cream">{rest} ₽</span></div>}
             </div>
             <ul className="mt-4 grid gap-2 text-sm text-cream/80 leading-relaxed list-disc pl-5">
-              <li>Место закрепляется за вами после предоплаты {pre} ₽.</li>
+              <li>Запись через администратора: напишите ему, он пришлёт реквизиты для предоплаты {pre} ₽ и запишет вас на игру.</li>
               {rest !== null && rest > 0 && <li>Оставшиеся {rest} ₽ оплачиваете на самой игре.</li>}
               <li>Предоплата вернётся или перейдёт в депозит, если предупредите, что не придёте, не позднее чем за сутки до начала.</li>
               <li>Ходите на кампанию стабильно? Абонемент на 4 игры — 3900 ₽, выходит 975 ₽ за игру, время и место закреплены за вами.</li>
             </ul>
             <div className="grid gap-2 mt-5">
-              <Btn tone="gold" className="h-12" disabled={busy} onClick={onJoin}>{busy ? '…' : 'Согласен, записаться'}</Btn>
+              <Btn tone="gold" className="h-12" onClick={() => write(`Здравствуйте! Хочу записаться на «${g.title}» (${when(g)}). С правилами согласен(на), готов(а) внести предоплату ${pre} ₽.`)}>Написать администратору</Btn>
               <Btn className="h-12" onClick={onClose}>Отмена</Btn>
-            </div>
-          </>
-        )}
-        {kind === 'done' && (
-          <>
-            <h2 className="font-display-sc text-2xl text-sand-light">Вы записаны!</h2>
-            <p className="mt-2 text-[15px] text-cream/85 leading-relaxed">Чтобы место осталось за вами, внесите предоплату {pre} ₽. Напишите администратору — он пришлёт, куда перевести. Бот напомнит об игре накануне.</p>
-            <div className="grid gap-2 mt-5">
-              <Btn tone="gold" className="h-12" onClick={() => write(`Здравствуйте! Записался(-ась) на «${g.title}» (${when(g)}). Хочу внести предоплату ${pre} ₽.`)}>Написать администратору</Btn>
-              <Btn className="h-12" onClick={onClose}>Готово</Btn>
             </div>
           </>
         )}

@@ -50,10 +50,12 @@ test('Telegram-приложение: администратор создаёт �
   await expect(rules).toContainText('Предоплата сейчас');
   await expect(rules).toContainText('700 ₽');
   await player.screenshot({ path: 'e2e/shots/t2-rules.png' });
-  await rules.getByRole('button', { name: 'Согласен, записаться' }).click();
-  const done = player.getByRole('dialog', { name: 'Вы записаны' });
-  await expect(done.getByRole('button', { name: 'Написать администратору' })).toBeVisible();
-  await done.getByRole('button', { name: 'Готово' }).click();
+  await expect(rules.getByRole('button', { name: 'Написать администратору' })).toBeVisible();
+  await expect(rules.getByRole('button', { name: /записаться/i })).toHaveCount(0);
+  await rules.getByRole('button', { name: 'Отмена' }).click();
+  // записывает администратор; здесь — прямым запросом от имени игрока
+  await player.evaluate(async (api) => { await fetch(`${api}/api/games/1/join`, { method: 'POST', headers: { 'x-init-data': localStorage.getItem('dev-init')! } }); }, API);
+  await player.reload();
   await expect(player.getByText('Лиса')).toBeVisible();
   await player.screenshot({ path: 'e2e/shots/t2-game.png', fullPage: true });
   await player.goto('./app/');
