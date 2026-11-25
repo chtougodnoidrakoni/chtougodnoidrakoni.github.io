@@ -2,11 +2,12 @@
  * Окно заполнения блока. Открывается касанием блока на странице.
  * Всё пишется здесь крупными полями, на странице ничего не прыгает. «Сохранить» переносит текст в лист.
  */
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Plus, Trash2, ImagePlus } from 'lucide-react';
 import { useStore } from './store';
-import { abilityMod, autoItem, autoStat, calcSheet, cocBase, COC_FORMULAS, COC_JOBS, cocPools, signed, spellOf, BLOCK_NAMES, type Block } from './model';
+import { abilityMod, autoItem, autoStat, calcSheet, cocBase, COC_FORMULAS, COC_JOBS, cocPools, keyOf, plusSign, signed, slotRows, slotsFor, spellOf, BLOCK_NAMES, type Block, type CheckItem } from './model';
+import { FmtBar } from './rich';
 import { CPR_KEY, downscale } from './blocks';
 
 const base = 'px-3 rounded-xl bg-moss-deep border border-moss-light text-cream outline-none focus:border-sand';
@@ -18,6 +19,25 @@ const Ring = ({ on, onClick, label }: { on: boolean; onClick: () => void; label?
   <button type="button" aria-label={label} onClick={onClick} className={`w-8 h-8 flex-none rounded-full border-2 ${on ? 'bg-sand border-sand-light' : 'border-cream/50'}`} />
 );
 
+/** Поле записей с кнопками Ж К Ч. */
+function RichArea({ value, onChange, rows, placeholder }: { value: string; onChange: (v: string) => void; rows: number; placeholder?: string }) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  return (
+    <div className="grid gap-1.5">
+      <FmtBar target={ref} onChange={onChange} />
+      <textarea ref={ref} rows={rows} value={value} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} className={`${box} py-3 leading-relaxed`} />
+    </div>
+  );
+}
+/** Владение и компетентность: два кружка. Компетентность удваивает бонус мастерства. */
+const ProfRings = ({ it, up, title }: { it: CheckItem; up: (p: Partial<CheckItem>) => void; title: string }) => (
+  <div className="flex gap-1.5 flex-none">
+    <Ring on={!!it.checked || !!it.exp} onClick={() => up(it.checked || it.exp ? { checked: false, exp: false } : { checked: true })} label={`Владение: ${title}`} />
+    <button type="button" aria-label={`Компетентность: ${title}`} onClick={() => up(it.exp ? { exp: false } : { exp: true, checked: true })}
+      className={`w-8 h-8 flex-none rounded-full border-2 grid place-items-center text-[11px] font-bold ${it.exp ? 'bg-sand border-sand-light text-moss-deep' : 'border-cream/30 text-cream/40'}`}>×2</button>
+  </div>
+);
+
 export function FillModal() {
   const { sheet, filling, fill, updateBlock, spellMap, edit } = useStore();
   const src = sheet?.pages.flatMap((p) => p.blocks).find((b) => b.id === filling);
@@ -25,21 +45,23 @@ export function FillModal() {
   useEffect(() => { setD(src ? structuredClone(src) : undefined); }, [filling]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!sheet) return null;
   const set = (patch: Partial<Block>) => setD((x) => (x ? { ...x, ...patch } : x));
-  const save = () => { if (d) updateBlock(d.id, d, true); fill(undefined); };
+  const save = () => { if (d) { const k = keyOf(d); const v = (k === 'init' || k === 'spell:atk') && d.value ? plusSign(d.value) : d.value; updateBlock(d.id, { ...d, value: v }, true); } fill(undefined); };
   const calc = d ? calcSheet({ ...sheet, pages: sheet.pages.map((p) => ({ ...p, blocks: p.blocks.map((b) => (b.id === d.id ? d : b)) })) }) : undefined;
 
   const body = (b: Block): ReactNode => {
     switch (b.type) {
-      case 'title': case 'field':
-        return <L t="Что вписать"><In value={b.value ?? ''} onChange={(e) => set({ value: e.target.value })} autoFocus /></L>;
+      case 'title': case 'field': {
+        const auto = b.type === 'field' ? autoStat(b, calc!) : '';
+        return <L t={auto ? `Что вписать (если пусто — ${auto}, посчитано само)` : 'Что вписать'}><In value={b.value ?? ''} placeholder={auto} onChange={(e) => set({ value: e.target.value })} autoFocus={!auto} /></L>;
+      }
       case 'text':
         if (b.parts?.length) return b.parts.map((title, i) => (
           <div key={i} className="grid gap-2">
             <L t={`Заголовок колонки ${i + 1}`}><In value={title} onChange={(e) => set({ parts: b.parts!.map((x, j) => (j === i ? e.target.value : x)) })} /></L>
-            <Area rows={7} value={b.values?.[i] ?? ''} placeholder={title} onChange={(e) => set({ values: b.parts!.map((_, j) => (j === i ? e.target.value : b.values?.[j] ?? '')) })} />
+            <RichArea rows={7} value={b.values?.[i] ?? ''} placeholder={title} onChange={(v) => set({ values: b.parts!.map((_, j) => (j === i ? v : b.values?.[j] ?? '')) })} />
           </div>
         ));
-        return <L t="Текст"><Area rows={12} value={b.value ?? ''} onChange={(e) => set({ value: e.target.value })} /></L>;
+        return <L t="Текст"><RichArea rows={12} value={b.value ?? ''} onChange={(v) => set({ value: v })} /></L>;
       case 'image':
         return (
           <div className="grid gap-3">
@@ -68,6 +90,20 @@ export function FillModal() {
       }
       case 'stat': {
         const auto = autoStat(b, calc!);
+        if (keyOf(b) === 'hd') {
+          const m = (b.value || auto).match(/^\s*(\d+)\s*[кkdд]\s*(\d+)/i);
+          const n = m ? m[1]! : '', die = m ? Number(m[2]) : 0;
+          const put = (nn: string, dd: number) => set({ value: dd ? `${nn || 1}к${dd}` : nn });
+          return (
+            <div className="grid gap-3">
+              <L t="Сколько костей"><In inputMode="numeric" value={n} placeholder="1" onChange={(e) => put(e.target.value.replace(/\D/g, '').slice(0, 2), die || 8)} className="text-2xl text-center" /></L>
+              <div><div className="text-xs text-cream/60 mb-1 px-1">Кость</div>
+                <div className="grid grid-cols-4 gap-2">{[6, 8, 10, 12].map((x) => <button key={x} type="button" onClick={() => put(n, x)} className={`h-12 rounded-xl border text-lg ${die === x ? 'bg-sand text-moss-deep border-sand font-semibold' : 'border-moss-light text-cream'}`}>к{x}</button>)}</div>
+              </div>
+              {auto && <div className="text-xs text-cream/55 px-1">По классу и уровню выходит {auto}. {b.value && <button type="button" className="underline text-sand-light" onClick={() => set({ value: '' })}>Считать само</button>}</div>}
+            </div>
+          );
+        }
         return <L t={auto ? `Число (если пусто — ${auto}, посчитано само)` : 'Число'}><In value={b.value ?? ''} placeholder={auto} onChange={(e) => set({ value: e.target.value })} className="text-2xl text-center" autoFocus={!auto} /></L>;
       }
       case 'abilityx': {
@@ -76,7 +112,7 @@ export function FillModal() {
           const a = autoItem(it, calc!.mods, calc!.prof);
           return (
             <div className="flex items-center gap-3 py-1.5 border-b border-moss-light/30">
-              <Ring on={!!it.checked} onClick={() => up({ checked: !it.checked })} label={`Владение: ${title}`} />
+              <ProfRings it={it} up={up} title={title} />
               <div className="flex-1 min-w-0 leading-tight">{title}</div>
               <input className={`${base} flex-none h-10 text-center`} style={{ width: 64 }} value={it.value ?? ''} placeholder={a === undefined ? '—' : signed(a)} onChange={(e) => up({ value: e.target.value })} />
             </div>
@@ -88,7 +124,7 @@ export function FillModal() {
               <L t="Значение"><In inputMode="numeric" value={b.score ?? ''} placeholder="10" onChange={(e) => set({ score: e.target.value.replace(/[^\d]/g, '').slice(0, 2) })} className="text-2xl text-center" /></L>
               <L t="Модификатор (считается сам)"><In value={b.mod ?? ''} placeholder={mod || '±'} onChange={(e) => set({ mod: e.target.value })} className="text-2xl text-center" /></L>
             </div>
-            <div className="text-xs text-cream/60 px-1">Кружок — владение (добавляет бонус мастерства). Число считается само, можно вписать своё.</div>
+            <div className="text-xs text-cream/60 px-1">Кружок — владение (+ бонус мастерства). «×2» — компетентность, бонус мастерства удваивается. Число считается само, можно вписать своё.</div>
             <div>
               {b.save && skillRow(b.save, (p) => set({ save: { ...b.save!, ...p } }), 'Спасбросок')}
               {(b.items ?? []).map((it, i) => <div key={i}>{skillRow(it, (p) => set({ items: b.items!.map((x, j) => (j === i ? { ...x, ...p } : x)) }), it.name)}</div>)}
@@ -175,13 +211,13 @@ export function FillModal() {
       case 'checklist':
         return (
           <div className="grid gap-1.5">
-            <div className="text-xs text-cream/60 px-1">Кружок — владение (добавляет бонус мастерства). Число считается само, можно вписать своё.</div>
+            <div className="text-xs text-cream/60 px-1">Кружок — владение (+ бонус мастерства). «×2» — компетентность, бонус удваивается. Число считается само, можно вписать своё.</div>
             {(b.items ?? []).map((it, i) => {
               const a = autoItem(it, calc!.mods, calc!.prof);
               const up = (patch: Partial<typeof it>) => set({ items: b.items!.map((x, j) => (j === i ? { ...x, ...patch } : x)) });
               return (
                 <div key={i} className="flex items-center gap-3 py-1.5 border-b border-moss-light/30">
-                  <Ring on={!!it.checked} onClick={() => up({ checked: !it.checked })} label={`Владение: ${it.name}`} />
+                  <ProfRings it={it} up={up} title={it.name} />
                   <div className="flex-1 min-w-0 leading-tight">{it.name}{it.sub && <span className="text-cream/50 text-sm"> {it.sub}</span>}</div>
                   <input inputMode="text" className={`${base} flex-none h-10 text-center`} style={{ width: 64 }} value={it.value ?? ''} placeholder={a === undefined ? '—' : signed(a)} onChange={(e) => up({ value: e.target.value })} />
                 </div>
@@ -189,15 +225,24 @@ export function FillModal() {
             })}
           </div>
         );
-      case 'circles':
-        return (b.rows ?? []).map((r, i) => (
+      case 'circles': {
+        const auto = !!b.rows && /ячейк/i.test(b.label) && slotsFor(calc!) !== undefined;
+        const rows = slotRows(b, calc!);
+        const own = (fn: (x: typeof rows) => typeof rows) => set({ rows: fn(rows), manual: true });
+        return <>
+          {/ячейк/i.test(b.label) && (auto && !b.manual
+            ? <div className="text-xs text-cream/60 px-1">Ячейки посчитаны сами по классу и уровню. Тратить их удобнее на листе. Если у вас другое количество — поправьте кнопками − и +.</div>
+            : <div className="text-xs text-cream/60 px-1 flex items-center gap-2 flex-wrap">{b.manual ? 'Количество ячеек задано вручную.' : 'Впишите на первой странице класс и уровень — ячейки посчитаются сами.'}{b.manual && slotsFor(calc!) !== undefined && <button type="button" className="underline text-sand-light" onClick={() => set({ manual: false })}>Считать по классу и уровню</button>}</div>)}
+          {rows.map((r, i) => (
           <div key={i} className="flex items-center gap-2 flex-wrap py-1.5 border-b border-moss-light/30">
             <div className="w-20 flex-none">{r.name}</div>
-            <button type="button" aria-label={`Убрать ячейку: ${r.name}`} className="w-8 h-8 flex-none rounded-lg bg-moss border border-moss-light text-sand-light" onClick={() => set({ rows: b.rows!.map((x, j) => (j === i ? { ...x, count: Math.max(0, x.count - 1), filled: Math.min(x.filled, Math.max(0, x.count - 1)) } : x)) })}>−</button>
-            <button type="button" aria-label={`Добавить ячейку: ${r.name}`} className="w-8 h-8 flex-none rounded-lg bg-moss border border-moss-light text-sand-light" onClick={() => set({ rows: b.rows!.map((x, j) => (j === i ? { ...x, count: Math.min(12, x.count + 1) } : x)) })}>+</button>
-            {Array.from({ length: r.count }, (_, k) => <Ring key={k} on={k < r.filled} label={`${r.name} ${k + 1}`} onClick={() => set({ rows: b.rows!.map((x, j) => (j === i ? { ...x, filled: k < x.filled ? k : k + 1 } : x)) })} />)}
+            <button type="button" aria-label={`Убрать ячейку: ${r.name}`} className="w-8 h-8 flex-none rounded-lg bg-moss border border-moss-light text-sand-light" onClick={() => own((rs) => rs.map((x, j) => (j === i ? { ...x, count: Math.max(0, x.count - 1), filled: Math.min(x.filled, Math.max(0, x.count - 1)) } : x)))}>−</button>
+            <button type="button" aria-label={`Добавить ячейку: ${r.name}`} className="w-8 h-8 flex-none rounded-lg bg-moss border border-moss-light text-sand-light" onClick={() => own((rs) => rs.map((x, j) => (j === i ? { ...x, count: Math.min(12, x.count + 1) } : x)))}>+</button>
+            {Array.from({ length: r.count }, (_, k) => <Ring key={k} on={k < r.filled} label={`${r.name} ${k + 1}`} onClick={() => set({ rows: (b.rows ?? []).map((x, j) => (j === i ? { ...x, filled: k < r.filled ? k : k + 1 } : x)) })} />)}
           </div>
-        ));
+        ))}
+        </>;
+      }
       case 'table': {
         const cols = b.columns ?? [];
         const cells = b.cells ?? [];
@@ -215,7 +260,8 @@ export function FillModal() {
         );
       }
       case 'spells': {
-        const list = sheet.spells.map((s) => ({ s, sp: spellOf(s, spellMap) })).filter((x) => x.sp && x.sp.lvl >= (b.minLevel ?? 0) && x.sp.lvl <= (b.maxLevel ?? 9));
+        const list = sheet.spells.map((s) => ({ s, sp: spellOf(s, spellMap) })).filter((x) => x.sp && x.sp.lvl >= (b.minLevel ?? 0) && x.sp.lvl <= (b.maxLevel ?? 9))
+          .sort((a, z) => a.sp!.lvl - z.sp!.lvl || (a.sp!.ru ?? a.sp!.name).localeCompare(z.sp!.ru ?? z.sp!.name, 'ru'));
         return (
           <div className="grid gap-2">
             <button className="h-12 rounded-xl bg-gradient-to-b from-sand-light to-sand text-moss-deep font-semibold inline-flex items-center justify-center gap-2"

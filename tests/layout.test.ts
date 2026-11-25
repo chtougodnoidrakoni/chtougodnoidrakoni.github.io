@@ -116,7 +116,11 @@ describe('таблица оружия', () => {
     t.cells = [['Меч', '+5', '+3', '1d8', 'рубящий']];
     const m = migrateSheet(s).pages[1]!.blocks.find((x) => x.label === 'Оружие')!;
     expect(m.columns).toEqual(WEAPON_COLS);
-    expect(m.cells![0]).toEqual(['Меч', '1d8', '+5', '+3', 'рубящий']);
+    expect(m.cells![0]).toEqual(['Меч', '+5', '1d8', '+3', 'рубящий']);
+    // таблица прошлой версии (урон перед попаданием) тоже переставляется
+    t.columns = ['Оружие', 'Урон', 'Бонус к попаданию', 'Бонус к урону', 'Вид урона'];
+    t.cells = [['Лук', '1d6', '+4', '', 'колющий']];
+    expect(migrateSheet(s).pages[1]!.blocks.find((x) => x.label === 'Оружие')!.cells![0]).toEqual(['Лук', '+4', '1d6', '', 'колющий']);
     expect(m.widths).toEqual([30, 15, 15, 15, 25]);
   });
 });

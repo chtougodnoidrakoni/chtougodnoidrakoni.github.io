@@ -100,3 +100,17 @@ test('Telegram-приложение: администратор создаёт �
   expect(h).toBeLessThanOrEqual(w + 1);
   expect(errors).toEqual([]);
 });
+
+test('Telegram-приложение: из «Изменить игру» можно вернуться к игре и в расписание', async ({ browser }) => {
+  const ctx = await browser.newContext();
+  const admin = await ctx.newPage();
+  await as(admin, 'id=1&username=astrakhan_trener&name=Замир');
+  await admin.goto('./app/#game/1');
+  await admin.getByRole('button', { name: 'Изменить' }).click();
+  await expect(admin.getByRole('heading', { name: 'Изменить игру' })).toBeVisible();
+  await admin.getByRole('button', { name: 'К игре' }).click();
+  await expect(admin).toHaveURL(/#game\/1$/);
+  await admin.getByRole('button', { name: 'Все игры' }).click();
+  await expect(admin.locator('section[aria-label]').first()).toBeVisible();
+  await expect(admin).not.toHaveURL(/#game|#edit/);
+});

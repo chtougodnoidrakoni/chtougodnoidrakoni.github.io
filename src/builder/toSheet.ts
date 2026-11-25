@@ -22,7 +22,7 @@ export function buildData(b: Build): Record<string, unknown> {
   const sr = rule(b); const sl = slots(c, b.ed, b.level);
   const raceName = [sub?.name ?? r.name, r.dragon && b.dragon ? `(${b.dragon.toLowerCase()} предок, ${dragonType(b)})` : ''].filter(Boolean).join(' ');
   const traits = [...r.traits, ...(sub?.traits ?? [])].map((t) => `${t.name}. ${t.text}`).join('\n');
-  const arm = attacks(b).map((a) => [a.name, a.dmg, sgn(a.bonus), '', a.type]);
+  const arm = attacks(b).map((a) => [a.name, sgn(a.bonus), a.dmg, '', a.type]);
   const prof = [
     `Доспехи: ${c.armor}`,
     `Оружие: ${b.ed === '2024' && c.weapons24 ? { martial: 'простое и воинское', simple: 'простое', light: 'простое и воинское с лёгким свойством', 'finesse-light': 'простое и воинское с фехтовальным или лёгким свойством' }[c.weapons24] : c.weapons === 'martial' ? 'простое и воинское' : c.weapons === 'simple' ? 'простое' : `${['bard', 'rogue', 'monk'].includes(c.id) ? 'простое, ' : ''}${(c.weapons as string[]).join(', ').toLowerCase()}`}`,

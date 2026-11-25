@@ -10,7 +10,7 @@ import { AiPaste } from './AiPaste';
 import { PlayPanel } from './PlayPanel';
 import { allSheets, BACKUP_KIND, backupDue, markBackup, sheetFromLink, sheetsFromFile, shareLink, snoozeBackup } from './backup';
 import { useStore } from './store';
-import { makeBlock, PAGE_TEMPLATES, relayoutFromTemplate, sheetName, uid, type BlockType, type Sheet } from './model';
+import { makeBlock, oneshotTemplate, PAGE_TEMPLATES, relayoutFromTemplate, sheetName, uid, type BlockType, type Sheet } from './model';
 import { LayoutPage, SpellbookPages } from './Page';
 import { findFree } from './layout';
 import { SYSTEMS, systemTemplate } from './systems';
@@ -122,6 +122,7 @@ function BackupRow() {
 function Home() {
   const { index, create, open, remove, say } = useStore();
   const [confirm, setConfirm] = useState<string | null>(null);
+  const [kind, setKind] = useState(false);
   return (
     <>
     <Dragon />
@@ -134,11 +135,21 @@ function Home() {
         <div className="text-sm text-cream/70 px-1">Новый лист — выберите игру:</div>
         <div className="grid grid-cols-2 gap-2">{SYSTEMS.map((g) => (
           <button key={g.id} className={`rounded-2xl p-3 text-left border ${g.id === 'dnd' ? 'bg-gradient-to-b from-sand-light to-sand text-moss-deep border-sand-light' : 'bg-moss border-moss-light text-cream'}`}
-            onClick={async () => open(await create(g.id === 'dnd' ? undefined : systemTemplate(g.id)))}>
+            onClick={async () => (g.id === 'dnd' ? setKind(true) : open(await create(systemTemplate(g.id))))}>
             <div className="flex items-center gap-2 font-display-sc text-lg leading-tight"><FilePlus2 size={18} />{g.name}</div>
             <div className={`text-xs mt-1 ${g.id === 'dnd' ? 'text-moss-deep/70' : 'text-cream/60'}`}>{g.hint}</div>
           </button>
         ))}</div>
+        <Panel open={kind} onClose={() => setKind(false)} title="Какой лист D&D">
+          <div className="grid gap-2 pb-2">
+            <button className="rounded-2xl p-4 text-left border bg-gradient-to-b from-sand-light to-sand text-moss-deep border-sand-light" onClick={async () => { setKind(false); open(await create(oneshotTemplate())); }}>
+              <div className="font-display-sc text-lg">Для ваншота</div><div className="text-sm text-moss-deep/75 mt-0.5">Сразу характеристики с цифрами, как в классическом листе. Без большой биографии</div>
+            </button>
+            <button className="rounded-2xl p-4 text-left border bg-moss border-moss-light text-cream" onClick={async () => { setKind(false); open(await create()); }}>
+              <div className="font-display-sc text-lg text-sand-light">Для кампании</div><div className="text-sm text-cream/65 mt-0.5">Первая страница — портрет, внешность, предыстория, цели и союзники</div>
+            </button>
+          </div>
+        </Panel>
         <PromptButton />
         <a href="#help" onClick={() => scrollTo(0, 0)} className="h-11 rounded-xl border border-sand/60 text-sand-light inline-flex items-center justify-center gap-2"><BookOpen size={18} />Как пользоваться сайтом</a>
         <label className="h-11 rounded-xl bg-moss border border-moss-light inline-flex items-center justify-center gap-2 cursor-pointer"><Upload size={18} />Открыть файл листа или копию (.json)
@@ -204,6 +215,11 @@ function Editor() {
       console.error(e);
     }
   };
+  const saveToDevice = async () => {
+    if (!sheet) return;
+    await saveFile(`${sheetName(sheet).replace(/[^\p{L}\p{N}]+/gu, '_') || 'list'}.json`, new Blob([JSON.stringify(sheet)], { type: 'application/json' }));
+    say('Файл листа сохранён. Открыть его снова: на главной «Открыть файл листа»');
+  };
   const [addBlock, setAddBlock] = useState(false);
   const [addPage, setAddPage] = useState(false);
   const [pageMenu, setPageMenu] = useState<number | null>(null);
@@ -233,6 +249,7 @@ function Editor() {
           <div className="flex-1 min-w-0 font-display-sc text-xl truncate">{sheetName(sheet)}</div>
           <button className="w-10 h-10 grid place-items-center disabled:opacity-30" disabled={!past.length} onClick={undo} aria-label="Отменить"><Undo2 size={20} /></button>
           <button className="w-10 h-10 grid place-items-center disabled:opacity-30" disabled={!future.length} onClick={redo} aria-label="Повторить"><Redo2 size={20} /></button>
+          <button className="w-10 h-10 grid place-items-center text-sand-light" onClick={saveToDevice} aria-label="Скачать файл листа на устройство" title="Сохранить на устройство"><Download size={20} /></button>
           <button className="w-11 h-11 grid place-items-center text-sand-light" onClick={() => setMenu(true)} aria-label="Меню"><MoreHorizontal /></button>
         </div>
       </header>
@@ -329,7 +346,7 @@ function Editor() {
           <Btn onClick={() => { setMenu(false); setTimeout(makePdf, 300); }}><Printer size={18} />Скачать PDF</Btn>
           <Btn onClick={() => { setMenu(false); setTimeout(() => window.print(), 300); }}><Printer size={18} />Системная печать Safari</Btn>
           <Btn onClick={async () => { const url = await shareLink(sheet); const nav = navigator as Navigator; if (nav.share && /iPhone|iPad|Android/i.test(navigator.userAgent)) { try { await nav.share({ url }); return; } catch (e) { if ((e as Error).name === 'AbortError') return; } } try { await navigator.clipboard.writeText(url); say('Ссылка скопирована — отправьте её мастеру или другу'); } catch { prompt('Скопируйте ссылку', url); } }}><Share2 size={18} />Поделиться ссылкой на лист</Btn>
-          <Btn onClick={() => saveFile(`${sheetName(sheet).replace(/[^\p{L}\p{N}]+/gu, '_') || 'list'}.json`, new Blob([JSON.stringify(sheet)], { type: 'application/json' }))}><Download size={18} />Сохранить файлом (.json)</Btn>
+          <Btn onClick={() => { setMenu(false); void saveToDevice(); }}><Download size={18} />Сохранить на устройство</Btn>
           <Btn onClick={async () => { const id = await create({ ...sheet, name: `${sheetName(sheet)} (копия)` }); setMenu(false); await open(id); say('Создана копия листа'); }}><Copy size={18} />Копия листа</Btn>
           <p className="text-xs text-cream/40 px-1 pt-1">Версия от {new Date(Number(__BUILD__)).toLocaleString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}</p>
           <p className="text-xs text-cream/50 px-1 pt-2 leading-relaxed">«Скачать PDF» собирает файл прямо здесь: потом его можно сохранить в Файлы, отправить в Telegram или напечатать. Белые поля оставлены специально: принтер не печатает края листа.</p>

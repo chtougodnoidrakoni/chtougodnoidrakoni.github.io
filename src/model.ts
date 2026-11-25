@@ -7,7 +7,7 @@ export const PAGE_W = 210, PAGE_H = 297, MARGIN = 12;
 export type Frame = 'frame' | 'line' | 'none';
 export type BlockType = 'title' | 'field' | 'text' | 'image' | 'ability' | 'stat' | 'checklist' | 'circles' | 'table' | 'spells' | 'emblem' | 'ornament' | 'qr' | 'abilityx' | 'pctstat' | 'pctlist' | 'sumlist' | 'track';
 
-export interface CheckItem { name: string; sub?: string; checked?: boolean; value?: string; /** Зов Ктулху: навык рода занятий */ occ?: boolean }
+export interface CheckItem { name: string; sub?: string; checked?: boolean; /** компетентность: двойной бонус мастерства */ exp?: boolean; value?: string; /** Зов Ктулху: навык рода занятий */ occ?: boolean }
 export interface CircleRow { name: string; count: number; filled: number }
 
 export interface Block {
@@ -51,6 +51,8 @@ export interface Block {
   textSize?: number;
   /** спасбросок в карточке характеристики */
   save?: CheckItem;
+  /** ячейки заклинаний поправлены руками — не пересчитывать по классу */
+  manual?: boolean;
 }
 
 export interface Page { id: string; title: string; kind: 'layout' | 'spellbook'; blocks: Block[] }
@@ -96,17 +98,20 @@ export interface Sheet {
   spells: SheetSpell[];
 }
 
-export const WEAPON_COLS = ['Оружие', 'Урон', 'Бонус к попаданию', 'Бонус к урону', 'Вид урона'];
+export const WEAPON_COLS = ['Оружие', 'Бонус к попаданию', 'Урон', 'Бонус к урону', 'Вид урона'];
 export const WEAPON_W = [30, 15, 15, 15, 25];
 const HP_FIELDS = ['Текущие хиты', 'Временные хиты', 'Кости хитов'];
-const OLD_WEAPON = ['Оружие', 'Попадание', 'Бонус к урону', 'Урон', 'Вид урона'];
 /** Старые листы: таблица оружия в прежнем порядке → новый порядок, текст переезжает вместе с колонками. */
 export function migrateSheet(s: Sheet): Sheet {
-  const order = WEAPON_COLS.map((c) => OLD_WEAPON.indexOf(c === 'Бонус к попаданию' ? 'Попадание' : c));
+  const norm = (c: string) => (c === 'Попадание' ? 'Бонус к попаданию' : c);
+  const NEW = WEAPON_COLS.join('|');
   return { ...s, pages: s.pages.map((p) => ({ ...p, blocks: p.blocks.map((b) => {
     // хиты в одном виде с «Максимумом хитов»: крупная цифра по центру
     if (b.type === 'field' && HP_FIELDS.includes(b.label)) return { ...b, type: 'stat' as const, fontSize: 6.5 };
-    if (b.type !== 'table' || b.columns?.join('|') !== OLD_WEAPON.join('|')) return b;
+    // таблица оружия в любом прежнем порядке колонок → «попадание, урон, бонус к урону», текст едет вместе с колонкой
+    const cols = b.columns?.map(norm);
+    if (b.type !== 'table' || !cols || cols.join('|') === NEW || [...cols].sort().join('|') !== [...WEAPON_COLS].sort().join('|')) return b;
+    const order = WEAPON_COLS.map((c) => cols.indexOf(c));
     return { ...b, columns: [...WEAPON_COLS], widths: [...WEAPON_W], cells: (b.cells ?? []).map((row) => order.map((i) => row[i] ?? '')) };
   }) })) };
 }
@@ -344,6 +349,18 @@ export function clubTemplate(): Sheet {
     spells: [],
   };
 }
+/** Лист для ваншота: без большой биографии, первая страница — характеристики с именем, классом и уровнем вверху, как в классическом листе. */
+export function oneshotTemplate(): Sheet {
+  const st = statsPage();
+  const head = [
+    B('title', { label: 'Имя персонажа', x: 12, y: 12, w: 64, h: 13, fontSize: 14 }),
+    B('field', { label: 'Класс', x: 78, y: 12, w: 42, h: 13 }),
+    B('field', { label: 'Вид', x: 122, y: 12, w: 30, h: 13 }),
+    B('stat', { label: 'Уровень', key: 'level', x: 154, y: 11, w: 25, h: 15, fontSize: 6 }),
+  ];
+  const stats = markFixed({ ...st, blocks: [...head, ...st.blocks.filter((b) => !(b.type === 'title' && b.label === 'Характеристики'))] });
+  return { ...clubTemplate(), pages: [stats, featuresPage(), magicPage(), { id: uid(), title: 'Книга заклинаний', kind: 'spellbook', blocks: [] }, notesPage()] };
+}
 /** Заметки: один лист, четыре больших блока. */
 export function notesPage(): Page {
   const p = blankPage('Заметки');
@@ -379,18 +396,20 @@ export const parseMod = (v?: string) => {
 };
 
 const LABEL_KEYS: Record<string, string> = Object.fromEntries([
-  ...ABILITIES.map(([l, k]) => [l, k]), ['Бонус мастерства', 'prof'], ['Инициатива', 'init'], ['Пасс. внимательность', 'passive'], ['Пассивная внимательность', 'passive'], ['Уровень', 'level'],
+  ...ABILITIES.map(([l, k]) => [l, k]), ['Бонус мастерства', 'prof'], ['Кости хитов', 'hd'], ['Заклинательный класс', 'spell:class'], ['Характеристика', 'spell:ab'], ['СЛ спасброска', 'spell:dc'], ['Бонус атаки', 'spell:atk'], ['Класс', 'class'], ['Инициатива', 'init'], ['Пасс. внимательность', 'passive'], ['Пассивная внимательность', 'passive'], ['Уровень', 'level'],
 ]);
 /** Смысл блока: из поля key или по подписи (для листов, созданных до автоподсчёта). */
 export const keyOf = (b: Block) => b.key ?? LABEL_KEYS[b.label];
 
-export interface Calc { mods: Record<string, number | undefined>; prof?: number; perception?: number; vals: Record<string, number | undefined> }
+export interface Calc { mods: Record<string, number | undefined>; prof?: number; perception?: number; vals: Record<string, number | undefined>; level?: number; text: Record<string, string>; ed: '2014' | '2024' }
 /** Что лист может посчитать сам: модификаторы характеристик и бонус мастерства. */
 export function calcSheet(sheet: Sheet): Calc {
   const all = sheet.pages.flatMap((p) => p.blocks);
   const mods: Calc['mods'] = {};
   const vals: Calc['vals'] = {};
+  const text: Calc['text'] = {};
   for (const b of all) if ((b.type === 'stat' || b.type === 'pctstat' || b.type === 'field') && b.key) { const n = parseInt(b.value ?? '', 10); vals[b.key] = Number.isNaN(n) ? undefined : n; }
+  for (const b of all) if (b.type === 'field' || b.type === 'stat') { const k = keyOf(b); if (k && b.value?.trim() && !(k in text)) text[k] = b.value.trim(); }
   for (const b of all) if (b.type === 'ability' || b.type === 'abilityx') { const k = keyOf(b); if (k) mods[k] = parseMod(b.mod || abilityMod(b.score ?? '')); }
   const level = parseInt(all.find((b) => keyOf(b) === 'level')?.value ?? '', 10);
   const profBlock = all.find((b) => keyOf(b) === 'prof');
@@ -410,7 +429,8 @@ export function calcSheet(sheet: Sheet): Calc {
     const pools = cocPools(sheet, vals);
     vals['coc:profSpent'] = sp; vals['coc:persSpent'] = sl; vals['coc:profTotal'] = pools.prof; vals['coc:persTotal'] = pools.pers;
   }
-  return { mods, prof, perception, vals };
+  const ed = sheet.spells.some((x) => (x.custom?.ed ?? x.ref?.match(/20(14|24)/)?.[0]) === '2024') ? '2024' : '2014';
+  return { mods, prof, perception, vals, level: level >= 1 ? Math.min(level, 20) : undefined, text, ed };
 }
 /** Формулы профессиональных очков: [характеристики на выбор (берётся большая), множитель] */
 export const COC_FORMULAS: { id: string; label: string; terms: [string[], number][] }[] = [
@@ -455,14 +475,68 @@ const CODE: Record<string, string> = { СИЛ: 'СИЛ', ЛВК: 'ЛВК', ТЕ�
 export function autoItem(it: CheckItem, mods: Calc['mods'], prof?: number): number | undefined {
   const m = it.sub ? mods[CODE[it.sub] ?? ''] : undefined;
   if (m === undefined) return undefined;
-  return m + (it.checked && prof ? prof : 0);
+  return m + (prof ? (it.exp ? prof * 2 : it.checked ? prof : 0) : 0);
 }
+
+/* ---------- D&D: что лист знает о классах ---------- */
+type Caster = 'full' | 'half' | 'half_up' | 'pact';
+/** Класс по-русски → кость хитов, тип заклинателя, заклинательная характеристика. */
+export const DND_CLASSES: { re: RegExp; name: string; hd: number; caster?: Caster; ab?: string }[] = [
+  { re: /варвар/i, name: 'Варвар', hd: 12 },
+  { re: /бард/i, name: 'Бард', hd: 8, caster: 'full', ab: 'ХАР' },
+  { re: /жрец|клерик/i, name: 'Жрец', hd: 8, caster: 'full', ab: 'МДР' },
+  { re: /друид/i, name: 'Друид', hd: 8, caster: 'full', ab: 'МДР' },
+  { re: /воин|файтер/i, name: 'Воин', hd: 10 },
+  { re: /монах/i, name: 'Монах', hd: 8 },
+  { re: /паладин/i, name: 'Паладин', hd: 10, caster: 'half', ab: 'ХАР' },
+  { re: /следопыт|рейнджер/i, name: 'Следопыт', hd: 10, caster: 'half', ab: 'МДР' },
+  { re: /плут|разбойник/i, name: 'Плут', hd: 8 },
+  { re: /чародей/i, name: 'Чародей', hd: 6, caster: 'full', ab: 'ХАР' },
+  { re: /колдун/i, name: 'Колдун', hd: 8, caster: 'pact', ab: 'ХАР' },
+  { re: /волшебник|маг\b/i, name: 'Волшебник', hd: 6, caster: 'full', ab: 'ИНТ' },
+  { re: /изобретатель|артифи[сц]ер/i, name: 'Изобретатель', hd: 8, caster: 'half_up', ab: 'ИНТ' },
+];
+export const dndClass = (text?: string) => (text ? DND_CLASSES.find((c) => c.re.test(text)) : undefined);
+const AB_FULL: Record<string, string> = { СИЛ: 'Сила', ЛВК: 'Ловкость', ТЕЛ: 'Телосложение', ИНТ: 'Интеллект', МДР: 'Мудрость', ХАР: 'Харизма' };
+/** «ИНТ», «Интеллект», «инт.» → ключ характеристики */
+export const abKey = (t?: string) => (t ? Object.entries(AB_FULL).find(([k, f]) => t.toUpperCase().startsWith(k) || t.toLowerCase().startsWith(f.toLowerCase().slice(0, 4)))?.[0] : undefined);
+const FULL_SLOTS = [[2], [3], [4, 2], [4, 3], [4, 3, 2], [4, 3, 3], [4, 3, 3, 1], [4, 3, 3, 2], [4, 3, 3, 3, 1], [4, 3, 3, 3, 2], [4, 3, 3, 3, 2, 1], [4, 3, 3, 3, 2, 1], [4, 3, 3, 3, 2, 1, 1], [4, 3, 3, 3, 2, 1, 1], [4, 3, 3, 3, 2, 1, 1, 1], [4, 3, 3, 3, 2, 1, 1, 1], [4, 3, 3, 3, 2, 1, 1, 1, 1], [4, 3, 3, 3, 3, 1, 1, 1, 1], [4, 3, 3, 3, 3, 2, 1, 1, 1], [4, 3, 3, 3, 3, 2, 2, 1, 1]];
+/** Ячейки по кругам (индекс 0 — 1 круг) для класса и уровня; undefined — лист не знает класса. */
+export function slotsFor(c: Calc): number[] | undefined {
+  const cls = dndClass(c.text['class']); const l = c.level;
+  if (!cls || !l) return undefined;
+  if (!cls.caster) return [];
+  if (cls.caster === 'full') return FULL_SLOTS[l - 1]!;
+  if (cls.caster === 'half_up') return FULL_SLOTS[Math.ceil(l / 2) - 1]!;
+  if (cls.caster === 'half') return c.ed === '2014' && l < 2 ? [] : FULL_SLOTS[Math.ceil(l / 2) - 1]!;
+  const n = l >= 17 ? 4 : l >= 11 ? 3 : l >= 2 ? 2 : 1; const lv = Math.min(5, Math.ceil(l / 2));
+  return Array.from({ length: lv }, (_, i) => (i === lv - 1 ? n : 0));
+}
+/** Строки блока «Ячейки заклинаний»: сами по классу и уровню, пока игрок не правил их руками. */
+export function slotRows(b: Block, c: Calc): CircleRow[] {
+  const rows = b.rows ?? [];
+  if (b.manual || !/ячейк/i.test(b.label)) return rows;
+  const s = slotsFor(c);
+  if (!s) return rows;
+  return rows.map((r, i) => ({ ...r, count: s[i] ?? 0, filled: Math.min(r.filled, s[i] ?? 0) }));
+}
+const spellAb = (c: Calc) => abKey(c.text['spell:ab']) ?? dndClass(c.text['class'])?.ab;
+/** «3» → «+3» для полей, где по смыслу всегда бонус. */
+export const plusSign = (v: string) => (/^\s*\d+\s*$/.test(v) ? `+${v.trim()}` : v);
 /** Автозначение для числа (инициатива, пассивная внимательность, бонус мастерства). */
 export function autoStat(b: Block, c: Calc): string {
   const k = keyOf(b);
   if (k === 'init' && c.mods['ЛВК'] !== undefined) return signed(c.mods['ЛВК']!);
   if (k === 'passive' && c.perception !== undefined) return String(10 + c.perception);
   if (k === 'prof' && c.prof !== undefined) return signed(c.prof);
+  if (k === 'hd') { const cls = dndClass(c.text['class']); return cls && c.level ? `${c.level}к${cls.hd}` : ''; }
+  if (k === 'spell:class') { const cls = dndClass(c.text['class']); return cls?.caster ? cls.name : ''; }
+  if (k === 'spell:ab') { const a = dndClass(c.text['class'])?.ab; return a ? AB_FULL[a]! : ''; }
+  if (k === 'spell:dc' || k === 'spell:atk') {
+    const a = spellAb(c); const m = a ? c.mods[a] : undefined;
+    if (m === undefined || c.prof === undefined) return '';
+    return k === 'spell:dc' ? String(8 + c.prof + m) : signed(c.prof + m);
+  }
   const v = (x: string) => c.vals[x];
   const has = (...xs: string[]) => xs.every((x) => v(x) !== undefined);
   // Зов Ктулху

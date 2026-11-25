@@ -1,6 +1,7 @@
 /** Отрисовка блоков листа. Все размеры — в миллиметрах через переменную --u (1 мм на печати). */
 import { useState, type CSSProperties, type ReactNode } from 'react';
-import { abilityMod, autoItem, autoStat, calcSheet, cocBase, cocBaseText, oldLabel, oldLabelsOn, sheetTheme, signed, spellOf, type Block, type Sheet } from './model';
+import { abilityMod, autoItem, autoStat, calcSheet, cocBase, cocBaseText, keyOf, oldLabel, oldLabelsOn, plusSign, sheetTheme, signed, slotRows, spellOf, type Block, type Sheet } from './model';
+import { RichText } from './rich';
 import { artUrl, DIVIDER, watermarkFor } from './art';
 import { useStore } from './store';
 
@@ -25,13 +26,13 @@ function Watermark({ b, sheet, theme }: { b: Block; sheet: Sheet; theme: ReturnT
  * Поле с автозначением: пока игрок ничего не вписал, показывается посчитанное.
  * Вписал своё — остаётся его число. Стёр — снова считается само.
  */
-function AutoInput({ value, auto, onChange, readOnly, className, style, inputMode }: { value?: string; auto: string; onChange: (v: string) => void; readOnly: boolean; className?: string; style?: CSSProperties; inputMode?: 'numeric' | 'text' }) {
+function AutoInput({ value, auto, onChange, readOnly, className, style, inputMode, fix }: { value?: string; auto: string; onChange: (v: string) => void; readOnly: boolean; className?: string; style?: CSSProperties; inputMode?: 'numeric' | 'text'; fix?: (v: string) => string }) {
   const [focus, setFocus] = useState(false);
   const own = !!value;
   return (
     <input className={`${className ?? ''} ${own ? 'own' : auto ? 'auto' : ''}`} style={style} inputMode={inputMode} readOnly={readOnly}
       value={focus ? value ?? '' : value || auto} placeholder={focus ? auto : ''}
-      onFocus={() => setFocus(true)} onBlur={() => setFocus(false)} onChange={(e) => onChange(e.target.value)} />
+      onFocus={() => setFocus(true)} onBlur={() => { setFocus(false); if (fix && value && fix(value) !== value) onChange(fix(value)); }} onChange={(e) => onChange(e.target.value)} />
   );
 }
 
@@ -47,7 +48,9 @@ export function BlockView({ b: b0, sheet, fill }: { b: Block; sheet: Sheet; fill
   const set = (patch: Partial<Block>) => updateBlock(b.id, patch);
   const inputStyle: CSSProperties = { fontSize: fs };
   const frameCls = b.frame === 'frame' ? 'b-frame' : b.frame === 'line' ? 'b-line' : '';
-  const calc = ['checklist', 'stat', 'abilityx', 'sumlist', 'pctlist'].includes(b.type) ? calcSheet(sheet) : undefined;
+  const calc = ['checklist', 'stat', 'abilityx', 'sumlist', 'pctlist', 'field', 'circles'].includes(b.type) ? calcSheet(sheet) : undefined;
+  const k = keyOf(b);
+  const fix = k === 'init' || k === 'spell:atk' ? plusSign : undefined;
 
   switch (b.type) {
     case 'title':
@@ -59,7 +62,7 @@ export function BlockView({ b: b0, sheet, fill }: { b: Block; sheet: Sheet; fill
     case 'field':
       return (
         <div className={`blk ${frameCls} blk-field`}>
-          <input className="inp" style={inputStyle} value={b.value ?? ''} readOnly={!fill} onChange={(e) => set({ value: e.target.value })} />
+          <AutoInput className="inp" style={inputStyle} value={b.value} auto={autoStat(b, calc!)} fix={fix} readOnly={!fill} onChange={(v) => set({ value: v })} />
           <Label b={b} scale={scale} />
         </div>
       );
@@ -75,8 +78,8 @@ export function BlockView({ b: b0, sheet, fill }: { b: Block; sheet: Sheet; fill
               {b.parts.map((title, i) => (
                 <div key={i} className="part">
                   <div className="part-title" style={{ fontSize: pt(Math.max(6, b.fontSize * 0.85), scale) }}>{title}</div>
-                  <textarea className={`inp area ${b.lined !== false ? 'lined' : ''}`} style={lh} value={b.values?.[i] ?? ''} readOnly={!fill}
-                    onChange={(e) => set({ values: b.parts!.map((_, j) => (j === i ? e.target.value : b.values?.[j] ?? '')) })} />
+                  <RichText className={`inp area ${b.lined !== false ? 'lined' : ''}`} style={lh} value={b.values?.[i] ?? ''} editable={fill}
+                    onChange={(v) => set({ values: b.parts!.map((_, j) => (j === i ? v : b.values?.[j] ?? '')) })} />
                 </div>
               ))}
             </div>
@@ -87,7 +90,7 @@ export function BlockView({ b: b0, sheet, fill }: { b: Block; sheet: Sheet; fill
         <div className={`blk ${frameCls} blk-text`}>
           <Watermark b={b} sheet={sheet} theme={theme} />
           <Label b={b} scale={scale} />
-          <textarea className={`inp area ${b.lined !== false ? 'lined' : ''}`} style={{ fontSize: pt(b.textSize ?? b.fontSize, scale), lineHeight: 1.45, ['--lh' as string]: pt((b.textSize ?? b.fontSize) * 1.45, scale) }} value={b.value ?? ''} readOnly={!fill} onChange={(e) => set({ value: e.target.value })} />
+          <RichText className={`inp area ${b.lined !== false ? 'lined' : ''}`} style={{ fontSize: pt(b.textSize ?? b.fontSize, scale), lineHeight: 1.45, ['--lh' as string]: pt((b.textSize ?? b.fontSize) * 1.45, scale) }} value={b.value ?? ''} editable={fill} onChange={(v) => set({ value: v })} />
         </div>
       );
     case 'image':
@@ -179,7 +182,7 @@ export function BlockView({ b: b0, sheet, fill }: { b: Block; sheet: Sheet; fill
         const a = autoItem(it, calc!.mods, calc!.prof);
         return (
           <div className={`abx-row ${bold ? 'abx-save' : ''}`}>
-            <span className={`dot ${it.checked ? 'on' : ''}`} />
+            <span className={`dot ${it.checked || it.exp ? 'on' : ''} ${it.exp ? 'exp' : ''}`} />
             <span className="abx-val">{it.value || (a === undefined ? '' : signed(a))}</span>
             <span className="abx-name">{bold ? 'Спасбросок' : it.name}</span>
           </div>
@@ -202,7 +205,7 @@ export function BlockView({ b: b0, sheet, fill }: { b: Block; sheet: Sheet; fill
     case 'stat':
       return (
         <div className={`blk ${b.shape === 'shield' ? 'b-shield' : b.shape === 'circle' ? 'b-circle' : b.shape === 'medal' ? 'b-medal' : frameCls} blk-stat`}>
-          <AutoInput className="inp font-display-sc text-center" style={{ fontSize: pt(b.fontSize * (b.shape === 'medal' ? 2.6 : 2.3), scale) }} value={b.value} auto={autoStat(b, calc!)} readOnly={!fill} onChange={(v) => set({ value: v })} />
+          <AutoInput className="inp font-display-sc text-center" style={{ fontSize: pt(b.fontSize * (b.shape === 'medal' ? 2.6 : 2.3), scale) }} value={b.value} auto={autoStat(b, calc!)} fix={fix} readOnly={!fill} onChange={(v) => set({ value: v })} />
           <Label b={b} scale={scale} />
         </div>
       );
@@ -213,7 +216,7 @@ export function BlockView({ b: b0, sheet, fill }: { b: Block; sheet: Sheet; fill
           <div className="list-rows" style={{ fontSize: fs }}>
             {(b.items ?? []).map((it, i) => (
               <div key={i} className="list-row">
-                <button className={`dot ${it.checked ? 'on' : ''}`} disabled={!fill} onClick={() => set({ items: b.items!.map((x, j) => (j === i ? { ...x, checked: !x.checked } : x)) })} />
+                <button className={`dot ${it.checked || it.exp ? 'on' : ''} ${it.exp ? 'exp' : ''}`} disabled={!fill} onClick={() => set({ items: b.items!.map((x, j) => (j === i ? (x.exp ? { ...x, checked: false, exp: false } : x.checked ? { ...x, exp: true } : { ...x, checked: true }) : x)) })} />
                 {(() => { const a = autoItem(it, calc!.mods, calc!.prof); return (
                   <AutoInput className="inp list-val" value={it.value} auto={a === undefined ? '' : signed(a)} readOnly={!fill} onChange={(v) => set({ items: b.items!.map((x, j) => (j === i ? { ...x, value: v } : x)) })} />
                 ); })()}
@@ -223,22 +226,27 @@ export function BlockView({ b: b0, sheet, fill }: { b: Block; sheet: Sheet; fill
           </div>
         </div>
       );
-    case 'circles':
+    case 'circles': {
+      const rows = slotRows(b, calc!);
+      const slots = !!b.rows && rows !== b.rows;
+      const shown = slots ? rows.map((r, i) => ({ r, i })).filter(({ r }) => r.count > 0) : rows.map((r, i) => ({ r, i }));
       return (
         <div className={`blk ${frameCls} blk-circles`}>
           <Label b={b} scale={scale} />
-          <div className="circ-grid" style={{ fontSize: fs, gridTemplateColumns: `repeat(${b.perRow ?? Math.max(1, Math.min(b.rows?.length ?? 1, Math.floor(b.w / 36)))}, minmax(0,1fr))` }}>
-            {(b.rows ?? []).map((r, i) => (
+          <div className="circ-grid" style={{ fontSize: fs, gridTemplateColumns: `repeat(${b.perRow ?? Math.max(1, Math.min(slots ? Math.max(shown.length, 5) : b.rows?.length ?? 1, Math.floor(b.w / 36)))}, minmax(0,1fr))` }}>
+            {slots && !shown.length && <span className="circ-name">нет ячеек</span>}
+            {shown.map(({ r, i }) => (
               <div key={i} className="circ-row">
                 <span className="circ-name">{r.name}</span>
                 <span className="circ-dots">{Array.from({ length: r.count }, (_, k) => (
-                  <button key={k} disabled={!fill} className={`circ ${k < r.filled ? 'on' : ''}`} onClick={() => set({ rows: b.rows!.map((x, j) => (j === i ? { ...x, filled: k < x.filled ? k : k + 1 } : x)) })} />
+                  <button key={k} disabled={!fill} className={`circ ${k < r.filled ? 'on' : ''}`} onClick={() => set({ rows: (b.rows ?? []).map((x, j) => (j === i ? { ...x, filled: k < r.filled ? k : k + 1 } : x)) })} />
                 ))}</span>
               </div>
             ))}
           </div>
         </div>
       );
+    }
     case 'table':
       return (
         <div className={`blk ${frameCls} blk-table`}>

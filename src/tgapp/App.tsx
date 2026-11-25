@@ -36,6 +36,9 @@ const parseHash = (): View => {
   return { name: 'list' };
 };
 const go = (h: string) => { location.hash = h; scrollTo(0, 0); };
+/** «Назад» всегда ведёт на экран выше по смыслу, а не по истории: иначе «игра → изменить → игра» ходит по кругу. */
+const parentOf = (v: View): string => (v.name === 'edit' && v.id ? `game/${v.id}` : '');
+export const goBack = (v: View) => { location.replace(`${location.pathname}${location.search}#${parentOf(v)}`); scrollTo(0, 0); };
 
 export function App() {
   const [ready, setReady] = useState<'load' | 'ok' | 'noapi'>('load');
@@ -48,7 +51,7 @@ export function App() {
   // кнопка «Назад» Telegram на всех экранах, кроме главного
   useEffect(() => {
     if (!tg) return;
-    const back = () => (view.name === 'edit' && view.id ? go(`game/${view.id}`) : history.length > 1 ? history.back() : go(''));
+    const back = () => goBack(view);
     if (view.name === 'list') tg.BackButton.hide(); else { tg.BackButton.show(); tg.BackButton.onClick(back); }
     return () => tg?.BackButton.offClick(back);
   }, [view]);
@@ -324,7 +327,7 @@ function GamePage({ id, say, role }: { id: number; say: (t: string) => void; rol
   const toggleAtt = async (p: Player) => { await api.act(g.id, 'attended', { user_id: p.user_id, value: !p.attended }); void load(); };
   return (
     <div className="pb-6">
-      {!tg && <button onClick={() => go('')} className="mt-3 mb-2 inline-flex items-center gap-1.5 text-sm text-cream/75"><ArrowLeft size={16} />Все игры</button>}
+      <button onClick={() => goBack({ name: 'game', id: g.id })} className="mt-3 mb-2 h-10 px-3 -ml-1 rounded-xl inline-flex items-center gap-1.5 text-sm text-cream/80 border border-moss-light"><ArrowLeft size={16} />Все игры</button>
       <div className="relative -mx-4 aspect-[16/10] bg-moss mt-1">
         {g.image_id ? <img src={imgUrl(g.image_id)} alt="" className="absolute inset-0 w-full h-full object-cover" /> : <div className="absolute inset-0 grid place-items-center"><img src={`${ROOT}icons/icon-192.png`} alt="" className="w-28 opacity-40" /></div>}
         <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-[#1f2521] to-transparent" />
@@ -449,7 +452,7 @@ function Edit({ id, copy, day, room, say }: { id?: number; copy?: number; day?: 
   const input = useRef<HTMLInputElement>(null);
   return (
     <div className="pb-8">
-      {!tg && <button onClick={() => history.back()} className="mt-3 inline-flex items-center gap-1.5 text-sm text-cream/75"><ArrowLeft size={16} />Назад</button>}
+      <button onClick={() => goBack({ name: 'edit', id })} className="mt-3 h-10 px-3 -ml-1 rounded-xl inline-flex items-center gap-1.5 text-sm text-cream/80 border border-moss-light"><ArrowLeft size={16} />{id ? 'К игре' : 'Назад'}</button>
       <h1 className="font-display-sc text-2xl text-sand-light mt-3 mb-3">{id ? 'Изменить игру' : 'Новая игра'}</h1>
       <div className="grid gap-3">
         <input ref={input} type="file" accept="image/*" className="hidden" onChange={async (e) => {

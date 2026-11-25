@@ -12,6 +12,7 @@ test('лист: заполнение в окне, редактор страни�
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto('./');
   await page.getByRole('button', { name: /D&D 5e/ }).click();
+  await page.getByRole('button', { name: /Для кампании/ }).click();
   await expect(page.getByRole('button', { name: 'Изменить страницу Биография' })).toBeVisible();
   await page.screenshot({ path: 'e2e/shots/01-bio.png' }); await noOverflow(page, 'bio');
   const blk = (label: string) => page.locator(`.bw[data-label="${label}"]`).first();
@@ -23,7 +24,7 @@ test('лист: заполнение в окне, редактор страни�
   await save();
   await expect(blk('Имя персонажа').locator('input')).toHaveValue('Гордрик Каменный');
   // кнопки шрифта в текстовом блоке: меняют размер, окно заполнения не открывают
-  const area = blk('Внешность').locator('textarea');
+  const area = blk('Внешность').locator('.area');
   const fs0 = await area.evaluate((e) => parseFloat(getComputedStyle(e).fontSize));
   await page.getByRole('button', { name: 'Больше шрифт: Внешность' }).click();
   await page.getByRole('button', { name: 'Больше шрифт: Внешность' }).click();
@@ -111,6 +112,7 @@ test('лист: заполнение в окне, редактор страни�
 test('два пальца масштабируют страницу и не трогают блоки', async ({ page }) => {
   await page.goto('./');
   await page.getByRole('button', { name: /D&D 5e/ }).click();
+  await page.getByRole('button', { name: /Для кампании/ }).click();
   const portrait = page.locator('.bw').filter({ has: page.locator('.blk-image') }).first();
   await portrait.scrollIntoViewIfNeeded();
   const css = () => portrait.evaluate((e) => (e as HTMLElement).style.cssText);
@@ -134,6 +136,7 @@ test('заполнение прямо на листе', async ({ browser }) => {
   const page = await ctx.newPage();
   await page.goto('./');
   await page.getByRole('button', { name: /D&D 5e/ }).click();
+  await page.getByRole('button', { name: /Для кампании/ }).click();
   const name = page.locator('.bw[data-label="Имя персонажа"] input').first();
   await name.click(); await name.fill('Гордрик');
   await expect(page.getByLabel('Что вписать')).toHaveCount(0);
