@@ -8,8 +8,9 @@ import { gameBlock, mondayOf, postWeek, tgApi } from './schedule';
 
 export const SCHEDULE_BTN = '📅 Составить расписание';
 type Photo = { file_id: string; file_size?: number; width: number };
+type Entity = { type: string; offset: number; length: number; url?: string };
 export interface Upd {
-  message?: { chat: { id: number }; text?: string; from?: TgUser; photo?: Photo[] };
+  message?: { chat: { id: number }; text?: string; entities?: Entity[]; from?: TgUser; photo?: Photo[] };
   callback_query?: { id: string; from: TgUser; data?: string; message?: { chat: { id: number }; message_id: number } };
 }
 interface Draft {
@@ -49,6 +50,28 @@ async function savePhoto(env: Env, photos: Photo[]): Promise<number | null> {
   return Number(r.meta.last_row_id);
 }
 
+/** Текст с оформлением из Telegram (жирный, курсив, цитата, ссылки…) → HTML для поста. Свои теги ставим сами, текст экранируем. */
+const TAGS: Record<string, [string, string]> = {
+  bold: ['<b>', '</b>'], italic: ['<i>', '</i>'], underline: ['<u>', '</u>'], strikethrough: ['<s>', '</s>'], spoiler: ['<tg-spoiler>', '</tg-spoiler>'],
+  code: ['<code>', '</code>'], pre: ['<pre>', '</pre>'], blockquote: ['<blockquote>', '</blockquote>'], expandable_blockquote: ['<blockquote expandable>', '</blockquote>'],
+};
+export function entitiesToHtml(text: string, entities: Entity[] = []): string {
+  const open = new Map<number, string[]>(), close = new Map<number, string[]>();
+  const add = (m: Map<number, string[]>, i: number, t: string, front = false) => { const a = m.get(i) ?? []; front ? a.unshift(t) : a.push(t); m.set(i, a); };
+  for (const e of [...entities].sort((a, b) => a.offset - b.offset || b.length - a.length)) {
+    const t = e.type === 'text_link' && e.url && /^https?:\/\//.test(e.url) ? [`<a href="${esc(e.url).replace(/"/g, '&quot;')}">`, '</a>'] as [string, string] : TAGS[e.type];
+    if (!t) continue;
+    add(open, e.offset, t[0]); add(close, e.offset + e.length, t[1], true);
+  }
+  let out = '';
+  for (let i = 0; i <= text.length; i++) {
+    out += (close.get(i) ?? []).join('') + (open.get(i) ?? []).join('');
+    if (i < text.length) out += esc(text[i]!);
+  }
+  return out;
+}
+const DEFAULT_INTRO = '<b>Расписание игр на неделю</b>\n\n<blockquote>Приходить можно совершенно без знания правил, объясним всё в процессе. И не бойтесь приходить одни, у нас вы встретите единомышленников</blockquote>';
+
 /** Вопрос для шага. */
 async function ask(env: Env, send: Send, chat: number, step: string, d: Draft) {
   const q = (t: string, rows: Kb = []) => send(chat, t, ik([...rows, [CANCEL]]));
@@ -84,7 +107,7 @@ async function ask(env: Env, send: Send, chat: number, step: string, d: Draft) {
     }
     case 'post_image': return q('📣 Пришлите картинку для поста — она будет сверху, под ней расписание недели');
     case 'review': return q('Что делаем с постом?', [[{ text: '✅ Выложить в канал', cb: 'publish' }], [{ text: '✍️ Другая подводка', cb: 'reintro' }, { text: '🖼 Другая картинка', cb: 'reimg' }]]);
-    case 'intro': return q('✍️ Напишите подводку — текст в начале поста, перед играми. Или пропустите, тогда сверху будут даты недели', [[SKIP]]);
+    case 'intro': return q('✍️ <b>Оглавление (подводка)</b> — текст в начале поста, перед играми.\n\nПишите и оформляйте прямо здесь, как обычное сообщение: выделите слова → «Форматирование» → <b>Жирный</b>, <i>Курсив</i> или «Цитата». Бот сохранит оформление в посте.\n\nИли возьмите стандартную подводку.', [[{ text: '📝 Стандартная подводка', cb: 'std' }], [{ text: 'Без подводки — только даты', cb: 'skip' }]]);
   }
 }
 
@@ -152,7 +175,7 @@ export async function wizard(env: Env, upd: Upd, send: Send, origin: string, now
       d.post_image = img; await setState(env, from.id, 'intro', d, now); await ask(env, send, chat, 'intro', d); return true;
     }
     case 'intro':
-      if (cb === 'skip') d.intro = ''; else if (text) d.intro = text.slice(0, 2500); else { ok = false; break; }
+      if (cb === 'skip') d.intro = ''; else if (cb === 'std') d.intro = DEFAULT_INTRO; else if (msg?.text) d.intro = entitiesToHtml(msg.text.slice(0, 2500), msg.entities); else { ok = false; break; }
       // предпросмотр: тот же пост, но сюда, в чат администратора
       await send(chat, '👀 Так пост будет выглядеть в канале:');
       {

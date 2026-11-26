@@ -1,6 +1,7 @@
 import { describe, expect, it, beforeEach } from 'vitest';
 import { handle, remind, type Env } from '../worker/src/index';
 import { buildPost, mondayOf, scheduleReminders } from '../worker/src/schedule';
+import { entitiesToHtml } from '../worker/src/wizard';
 import { vi } from 'vitest';
 import { localDB } from '../worker/src/local-db';
 import { signInitData, verifyInitData, type TgUser } from '../worker/src/telegram';
@@ -212,5 +213,11 @@ describe('сервер записей', () => {
     // отмена в любой момент
     await say('📅 Составить расписание'); await say('Отмена'); expect(sent.at(-1)!.text).toMatch(/отменил/);
     spy.mockRestore();
+  });
+  it('подводка: оформление из Telegram (жирный, курсив, цитата, ссылка) переносится в пост, лишнее экранируется', () => {
+    const t = 'Два стола свободны (уже нет)\nПриходите <смело>';
+    const html = entitiesToHtml(t, [{ type: 'bold', offset: 0, length: 18 }, { type: 'italic', offset: 19, length: 9 }, { type: 'blockquote', offset: 29, length: 17 }, { type: 'mention', offset: 0, length: 3 }]);
+    expect(html).toBe('<b>Два стола свободны</b> <i>(уже нет)</i>\n<blockquote>Приходите &lt;смело&gt;</blockquote>');
+    expect(entitiesToHtml('тут', [{ type: 'text_link', offset: 0, length: 3, url: 'javascript:alert(1)' }])).toBe('тут');
   });
 });

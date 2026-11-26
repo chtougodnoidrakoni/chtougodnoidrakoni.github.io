@@ -41,7 +41,8 @@ export async function buildPost(env: Env, monday: string, intro = ''): Promise<{
     .filter((g) => Date.parse(g.starts_at) >= Date.parse(from) && Date.parse(g.starts_at) < Date.parse(to));
   const a = local(Date.parse(from)); const z = local(Date.parse(to) - 864e5);
   // подводку пишет администратор; без неё — заголовок с датами
-  const head = intro.trim() ? esc(intro.trim()) : `🗓 <b>Расписание на неделю ${pad(a.getUTCDate())}.${pad(a.getUTCMonth() + 1)} — ${pad(z.getUTCDate())}.${pad(z.getUTCMonth() + 1)}</b>`;
+  // intro — уже готовый HTML (из оформления Telegram или стандартный), экранированный при сборке
+  const head = intro.trim() ? intro.trim() : `🗓 <b>Расписание на неделю ${pad(a.getUTCDate())}.${pad(a.getUTCMonth() + 1)} — ${pad(z.getUTCDate())}.${pad(z.getUTCMonth() + 1)}</b>`;
   const app = env.BOT_USERNAME ? `<a href="https://t.me/${env.BOT_USERNAME}">приложение клуба</a>` : 'приложение клуба';
   const foot = `〰️〰️🌿〰️〰️\n\n🪙 <b>Стоимость</b>\n1200 ₽ за 4–5 часовую игру\n\n❓ <b>Как записаться</b>\nПишите @oh_katiakaterina или через ${app}`;
   const blocks = games.map((g) => gameBlock(g, g.taken));
