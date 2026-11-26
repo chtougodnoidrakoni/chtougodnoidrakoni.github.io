@@ -39,3 +39,6 @@ CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, name TEXT NOT NULL, us
 
 -- служебные отметки: какие напоминания уже ушли, какие недели выложены в канал
 CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+
+-- листы персонажей игроков: копия в облаке по Telegram-аккаунту
+CREATE TABLE IF NOT EXISTS sheets (id TEXT NOT NULL, user_id INTEGER NOT NULL, name TEXT NOT NULL, data TEXT NOT NULL, updated_at INTEGER NOT NULL, PRIMARY KEY (user_id, id));

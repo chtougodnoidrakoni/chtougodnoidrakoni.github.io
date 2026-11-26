@@ -1,6 +1,7 @@
 /** Состояние: список листов, открытый лист, режим, выделение, история отмен, база заклинаний. */
 import { create } from 'zustand';
 import { get as idbGet, set as idbSet, del as idbDel } from 'idb-keyval';
+import { cloudDelete, cloudPush, cloudSync } from './cloud';
 import { migrateLayout } from './layout';
 import { clubTemplate, migrateSheet, sheetName, uid, type Block, type GameSystem, type Page, type Sheet, type SpellData } from './model';
 
@@ -61,6 +62,7 @@ function persist(s: Sheet) {
     const next = [meta(s), ...index.filter((x) => x.id !== s.id)];
     await idbSet('index', next);
     useStore.setState({ index: next });
+    cloudPush(s);
   }, 400);
 }
 
@@ -91,6 +93,16 @@ export const useStore = create<State>((set, get) => ({
       await idbSet('index', index).catch(() => {});
     }
     set({ index, ready: true });
+    try {
+      // облачная копия по Telegram-аккаунту: подтягиваем листы с других устройств
+      const pulled = await cloudSync(index, (id) => idbGet(`sheet:${id}`), async (sh) => {
+        await idbSet(`sheet:${sh.id}`, sh);
+        const cur: SheetMeta[] = (await idbGet('index')) ?? [];
+        const next = [meta(sh), ...cur.filter((x) => x.id !== sh.id)].sort((a, b) => b.updatedAt - a.updatedAt);
+        await idbSet('index', next); set({ index: next });
+      });
+      if (pulled) get().say(`Из облака подтянулись листы: ${pulled}`);
+    } catch { /* без связи — работаем с тем, что на устройстве */ }
     try {
       const res = await fetch(`${import.meta.env.BASE_URL}spells.json`);
       baseSpells = await res.json();
@@ -123,10 +135,12 @@ export const useStore = create<State>((set, get) => ({
     const index = [meta(s), ...get().index];
     await idbSet('index', index);
     set({ index });
+    cloudPush(s, 0);
     return s.id;
   },
   async remove(id) {
     await idbDel(`sheet:${id}`);
+    cloudDelete(id);
     const index = get().index.filter((x) => x.id !== id);
     await idbSet('index', index);
     set({ index });

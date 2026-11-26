@@ -271,13 +271,39 @@ function List({ say }: { say: (t: string) => void }) {
 function My() {
   const [games, setGames] = useState<Game[] | null>(null);
   const [guest, setGuest] = useState(false);
+  const [sheets, setSheets] = useState<{ id: string; name: string; updated_at: number }[] | null>(null);
+  const [off, setOff] = useState(false);
   useEffect(() => { api.me().then((m) => { setGuest(!m.user); setGames(m.games ?? []); }).catch(() => setGames([])); }, []);
+  useEffect(() => { api.sheets().then((r) => { setSheets(r.sheets); setOff(r.off); }).catch(() => setSheets([])); }, []);
   if (guest) return <div className="mt-6 text-sm text-cream/70">Откройте приложение из Telegram, чтобы видеть свои записи.</div>;
+  const ago = (t: number) => new Date(t).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
   return (
-    <div className="grid gap-3 mt-4">
-      {games === null && <div className="h-40 rounded-3xl bg-moss-deep/60 animate-pulse" />}
-      {games && !games.length && <div className="py-10 text-center text-cream/60 text-sm">Вы пока никуда не записаны. Загляните во вкладку «Игры».</div>}
-      {games?.map((g) => <Card key={g.id} g={g} />)}
+    <div className="mt-4">
+      <h2 className="text-sm text-sand-light mb-2 inline-flex items-center gap-1.5"><CalendarDays size={16} />Мои записи на игры</h2>
+      <div className="grid gap-3">
+        {games === null && <div className="h-40 rounded-3xl bg-moss-deep/60 animate-pulse" />}
+        {games && !games.length && <div className="py-6 text-center text-cream/60 text-sm">Вы пока никуда не записаны. Загляните во вкладку «Игры».</div>}
+        {games?.map((g) => <Card key={g.id} g={g} />)}
+      </div>
+      <h2 className="text-sm text-sand-light mt-7 mb-2 inline-flex items-center gap-1.5"><ScrollText size={16} />Мои персонажи</h2>
+      <div className="grid gap-2">
+        {sheets === null && <div className="h-14 rounded-2xl bg-moss-deep/60 animate-pulse" />}
+        {off && <div className="rounded-2xl border border-moss-light p-4 text-sm text-cream/70">Сохранение листов на сервер выключено. <button className="underline text-sand-light" onClick={async () => { await api.sheetsOn().catch(() => undefined); setOff(false); }}>Включить</button></div>}
+        {sheets && !sheets.length && !off && <div className="rounded-2xl border border-dashed border-moss-light p-4 text-sm text-cream/65">Персонажей пока нет. Соберите героя в билдере или заполните лист — он сохранится сюда сам, и его можно будет открыть с любого устройства.</div>}
+        {sheets?.map((x) => (
+          <button key={x.id} onClick={() => openLink(`${SITES.sheet}#sheet/${x.id}`)} className="text-left rounded-2xl border border-moss-light bg-moss-deep/60 px-4 py-3 flex items-center gap-3">
+            <ScrollText size={18} className="text-sand shrink-0" />
+            <span className="flex-1 min-w-0"><span className="block text-cream truncate">{x.name || 'Без имени'}</span><span className="block text-[11px] text-cream/50">изменён {ago(x.updated_at)}</span></span>
+            <ArrowLeft size={16} className="rotate-180 text-cream/40" />
+          </button>
+        ))}
+      </div>
+      {!!sheets?.length && (
+        <button className="mt-3 text-xs text-cream/45 underline underline-offset-4" onClick={async () => {
+          if (!(await confirmBox('Удалить все ваши листы с сервера клуба и больше их туда не сохранять? На устройстве они останутся.'))) return;
+          await api.deleteSheets().catch(() => undefined); setSheets([]); setOff(true);
+        }}>Удалить мои листы с сервера</button>
+      )}
     </div>
   );
 }

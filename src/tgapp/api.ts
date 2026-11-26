@@ -37,6 +37,9 @@ export const api = {
   image: (mime: string, data: string) => req<{ id: number }>('POST', '/api/images', { mime, data }),
   schedulePreview: (week: string) => req<{ week: string; text: string; count: number; posted: string | null }>('GET', `/api/schedule/preview?week=${week}`),
   schedulePost: (week: string, image_id: number) => req<{ ok: true; count: number }>('POST', '/api/schedule/post', { week, image_id }),
+  sheets: () => req<{ sheets: { id: string; name: string; updated_at: number }[]; off: boolean }>('GET', '/api/sheets'),
+  deleteSheets: () => req('DELETE', '/api/sheets'),
+  sheetsOn: () => req('POST', '/api/sheets/on'),
   roles: () => req<{ roles: { username: string; role: string }[] }>('GET', '/api/roles'),
   setRole: (username: string, role: 'master' | null) => req('POST', '/api/roles', { username, role }),
 };

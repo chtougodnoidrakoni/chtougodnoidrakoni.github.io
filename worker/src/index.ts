@@ -226,6 +226,54 @@ export async function handle(req: Request, env: Env, ctx: Ctx, send: Send = tele
       const r = await env.DB.prepare('INSERT INTO images(mime, data) VALUES (?, ?)').bind(mime, data).run();
       return json({ id: r.meta.last_row_id });
     }
+    // ---------- листы персонажей игрока (облачная копия по Telegram-аккаунту)
+    if (path === '/api/sheets' && req.method === 'GET') {
+      const no = need(); if (no) return no;
+      const r = await env.DB.prepare('SELECT id, name, updated_at FROM sheets WHERE user_id = ? ORDER BY updated_at DESC').bind(m!.user.id).all<{ id: string; name: string; updated_at: number }>();
+      const off = await env.DB.prepare('SELECT 1 FROM meta WHERE key = ?').bind(`nocloud:${m!.user.id}`).first();
+      return json({ sheets: r.results, off: !!off });
+    }
+    if (path === '/api/sheets' && req.method === 'DELETE') {
+      const no = need(); if (no) return no;
+      // удалить всё и больше не сохранять, пока игрок сам не включит
+      await env.DB.prepare('DELETE FROM sheets WHERE user_id = ?').bind(m!.user.id).run();
+      await env.DB.prepare("INSERT INTO meta(key, value) VALUES (?, '1') ON CONFLICT(key) DO NOTHING").bind(`nocloud:${m!.user.id}`).run();
+      return json({ ok: true });
+    }
+    if (path === '/api/sheets/on' && req.method === 'POST') {
+      const no = need(); if (no) return no;
+      await env.DB.prepare('DELETE FROM meta WHERE key = ?').bind(`nocloud:${m!.user.id}`).run();
+      return json({ ok: true });
+    }
+    const shm = path.match(/^\/api\/sheets\/([A-Za-z0-9_-]{4,40})$/);
+    if (shm) {
+      const no = need(); if (no) return no;
+      const sid = shm[1]!;
+      if (req.method === 'GET') {
+        const r = await env.DB.prepare('SELECT data FROM sheets WHERE user_id = ? AND id = ?').bind(m!.user.id, sid).first<{ data: string }>();
+        return r ? new Response(r.data, { headers: { 'content-type': 'application/json', ...CORS } }) : fail('лист не найден', 404);
+      }
+      if (req.method === 'PUT') {
+        if (await env.DB.prepare('SELECT 1 FROM meta WHERE key = ?').bind(`nocloud:${m!.user.id}`).first()) return json({ ok: false, off: true });
+        const body = await req.text();
+        if (body.length > 1_800_000) return fail('Лист слишком большой — уменьшите портрет', 413);
+        let sh: { id?: string; updatedAt?: number; name?: string };
+        try { sh = JSON.parse(body); } catch { return fail('лист повреждён'); }
+        if (sh.id !== sid || typeof sh.updatedAt !== 'number') return fail('лист повреждён');
+        const name = String(new URL(req.url).searchParams.get('name') ?? sh.name ?? 'Персонаж').slice(0, 120);
+        // старая копия не затирает новую (два устройства)
+        await env.DB.prepare(`INSERT INTO sheets(id, user_id, name, data, updated_at) VALUES (?1, ?2, ?3, ?4, ?5)
+          ON CONFLICT(user_id, id) DO UPDATE SET name = excluded.name, data = excluded.data, updated_at = excluded.updated_at WHERE excluded.updated_at >= sheets.updated_at`)
+          .bind(sid, m!.user.id, name, body, sh.updatedAt).run();
+        const cnt = await env.DB.prepare('SELECT COUNT(*) AS n FROM sheets WHERE user_id = ?').bind(m!.user.id).first<{ n: number }>();
+        if ((cnt?.n ?? 0) > 200) { await env.DB.prepare('DELETE FROM sheets WHERE user_id = ? AND id = ?').bind(m!.user.id, sid).run(); return fail('Слишком много листов — удалите старые', 413); }
+        return json({ ok: true });
+      }
+      if (req.method === 'DELETE') {
+        await env.DB.prepare('DELETE FROM sheets WHERE user_id = ? AND id = ?').bind(m!.user.id, sid).run();
+        return json({ ok: true });
+      }
+    }
     // ---------- расписание недели в канал
     if (path === '/api/schedule/preview' && req.method === 'GET') {
       if (m?.role !== 'admin') return fail('Только для администратора', 403);

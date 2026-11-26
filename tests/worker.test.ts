@@ -140,4 +140,25 @@ describe('сервер записей', () => {
     await env.DB.prepare("INSERT INTO meta(key, value) VALUES (?, 'x')").bind(`posted:${mondayOf(fri + 7 * 864e5)}`).run();
     await scheduleReminders(env, send, fri, {}); expect(sent).toHaveLength(2);
   });
+  it('облачные листы: у каждого свои, старая копия не затирает новую, можно удалить и выключить', async () => {
+    const put = async (u: TgUser, sh: object) => {
+      const headers = { 'x-init-data': await signInitData(u, TOKEN, Math.floor(NOW / 1000)) };
+      const r = await handle(new Request(`https://w.test/api/sheets/${(sh as { id: string }).id}?name=Мирра`, { method: 'PUT', headers, body: JSON.stringify(sh) }), env, ctx, send, NOW);
+      return r.json() as Promise<Record<string, any>>;
+    };
+    await put(players[0], { id: 'abc123', updatedAt: 200, pages: [] });
+    await put(players[0], { id: 'abc123', updatedAt: 100, pages: ['старое'] });
+    const list = await call('GET', '/api/sheets', players[0]);
+    expect(list.data.sheets).toEqual([{ id: 'abc123', name: 'Мирра', updated_at: 200 }]);
+    expect((await call('GET', '/api/sheets', players[1])).data.sheets).toEqual([]);
+    expect((await call('GET', '/api/sheets/abc123', players[1])).status).toBe(404);
+    expect((await call('GET', '/api/sheets/abc123', players[0])).data.pages).toEqual([]);
+    expect((await call('GET', '/api/sheets')).status).toBe(401);
+    await call('DELETE', '/api/sheets', players[0]);
+    expect((await put(players[0], { id: 'abc123', updatedAt: 300, pages: [] })).off).toBe(true);
+    expect((await call('GET', '/api/sheets', players[0])).data).toMatchObject({ sheets: [], off: true });
+    await call('POST', '/api/sheets/on', players[0]);
+    await put(players[0], { id: 'abc123', updatedAt: 300, pages: [] });
+    expect((await call('GET', '/api/sheets', players[0])).data.sheets).toHaveLength(1);
+  });
 });
