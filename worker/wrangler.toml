@@ -13,5 +13,5 @@ database_name = "chd-games"
 database_id = "__D1_ID__"
 
 [vars]
-ADMIN_USERNAMES = "astrakhan_trener"
+ADMIN_USERNAMES = "astrakhan_trener,oh_katiakaterina,aalkhutova"
 APP_URL = "https://chtougodnoidrakoni.github.io/app/"
