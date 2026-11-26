@@ -45,10 +45,12 @@ export async function buildPdf(onProgress: (done: number, total: number) => void
   return pdf.save();
 }
 
-/** Отдать файл: «Поделиться» (Файлы, Telegram, печать) или скачивание, если «Поделиться» нет. */
-export async function sharePdf(bytes: Uint8Array, name: string) {
+/** Отдать файл: на телефоне — «Поделиться» (Файлы, Telegram, печать), на компьютере и по просьбе — сразу скачивание.
+ * На компьютере «Поделиться» не нужен: в Windows он открывает пустое окно «Не удалось показать все способы…». */
+export async function sharePdf(bytes: Uint8Array, name: string, download = false) {
   const file = new File([bytes as Uint8Array<ArrayBuffer>], `${name.replace(/[\\/:*?"<>|]+/g, ' ').trim() || 'Лист персонажа'}.pdf`, { type: 'application/pdf' });
-  if (navigator.canShare?.({ files: [file] })) {
+  const phone = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if (!download && phone && navigator.canShare?.({ files: [file] })) {
     // только файл: заголовок или текст iPhone сохраняет рядом отдельным .txt
     try { await navigator.share({ files: [file] }); return; } catch (e) { if ((e as Error).name === 'AbortError') return; }
   }

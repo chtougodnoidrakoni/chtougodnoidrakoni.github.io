@@ -23,6 +23,7 @@ declare const __BUILD__: string;
 const cx = (...c: (string | false | undefined)[]) => c.filter(Boolean).join(' ');
 
 async function saveFile(name: string, blob: Blob) {
+  // на компьютере — только скачивание: системное «Поделиться» в Windows не работает
   const file = new File([blob], name, { type: blob.type });
   const nav = navigator as Navigator & { canShare?: (d: { files: File[] }) => boolean };
   if (nav.canShare?.({ files: [file] }) && /iPhone|iPad|Android/i.test(navigator.userAgent)) { try { await nav.share({ files: [file] }); return; } catch (e) { if ((e as Error).name === 'AbortError') return; } }
@@ -323,6 +324,7 @@ function Editor() {
               <div className="font-display-sc text-xl text-sand-light">PDF готов</div>
               <div className="text-sm text-cream/70 mt-2">Сохраните в Файлы, отправьте в Telegram или сразу напечатайте</div>
               <Btn tone="gold" className="w-full mt-4" onClick={() => void sharePdf(pdf.bytes!, sheetName(sheet))}><Download size={18} />Сохранить или отправить</Btn>
+              <button className="mt-2 h-10 w-full text-sand-light underline underline-offset-4" onClick={() => void sharePdf(pdf.bytes!, sheetName(sheet), true)}>Скачать файлом</button>
               <button className="mt-3 h-10 text-cream/70" onClick={() => setPdf(null)}>Закрыть</button>
             </>}
           </div>
