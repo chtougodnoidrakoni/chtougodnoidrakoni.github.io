@@ -53,3 +53,23 @@ export function setupTgBack() {
   };
   document.head.appendChild(s);
 }
+
+/* ---------- внутри Telegram файлы не скачиваются: уводим в обычный браузер ---------- */
+type TgWin = { Telegram?: { WebApp?: { platform?: string; openLink?(u: string): void; openTelegramLink?(u: string): void } }; TelegramWebviewProxy?: { postEvent(e: string, d: string): void } };
+const tw = () => window as unknown as TgWin;
+/** Сайт открыт во встроенном окне Telegram (мини-приложение или ссылка из чата). */
+export const inTelegram = () => fromTg() || !!tw().TelegramWebviewProxy || /Telegram/i.test(navigator.userAgent);
+/** Открыть адрес в обычном браузере телефона или компьютера. */
+export function openExternal(url: string) {
+  const w = tw();
+  if (w.Telegram?.WebApp?.openLink && w.Telegram.WebApp.platform && w.Telegram.WebApp.platform !== 'unknown') return w.Telegram.WebApp.openLink(url);
+  if (w.TelegramWebviewProxy) return w.TelegramWebviewProxy.postEvent('web_app_open_link', JSON.stringify({ url }));
+  window.open(url, '_blank');
+}
+/** Окно «Переслать» Telegram с готовой ссылкой. */
+export function shareInTelegram(url: string, text: string): boolean {
+  const w = tw(); const path = `/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
+  if (w.Telegram?.WebApp?.openTelegramLink && w.Telegram.WebApp.platform && w.Telegram.WebApp.platform !== 'unknown') { w.Telegram.WebApp.openTelegramLink(`https://t.me${path}`); return true; }
+  if (w.TelegramWebviewProxy) { w.TelegramWebviewProxy.postEvent('web_app_open_tg_link', JSON.stringify({ path_full: path })); return true; }
+  return false;
+}

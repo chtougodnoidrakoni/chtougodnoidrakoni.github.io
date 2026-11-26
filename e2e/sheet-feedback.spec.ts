@@ -60,3 +60,24 @@ test('ваншот: классическая первая страница, ав
   await expect(page.getByRole('button', { name: 'Скачать файл листа на устройство' })).toBeVisible();
   expect(errors).toEqual([]);
 });
+
+test('в Telegram PDF открывается в браузере по ссылке на лист и там собирается сам', async ({ page }) => {
+  await page.addInitScript(() => {
+    (window as unknown as { __opened: string[] }).__opened = [];
+    window.open = ((u: string) => { (window as unknown as { __opened: string[] }).__opened.push(u); return null; }) as typeof window.open;
+  });
+  await page.goto('./?tg=1');
+  await page.getByRole('button', { name: /D&D 5e/ }).click();
+  await page.getByRole('button', { name: /Для ваншота/ }).click();
+  await page.locator('.bw[data-label="Имя персонажа"]').first().click();
+  await page.getByLabel('Что вписать').fill('Мирра');
+  await page.getByRole('button', { name: 'Сохранить' }).click();
+  await page.getByRole('button', { name: 'PDF', exact: true }).click();
+  await expect.poll(() => page.evaluate(() => (window as unknown as { __opened: string[] }).__opened[0] ?? '')).toMatch(/#share=[zp][A-Za-z0-9_-]+&do=pdf$/);
+  const url = await page.evaluate(() => (window as unknown as { __opened: string[] }).__opened[0]!);
+  // «браузер»: новая вкладка без Telegram
+  const p2 = await page.context().newPage();
+  await p2.goto(url.replace(/^https?:\/\/[^/]+\//, './'));
+  await expect(p2.getByText('PDF готов')).toBeVisible({ timeout: 30000 });
+  await expect(p2.locator('.bw[data-label="Имя персонажа"] input').first()).toHaveValue('Мирра');
+});

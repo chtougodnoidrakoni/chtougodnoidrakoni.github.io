@@ -298,3 +298,24 @@ export function problems(b: Build): Record<string, string[]> {
 
 export const abilityLine = (b: Build) => { const s = scores(b); return ABS.map((a) => `${AB_RU[a].slice(0, 3).toUpperCase()} ${s[a]} (${sgn(mod(s[a]))})`).join(' · '); };
 export { slots, SKILLS };
+
+/** Какие характеристики важнее для класса — для кнопки «Расставить автоматически». */
+const PRIORITY: Record<string, Ab[]> = {
+  barbarian: ['str', 'con', 'dex', 'wis', 'cha', 'int'], bard: ['cha', 'dex', 'con', 'wis', 'int', 'str'],
+  cleric: ['wis', 'con', 'str', 'dex', 'cha', 'int'], druid: ['wis', 'con', 'dex', 'int', 'cha', 'str'],
+  fighter: ['str', 'con', 'dex', 'wis', 'int', 'cha'], monk: ['dex', 'wis', 'con', 'str', 'int', 'cha'],
+  paladin: ['str', 'cha', 'con', 'wis', 'dex', 'int'], ranger: ['dex', 'wis', 'con', 'str', 'int', 'cha'],
+  rogue: ['dex', 'con', 'wis', 'int', 'cha', 'str'], sorcerer: ['cha', 'con', 'dex', 'wis', 'int', 'str'],
+  warlock: ['cha', 'con', 'dex', 'wis', 'int', 'str'], wizard: ['int', 'con', 'dex', 'wis', 'cha', 'str'],
+  artificer: ['int', 'con', 'dex', 'wis', 'cha', 'str'],
+};
+export function abilityPriority(b: Build): Ab[] {
+  const cl = classOf(b);
+  const base = (cl && PRIORITY[cl.id]) ?? [...(cl?.spellAb ? [cl.spellAb] : []), ...(cl?.saves ?? []), 'con', 'dex', 'wis', 'str', 'int', 'cha'] as Ab[];
+  return [...new Set([...base, ...ABS])].slice(0, 6);
+}
+/** Раскладывает набор чисел: самое большое — в главную характеристику класса и дальше по важности. */
+export function autoAssign(values: number[], b: Build): Record<Ab, number> {
+  const v = [...values].sort((x, y) => y - x);
+  return Object.fromEntries(abilityPriority(b).map((a, i) => [a, v[i] ?? 8])) as Record<Ab, number>;
+}

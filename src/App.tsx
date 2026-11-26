@@ -9,6 +9,7 @@ import { PromptButton } from './PromptMaker';
 import { AiPaste } from './AiPaste';
 import { PlayPanel } from './PlayPanel';
 import { allSheets, BACKUP_KIND, backupDue, markBackup, sheetFromLink, sheetsFromFile, shareLink, snoozeBackup } from './backup';
+import { inTelegram, openExternal, shareInTelegram } from './tgBack';
 import { useStore } from './store';
 import { makeBlock, oneshotTemplate, PAGE_TEMPLATES, relayoutFromTemplate, sheetName, uid, type BlockType, type Sheet } from './model';
 import { LayoutPage, SpellbookPages } from './Page';
@@ -52,8 +53,11 @@ export function App() {
   useEffect(() => {
     void boot().then(async () => {
       if (location.hash.startsWith('#share=')) {
-        const s = await sheetFromLink(location.hash); history.replaceState(null, '', location.pathname);
-        if (s) { const st = useStore.getState(); const id = await st.create({ ...s, name: s.name && s.name !== 'Новый персонаж' ? `${s.name} (по ссылке)` : s.name }); await st.open(id); st.say('Лист по ссылке добавлен в ваши листы'); }
+        const h = location.hash;
+        const todo = h.match(/&do=(pdf|save|print)/)?.[1];
+        const s = await sheetFromLink(h); history.replaceState(null, '', location.pathname);
+        if (s && todo) try { sessionStorage.setItem('auto-do', todo); } catch { /* */ }
+        if (s) { const st = useStore.getState(); const id = await st.create({ ...s, name: s.name && s.name !== 'Новый персонаж' && !todo ? `${s.name} (по ссылке)` : s.name }); await st.open(id); st.say(todo ? 'Лист открыт в браузере' : 'Лист по ссылке добавлен в ваши листы'); }
         else useStore.getState().say('Ссылка повреждена — попросите прислать её заново');
         return;
       }
@@ -211,12 +215,27 @@ function Editor() {
       setPdf({ done: 1, total: 1, bytes });
     } catch (e) {
       setPdf(null);
-      say('Не получилось собрать PDF. Попробуйте «Системная печать Safari» в меню «⋯»');
+      say('Не получилось собрать PDF. Попробуйте «Системная печать» в меню «⋯»');
       console.error(e);
     }
   };
+  /** В Telegram скачать файл нельзя — открываем этот же лист в обычном браузере, там всё сработает. */
+  const viaBrowser = async (todo: 'pdf' | 'save' | 'print') => {
+    if (!sheet || !inTelegram()) return false;
+    say('Открываю лист в браузере — Telegram не умеет сохранять файлы');
+    openExternal(await shareLink(sheet, `&do=${todo}`));
+    return true;
+  };
+  useEffect(() => {
+    let todo: string | null = null; try { todo = sessionStorage.getItem('auto-do'); sessionStorage.removeItem('auto-do'); } catch { /* */ }
+    if (todo === 'pdf') setTimeout(() => void makePdf(), 600);
+    if (todo === 'print') setTimeout(() => window.print(), 800);
+    if (todo === 'save') { setMenu(true); say('Нажмите «Сохранить на устройство»'); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const pdfOrBrowser = async () => { if (!(await viaBrowser('pdf'))) await makePdf(); };
   const saveToDevice = async () => {
-    if (!sheet) return;
+    if (!sheet || (await viaBrowser('save'))) return;
     await saveFile(`${sheetName(sheet).replace(/[^\p{L}\p{N}]+/gu, '_') || 'list'}.json`, new Blob([JSON.stringify(sheet)], { type: 'application/json' }));
     say('Файл листа сохранён. Открыть его снова: на главной «Открыть файл листа»');
   };
@@ -282,7 +301,7 @@ function Editor() {
             <Btn className="flex-1 !px-2" onClick={() => setAddPage(true)}><Plus size={18} />Страница</Btn>
             <Btn className="flex-1 !px-2" onClick={() => setAddBlock(true)}><LayoutTemplate size={18} />Блок</Btn>
             <Btn className="flex-1 !px-2 !border-sand/70 !text-sand-light" onClick={() => setPlay(true)}><Dices size={18} />Играть</Btn>
-            <Btn tone="gold" className="flex-1 !px-2" onClick={makePdf}><Printer size={18} />PDF</Btn>
+            <Btn tone="gold" className="flex-1 !px-2" onClick={() => void pdfOrBrowser()}><Printer size={18} />PDF</Btn>
           </div>
         </div>
       )}
@@ -343,9 +362,9 @@ function Editor() {
           <Btn onClick={() => { setMenu(false); setSettings(true); }}><Settings2 size={18} />Стиль, название, шрифт, эмблема</Btn>
           <Btn onClick={() => { setMenu(false); setAiOpen(true); }}><Wand2 size={18} />Заполнить ответом нейросети</Btn>
           <Btn onClick={() => { setMenu(false); close(); location.hash = '#help'; scrollTo(0, 0); }}><BookOpen size={18} />Как пользоваться сайтом</Btn>
-          <Btn onClick={() => { setMenu(false); setTimeout(makePdf, 300); }}><Printer size={18} />Скачать PDF</Btn>
-          <Btn onClick={() => { setMenu(false); setTimeout(() => window.print(), 300); }}><Printer size={18} />Системная печать Safari</Btn>
-          <Btn onClick={async () => { const url = await shareLink(sheet); const nav = navigator as Navigator; if (nav.share && /iPhone|iPad|Android/i.test(navigator.userAgent)) { try { await nav.share({ url }); return; } catch (e) { if ((e as Error).name === 'AbortError') return; } } try { await navigator.clipboard.writeText(url); say('Ссылка скопирована — отправьте её мастеру или другу'); } catch { prompt('Скопируйте ссылку', url); } }}><Share2 size={18} />Поделиться ссылкой на лист</Btn>
+          <Btn onClick={() => { setMenu(false); setTimeout(() => void pdfOrBrowser(), 300); }}><Printer size={18} />Скачать PDF</Btn>
+          <Btn onClick={async () => { setMenu(false); if (!(await viaBrowser('print'))) setTimeout(() => window.print(), 300); }}><Printer size={18} />Системная печать</Btn>
+          <Btn onClick={async () => { const url = await shareLink(sheet); if (inTelegram() && shareInTelegram(url, `Лист персонажа «${sheetName(sheet)}»`)) return; const nav = navigator as Navigator; if (nav.share && /iPhone|iPad|Android/i.test(navigator.userAgent)) { try { await nav.share({ url }); return; } catch (e) { if ((e as Error).name === 'AbortError') return; } } try { await navigator.clipboard.writeText(url); say('Ссылка скопирована — отправьте её мастеру или другу'); } catch { prompt('Скопируйте ссылку', url); } }}><Share2 size={18} />Поделиться ссылкой на лист</Btn>
           <Btn onClick={() => { setMenu(false); void saveToDevice(); }}><Download size={18} />Сохранить на устройство</Btn>
           <Btn onClick={async () => { const id = await create({ ...sheet, name: `${sheetName(sheet)} (копия)` }); setMenu(false); await open(id); say('Создана копия листа'); }}><Copy size={18} />Копия листа</Btn>
           <p className="text-xs text-cream/40 px-1 pt-1">Версия от {new Date(Number(__BUILD__)).toLocaleString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}</p>

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { ArrowLeft, CalendarDays, Crown, Info, Cake, Coins, Heart, Ticket, ChevronDown, ImagePlus, Plus, Settings, Sparkles, Swords, ScrollText, Users, X } from 'lucide-react';
+import { ArrowLeft, Baby, CalendarDays, Crown, Info, Cake, Coins, Heart, Ticket, ChevronDown, ImagePlus, Plus, Settings, Sparkles, Swords, ScrollText, Users, X } from 'lucide-react';
 import { Btn, Field, TextIn } from '../Panels';
 import { api, fmtDay, fmtTime, imgUrl, loadConfig, toIso, toLocal, type Game, type Player, type Role } from './api';
 import { confirmBox, haptic, openLink, setupTelegram, tg } from './tg';
@@ -10,7 +10,6 @@ const SITES = { builder: `${location.origin}${ROOT}builder/?tg=1`, sheet: `${loc
 const LINKS = [
   { t: 'Telegram-канал', u: 'https://t.me/chto_ugodno_i_drakon' },
   { t: 'Чат клуба', u: 'https://t.me/+a1t_Jic-Wpc1ZDIy' },
-  { t: 'Instagram', u: 'https://www.instagram.com/chto_ugodno_i_drakoni' },
 ];
 /** Кому писать по записи и предоплате. */
 export const ADMIN = 'oh_katiakaterina';
@@ -149,6 +148,10 @@ const rangeTitle = (a: string, b: string) => {
   return a.slice(5, 7) === b.slice(5, 7) ? `${f(a, { day: 'numeric' })}–${f(b, { day: 'numeric', month: 'long' })}` : `${f(a, { day: 'numeric', month: 'short' })} – ${f(b, { day: 'numeric', month: 'short' })}`;
 };
 
+/** Гости, записанные администратором через канал: игрокам их имя не показываем. */
+const GUEST = /^записан\(а\) через канал$/i;
+/** Игра для новичков: так написано в уровне или описании. */
+const newbie = (g: Game) => /новичк/i.test(`${g.level} ${g.description}`);
 function Tile({ g }: { g: Game }) {
   return (
     <button onClick={() => go(`game/${g.id}`)} aria-label={g.title} className={cx('text-left rounded-2xl border p-2.5 min-h-[7.5rem] flex flex-col', g.room === 'green' ? 'bg-emerald-950/50 border-emerald-500/50' : 'bg-red-950/40 border-red-500/45', g.mine && 'ring-2 ring-sand', g.status === 'cancelled' && 'opacity-55')}>
@@ -158,6 +161,7 @@ function Tile({ g }: { g: Game }) {
       </div>
       <div className="font-display-sc text-[15px] text-sand-light leading-tight mt-1.5 line-clamp-2">{g.title}</div>
       <div className="text-[11px] text-cream/65 mt-0.5 truncate">{g.master_name ? `Мастер: ${g.master_name}` : g.system}</div>
+      {newbie(g) && <span className="self-start mt-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-sand/90 text-moss-deep">Подходит новичкам</span>}
       <div className="mt-auto pt-1.5 flex items-center justify-between gap-1">
         <Seats g={g} />
         <span className={cx('text-[10px]', g.mine ? 'text-sand-light font-medium' : 'text-cream/55')}>{g.status === 'cancelled' ? 'отменена' : g.mine === 'main' ? 'вы идёте' : g.mine === 'wait' ? 'в очереди' : free(g) ? `${free(g)} св.` : 'мест нет'}</span>
@@ -303,7 +307,7 @@ function GamePage({ id, say, role }: { id: number; say: (t: string) => void; rol
     try {
       if (g.mine) {
         const late = Date.parse(g.starts_at) - Date.now() < 24 * 3600e3;
-        const msg = g.mine === 'main' ? `Отменить запись?${late ? ' До игры меньше суток — предоплата не вернётся и не перейдёт в депозит.' : ' Предоплата вернётся или перейдёт в депозит.'}` : 'Выйти из листа ожидания?';
+        const msg = g.mine === 'main' ? `Отменить запись?${late ? ' До игры меньше суток — предоплата не перейдёт в депозит.' : ' Предоплата не возвращается, но перейдёт в депозит и зачтётся в следующую игру.'}` : 'Выйти из листа ожидания?';
         if (!(await confirmBox(msg))) return; await api.leave(g.id); haptic('light'); say('Запись отменена'); }
       else if (!free(g)) { haptic('warning'); setSheet('full'); return; }
       else { setSheet('rules'); return; }
@@ -337,7 +341,7 @@ function GamePage({ id, say, role }: { id: number; say: (t: string) => void; rol
         <h1 className="font-display-sc text-3xl text-sand-light leading-tight mt-2">{g.title}</h1>
         {g.status === 'cancelled' && <div className="mt-2 rounded-xl bg-red-500/15 border border-red-400/40 px-3 py-2 text-sm text-red-200">Игра отменена</div>}
         <div className="grid grid-cols-2 gap-2 mt-3 text-sm">
-          {([['Когда', `${fmtDay(g.starts_at)}, ${fmtTime(g.starts_at)}`], ['Мастер', g.master_name || '—'], ['Система', g.system || '—'], ['Сеттинг', g.setting || '—'], ...(g.level ? [['Уровень', g.level]] : []), ['Длительность', `≈ ${Math.round(g.duration_min / 60 * 10) / 10} ч`], ...(g.price ? [['Стоимость', g.price]] : [])] as [string, string][]).map(([k, v]) => (
+          {([['Когда', `${fmtDay(g.starts_at)}, ${fmtTime(g.starts_at)}`], ['Мастер', g.master_name || '—'], ...(g.system ? [['Система', g.system]] : []), ...(g.setting ? [['Сеттинг', g.setting]] : []), ...(g.level ? [['Уровень', g.level]] : []), ['Длительность', `≈ ${Math.round(g.duration_min / 60 * 10) / 10} ч`], ...(g.price ? [['Стоимость', g.price]] : [])] as [string, string][]).map(([k, v]) => (
             <div key={k} className="rounded-xl bg-moss-deep/70 border border-moss-light/60 px-3 py-2"><div className="text-[11px] text-cream/55">{k}</div><div className="text-cream leading-snug">{v}</div></div>
           ))}
         </div>
@@ -348,7 +352,7 @@ function GamePage({ id, say, role }: { id: number; say: (t: string) => void; rol
           {Array.from({ length: g.seats }, (_, i) => main[i]).map((p, i) => (
             <div key={i} className={cx('flex items-center gap-2 rounded-xl px-3 h-10 text-sm border', p ? 'bg-moss-deep/70 border-moss-light/60' : 'border-dashed border-moss-light/50 text-cream/40')}>
               <span className="w-5 text-cream/40 text-xs">{i + 1}</span>
-              <span className="flex-1 truncate">{p ? p.name : 'свободно'}{p?.username ? <span className="text-cream/45"> · @{p.username}</span> : null}</span>
+              <span className={cx('flex-1 truncate', p && !d.canEdit && GUEST.test(p.name) && 'text-cream/55')}>{p ? (!d.canEdit && GUEST.test(p.name) ? 'место занято' : p.name) : 'свободно'}{p?.username ? <span className="text-cream/45"> · @{p.username}</span> : null}</span>
               {d.canEdit && p?.user_id !== undefined && (
                 <>
                   <button aria-label={`Пришёл: ${p.name}`} onClick={() => toggleAtt(p)} className={cx('text-xs px-2 h-7 rounded-lg border', p.attended ? 'bg-sand text-moss-deep border-sand' : 'border-moss-light text-cream/60')}>{p.attended ? 'пришёл' : 'отметить'}</button>
@@ -522,13 +526,13 @@ function Booking({ kind, g, onClose }: { kind: 'full' | 'rules'; g: Game; onClos
             <div className="text-sm text-cream/65 mt-1">{g.title} · {when(g)}</div>
             <div className="mt-4 rounded-2xl bg-moss-deep/70 border border-moss-light/60 divide-y divide-moss-light/50 text-[15px]">
               <div className="flex justify-between px-4 py-3"><span className="text-cream/75">Стоимость игры</span><span className="text-cream">{total !== null ? `${total} ₽` : g.price || 'уточните у администратора'}</span></div>
-              <div className="flex justify-between px-4 py-3"><span className="text-cream/75">Предоплата сейчас</span><span className="text-sand-light font-semibold">{pre} ₽</span></div>
+              <div className="flex justify-between px-4 py-3"><span className="text-cream/75">Предоплата сейчас<span className="block text-[11px] text-cream/50">не возвращается, при отмене — в депозит</span></span><span className="text-sand-light font-semibold">{pre} ₽</span></div>
               {rest !== null && rest > 0 && <div className="flex justify-between px-4 py-3"><span className="text-cream/75">Остаток на игре</span><span className="text-cream">{rest} ₽</span></div>}
             </div>
             <ul className="mt-4 grid gap-2 text-sm text-cream/80 leading-relaxed list-disc pl-5">
               <li>Запись через администратора: напишите ему, он пришлёт реквизиты для предоплаты {pre} ₽ и запишет вас на игру.</li>
               {rest !== null && rest > 0 && <li>Оставшиеся {rest} ₽ оплачиваете на самой игре.</li>}
-              <li>Предоплата вернётся или перейдёт в депозит, если предупредите, что не придёте, не позднее чем за сутки до начала.</li>
+              <li>Предоплата не возвращается. Если предупредите, что не придёте, не позднее чем за сутки до начала, она перейдёт в депозит и зачтётся в следующую игру.</li>
               <li>Ходите на кампанию стабильно? Абонемент на 4 игры — 3900 ₽, выходит 975 ₽ за игру, время и место закреплены за вами.</li>
             </ul>
             <div className="grid gap-2 mt-5">
@@ -570,7 +574,7 @@ function ClubInfo() {
           <li>видел D&D только в «Очень странных делах» и думаешь, что «D20» — это гаечный ключ. Не страшно, мы всё объясним и покажем;</li>
           <li>уже играешь, устал быть ДМ-ом или ищешь новую пати. Новых друзей ты тут точно найдёшь;</li>
           <li>творческая личность, которая ищет повод надеть эльфийские уши. Мы такое любим и всячески поощряем;</li>
-          <li>просто ищешь, куда сходить в пятницу вечером. Мы в центре, совсем рядом с Фиолетовым.</li>
+          <li>просто ищешь, куда сходить в пятницу вечером. Мы в центре, совсем рядом с Фиолетовой.</li>
         </ul>
         <p className="text-sand-light font-semibold">Что у нас есть:</p>
         <ul className="grid gap-1.5 list-disc pl-5">
@@ -581,24 +585,36 @@ function ClubInfo() {
       </InfoCard>
       <InfoCard icon={<Coins size={18} />} title="Цены">
         <Price t="Ваншот" p="1200 ₽" />
-        <Price t="Абонемент на кампанию" p="3900 ₽">4 игры, выходит 975 ₽ за игру. Ходите раз в две недели, время и место закреплены за вами — не нужно каждый раз думать, попадёте или нет.</Price>
+        <Price t="Абонемент на кампанию" p="3900 ₽">4 игры, выходит 975 ₽ за игру. Ходите раз в две недели, время и место закреплены за вами — не нужно каждый раз думать, попадёте или нет. Абонемент действует 2 месяца.</Price>
+        <Price t="Детская игра" p="1500 ₽">С человека, игра на 3 часа. Подробности — в разделе «Детские игры».</Price>
         <Price t="Выкуп стола" p="7000 ₽">Только для вашей компании, от 3 до 6 человек (6 — максимум).</Price>
         <Price t="День рождения в ДнД-шной" p="9500 ₽">Что входит — в разделе ниже.</Price>
       </InfoCard>
       <InfoCard icon={<Ticket size={18} />} title="Как записаться">
         <p>Выберите игру в расписании и напишите администратору — он подтвердит место и пришлёт реквизиты.</p>
-        <p><b className="text-cream">Предоплата — 700 ₽</b>, остаток платите на игре. Предоплата вернётся или перейдёт в депозит, если предупредите, что не сможете прийти, не позднее чем за сутки до начала.</p>
+        <p><b className="text-cream">Предоплата — 700 ₽</b>, остаток платите на игре. Предоплата не возвращается: если предупредите, что не сможете прийти, не позднее чем за сутки до начала, она перейдёт в депозит и зачтётся в следующую игру.</p>
         <Btn tone="gold" className="h-12 mt-1" onClick={() => openLink(adminLink('Здравствуйте! Хочу записаться на игру.'))}>Написать администратору</Btn>
+      </InfoCard>
+      <InfoCard icon={<Baby size={18} />} title="Детские игры">
+        <p>Проводим игры для детей от 12 лет — отличное развлечение, если надоели квесты.</p>
+        <ul className="grid gap-1.5 list-disc pl-5">
+          <li>Мастер готовит сюжеты, адаптированные под детскую аудиторию.</li>
+          <li>Всё, что нужно для игры, выдадим на месте, а правила ведущий объяснит прямо за столом.</li>
+          <li>Игра длится 3 часа.</li>
+          <li>За столом до 6 человек. Если вас 12, проведём две игры одновременно.</li>
+        </ul>
+        <p className="text-sm text-cream/65">Стоимость — 1500 ₽ с человека.</p>
+        <Btn tone="gold" className="h-12 mt-1" onClick={() => openLink(adminLink('Здравствуйте! Хотим записаться на детскую игру. Расскажите подробности?'))}>Записать детей</Btn>
       </InfoCard>
       <InfoCard icon={<Cake size={18} />} title="ДнД-день рождения">
         <p>Проводим такие праздники с самого открытия. Что входит:</p>
         <ul className="grid gap-1.5 list-disc pl-5">
-          <li><b className="text-cream">Сценарий под именинника.</b> Мрачная история, детектив, эпичные битвы или погружение в знакомый мир — скажите, что любите, и мы это сделаем.</li>
-          <li><b className="text-cream">Персональные листы и миниатюры</b> с портретами и предысториями. Благодаря ИИ фигурки подозрительно похожи на вас.</li>
+          <li><b className="text-cream">Сценарий под именинника.</b> Мрачная история, детектив, эпичные битвы или погружение в знакомый мир — скажите, что любите, и мы это сделаем. Можно встретить любимых персонажей или окунуться в мир любимой книги, фильма или сериала.</li>
+          <li><b className="text-cream">Персональные листы и миниатюры.</b> Мастер сам готовит для каждого лист персонажа с портретом и предысторией и миниатюру.</li>
           <li><b className="text-cream">Поздравление со свечкой внутри игры</b> — прямо в сюжете, а не в перерыве за чаем.</li>
           <li><b className="text-cream">4–5 часов игры</b> без посторонних: только ваша компания и приключение, которое готовили для вас.</li>
         </ul>
-        <p className="text-sm text-cream/65">Стоимость — 9500 ₽. Пока берём игроков от 14 лет, скоро будут и детские игры.</p>
+        <p className="text-sm text-cream/65">Стоимость — 9500 ₽. Берём игроков от 12 лет.</p>
         <Btn tone="gold" className="h-12 mt-1" onClick={() => openLink(adminLink('Здравствуйте! Хочу устроить ДнД-день рождения. Расскажите подробности?'))}>Обсудить праздник</Btn>
       </InfoCard>
     </div>

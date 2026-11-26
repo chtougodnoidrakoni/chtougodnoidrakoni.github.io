@@ -37,14 +37,18 @@ async function pipe(data: Uint8Array, t: CompressionStream | DecompressionStream
 export function stripImages(s: Sheet): Sheet {
   return { ...s, emblem: s.emblem?.startsWith('data:') ? undefined : s.emblem, pages: s.pages.map((p) => ({ ...p, blocks: p.blocks.map((b) => (b.type === 'image' && b.value?.startsWith('data:') ? { ...b, value: '' } : b)) })) };
 }
-export async function shareLink(s: Sheet): Promise<string> {
+async function packed(s: Sheet): Promise<string> {
   const raw = new TextEncoder().encode(JSON.stringify(stripImages(s)));
   const z = typeof CompressionStream !== 'undefined';
   const body = z ? await pipe(raw, new CompressionStream('deflate-raw')) : raw;
-  return `${location.origin}${import.meta.env.BASE_URL}#share=${z ? 'z' : 'p'}${b64u(body)}`;
+  return `${z ? 'z' : 'p'}${b64u(body)}`;
+}
+/** Ссылка на лист: весь лист сжат прямо в адресе. */
+export async function shareLink(s: Sheet, extra = ''): Promise<string> {
+  return `${location.origin}${import.meta.env.BASE_URL}#share=${await packed(s)}${extra}`;
 }
 export async function sheetFromLink(hash: string): Promise<Sheet | null> {
-  const m = hash.match(/#share=([zp])(.+)$/); if (!m) return null;
+  const m = hash.match(/#share=([zp])([A-Za-z0-9_-]+)/); if (!m) return null;
   try {
     const bytes = unb64u(m[2]!);
     const raw = m[1] === 'z' ? await pipe(bytes, new DecompressionStream('deflate-raw')) : bytes;

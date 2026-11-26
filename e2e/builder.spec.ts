@@ -13,6 +13,10 @@ test('сборка: волшебник 3 уровня от редакции до
   await page.getByRole('button', { name: /^Эльф/ }).click();
   await page.getByText('Высший эльф').click(); await next();
   await page.getByRole('button', { name: /^Прислужник/ }).click(); await next();
+  await page.getByRole('button', { name: /Расставить автоматически/ }).click();
+  await expect(page.getByLabel('Интеллект', { exact: true })).toHaveValue('15');
+  await expect(page.getByLabel('Сила', { exact: true })).toHaveValue('8');
+  await page.getByRole('button', { name: 'Стандартный набор' }).click(); // сброс, дальше вручную
   const vals: Record<string, string> = { 'Сила': '8', 'Ловкость': '14', 'Телосложение': '13', 'Интеллект': '15', 'Мудрость': '12', 'Харизма': '10' };
   for (const [a, v] of Object.entries(vals)) await page.getByLabel(a, { exact: true }).selectOption(v);
   await page.screenshot({ path: 'e2e/shots/b2-abil.png' }); await next();

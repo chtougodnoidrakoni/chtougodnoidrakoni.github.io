@@ -4,7 +4,7 @@ import { set as idbSet, get as idbGet } from 'idb-keyval';
 import { Btn, Field, TextIn } from '../Panels';
 import { SCHOOLS, sheetName, type SpellData } from '../model';
 import { ABS, AB_RU, AB_SHORT, ALIGNMENTS, ALL_SKILLS, ARMORS, BACKGROUNDS, DRAGONS, ORIGIN_FEATS, SKILLS, STYLES, WEAPONS, slots, type Ab, type Ed } from './data';
-import { POINT_COST, STANDARD, featById, prereqFail, allSkills, armorClass, armorProf, featureTexts, packSub, saves, subSpells, asiLevels, attacks, bgOf, classOf, emptyBuild, expertiseCount, feats, features, fixedSkills, maxHp, mod, originBonus, pb, problems, proficientWeapon, raceOf, rule, scores, sgn, speed, subAt, subName, subOf, type AsiPick, type Build } from './engine';
+import { POINT_COST, STANDARD, abilityPriority, autoAssign, featById, prereqFail, allSkills, armorClass, armorProf, featureTexts, packSub, saves, subSpells, asiLevels, attacks, bgOf, classOf, emptyBuild, expertiseCount, feats, features, fixedSkills, maxHp, mod, originBonus, pb, problems, proficientWeapon, raceOf, rule, scores, sgn, speed, subAt, subName, subOf, type AsiPick, type Build } from './engine';
 import { racialSpells, toSheet } from './toSheet';
 import { backgroundsFor, classesFor, featsFor, racesFor, loadClub, loadLocal, setActive, subsFor, type StoredPack } from './content';
 import { Library } from './Library';
@@ -299,6 +299,8 @@ function StepAbil({ b, up }: P) {
   const spent = ABS.reduce((t, a) => t + (POINT_COST[b.base[a] ?? 8] ?? 0), 0);
   // значение из набора можно поставить, если таких значений в наборе больше, чем уже занято
   const free = (v: number, a: Ab) => pool.filter((x) => x === v).length > ABS.filter((x) => x !== a && b.base[x] === v).length;
+  const auto = () => up({ base: autoAssign(b.method === 'roll' ? b.rolled : STANDARD, b) });
+  const canAuto = !!classOf(b) && (b.method !== 'roll' || b.rolled.length > 0) && b.method !== 'manual';
   return (
     <>
       <div className="grid grid-cols-2 gap-2 mb-3">
@@ -311,11 +313,17 @@ function StepAbil({ b, up }: P) {
       {b.method === 'pointbuy' && <Note>27 очков, значения от 8 до 15. Потрачено: <b className={spent > 27 ? 'text-red-300' : 'text-sand-light'}>{spent}</b> из 27.</Note>}
       {b.method === 'roll' && (
         <div className="mb-3 flex items-center gap-2 flex-wrap">
-          <Btn onClick={() => up({ rolled: Array.from({ length: 6 }, roll4d6).sort((x, y) => y - x), base: { str: undefined, dex: undefined, con: undefined, int: undefined, wis: undefined, cha: undefined } })}><Dices size={18} />{b.rolled.length ? 'Перебросить' : 'Бросить'}</Btn>
+          <Btn onClick={() => { const rolled = Array.from({ length: 6 }, roll4d6).sort((x, y) => y - x); up({ rolled, base: classOf(b) ? autoAssign(rolled, b) : { str: undefined, dex: undefined, con: undefined, int: undefined, wis: undefined, cha: undefined } }); }}><Dices size={18} />{b.rolled.length ? 'Перебросить' : 'Бросить'}</Btn>
           {b.rolled.length > 0 && <span className="text-sand-light font-display-sc text-xl">{b.rolled.join(' · ')}</span>}
         </div>
       )}
       {b.method === 'manual' && <Note>Если мастер выдал свои значения или вы бросали кубики за столом.</Note>}
+      {canAuto && (
+        <button type="button" onClick={auto} className="w-full mb-3 rounded-2xl border border-sand/60 bg-sand/10 p-3 text-left">
+          <div className="text-sand-light font-semibold inline-flex items-center gap-2"><Sparkles size={17} />Расставить автоматически</div>
+          <div className="text-xs text-cream/65 mt-0.5">Самое большое число — в {AB_RU[abilityPriority(b)[0]!].toLowerCase()}, дальше по важности для класса. Потом можно поменять.</div>
+        </button>
+      )}
       <div className="grid gap-2">
         {ABS.map((a) => (
           <div key={a} className="flex items-center gap-2 rounded-2xl border border-moss-light bg-moss-deep/60 p-2 pl-3">
@@ -422,10 +430,6 @@ function StepSkills({ b, up }: P) {
       <div className="flex flex-wrap gap-2">{from.map((x) => { const on = b.skills.includes(x); return <Chip key={x} on={on} disabled={fixed.includes(x) || (!on && b.skills.length >= cl.skills.n)} onClick={() => up({ skills: on ? b.skills.filter((y) => y !== x) : [...b.skills, x], expertise: b.expertise.filter((y) => y !== x || !on) })}>{x}</Chip>; })}</div>
       {skilled && <><H>Черта «Одарённый»: {b.skilledFeat.length} из 3</H><div className="flex flex-wrap gap-2">{ALL_SKILLS.map((x) => { const on = b.skilledFeat.includes(x); return <Chip key={x} on={on} disabled={(!on && (b.skilledFeat.length >= 3 || all.includes(x)))} onClick={() => up({ skilledFeat: on ? b.skilledFeat.filter((y) => y !== x) : [...b.skilledFeat, x] })}>{x}</Chip>; })}</div></>}
       {ex > 0 && <><H>Компетентность (двойной бонус): {b.expertise.length} из {ex}</H><div className="flex flex-wrap gap-2">{all.map((x) => { const on = b.expertise.includes(x); return <Chip key={x} on={on} disabled={!on && b.expertise.length >= ex} onClick={() => up({ expertise: on ? b.expertise.filter((y) => y !== x) : [...b.expertise, x] })}>{x}</Chip>; })}</div></>}
-      <H>Все навыки</H>
-      <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-        {SKILLS.map(([n, a]) => { const prof = all.includes(n); const v = mod(s[a]) + (prof ? p * (b.expertise.includes(n) ? 2 : 1) : 0); return <div key={n} className={cx('flex justify-between', prof ? 'text-cream' : 'text-cream/45')}><span>{prof ? '● ' : '○ '}{n}</span><span>{sgn(v)}</span></div>; })}
-      </div>
     </>
   );
 }
@@ -451,7 +455,7 @@ function StepSpells({ b, up, db }: P & { db: SpellData[] }) {
   const ab = cl.spellAb!; const sc = scores(b);
   return (
     <>
-      <Note>{sr.label}. Ячейки: {slots(cl, b.ed, b.level).map((v, i) => (v ? `${i + 1} кр. × ${v}` : '')).filter(Boolean).join(', ')}. СЛ спасброска {8 + pb(b.level) + mod(sc[ab])}, атака {sgn(pb(b.level) + mod(sc[ab]))} ({AB_RU[ab]}).</Note>
+      <Note>{sr.label}. Ячейки заклинаний: {slots(cl, b.ed, b.level).map((v, i) => (v ? `${i + 1} круг — ${v}` : '')).filter(Boolean).join(', ') || 'пока нет'}.</Note>
       {subSpells(b).length > 0 && <Note>От подкласса, всегда подготовлены: {subSpells(b).join(', ')} — добавятся сами.</Note>}
       {racial.length > 0 && <Note>От вида: {racialSpells(b, db).map((s) => s.ru ?? s.name).join(', ')} — добавятся сами.</Note>}
       <div className="flex gap-2 mb-3 flex-wrap">
@@ -496,11 +500,11 @@ function StepGear({ b, up }: P) {
   const atk = attacks(b);
   return (
     <>
-      <Note>Владение: {cl.armor}. Стартовый набор класса ({cl.kit.toLowerCase()}) и снаряжение предыстории запишутся в лист сами.</Note>
       <H><Shield size={15} className="inline -mt-0.5" /> Доспех</H>
+      <Note>Можно носить: {cl.armor}.</Note>
       <div className="grid gap-1.5">
         <Card on={!b.armor} onClick={() => up({ armor: undefined })} className="flex justify-between"><span>Без доспеха</span><span className="text-sand-light">КД {acWith(undefined)}</span></Card>
-        {ARMORS.map((a) => { const ok = armorProf(b).kinds.has(a.kind); return (
+        {ARMORS.filter((a) => armorProf(b).kinds.has(a.kind) || b.armor === a.id).map((a) => { const ok = armorProf(b).kinds.has(a.kind); return (
           <Card key={a.id} on={b.armor === a.id} onClick={() => up({ armor: a.id })} className={cx('flex justify-between items-center', !ok && 'opacity-50')}>
             <span>{a.name} <span className="text-xs text-cream/50">{a.kind === 'light' ? 'лёгкий' : a.kind === 'medium' ? 'средний' : 'тяжёлый'}{!ok && ' · нет владения'}</span></span><span className="text-sand-light">КД {acWith(a.id)}</span>
           </Card>
@@ -509,14 +513,16 @@ function StepGear({ b, up }: P) {
       <label className="flex items-center justify-between mt-3 rounded-2xl border border-moss-light bg-moss-deep/60 p-3"><span>Щит (+2 КД){!armorProf(b).shields && <span className="text-xs text-cream/50"> · нет владения</span>}</span><input type="checkbox" className="w-6 h-6 accent-[#aa9173]" checked={b.shield} onChange={(e) => up({ shield: e.target.checked })} /></label>
       <div className="text-sm text-cream/70 mt-2">Итого КД: <b className="text-sand-light">{armorClass(b).ac}</b> ({armorClass(b).how})</div>
       <H><Swords size={15} className="inline -mt-0.5" /> Оружие (до 4)</H>
-      <div className="flex flex-wrap gap-2">{WEAPONS.map((w) => { const on = b.weapons.includes(w.name); return <Chip key={w.name} on={on} disabled={!on && b.weapons.length >= 4} onClick={() => up({ weapons: on ? b.weapons.filter((x) => x !== w.name) : [...b.weapons, w.name] })}>{w.name}{!proficientWeapon(b, w.name) && ' *'}</Chip>; })}</div>
-      <div className="text-xs text-cream/50 mt-1">* нет владения — бонус мастерства к атаке не добавится</div>
+      <Note>Вам доступно по стартовому набору: {cl.kit.charAt(0).toLowerCase() + cl.kit.slice(1)}. Ниже — оружие, которым ваш класс владеет.</Note>
+      <div className="flex flex-wrap gap-2">{WEAPONS.filter((w) => proficientWeapon(b, w.name) || b.weapons.includes(w.name)).map((w) => { const on = b.weapons.includes(w.name); return <Chip key={w.name} on={on} disabled={!on && b.weapons.length >= 4} onClick={() => up({ weapons: on ? b.weapons.filter((x) => x !== w.name) : [...b.weapons, w.name] })}>{w.name}{!proficientWeapon(b, w.name) && ' *'}</Chip>; })}</div>
+      <div className="text-xs text-cream/50 mt-2">Снаряжение предыстории запишется в лист само.</div>
       {atk.length > 0 && <div className="grid gap-1 mt-3 text-sm">{atk.map((a) => <div key={a.name} className="flex justify-between rounded-xl bg-moss-deep/60 border border-moss-light px-3 py-2"><span>{a.name}</span><span className="text-cream/80">{sgn(a.bonus)} · {a.dmg} {a.type}</span></div>)}</div>}
     </>
   );
 }
 
 function StepPerson({ b, up }: P) {
+  const [copied, setCopied] = useState<string | null>(null);
   return (
     <div className="grid gap-3">
       <Field label="Имя персонажа"><TextIn value={b.name} onChange={(e) => up({ name: e.target.value })} /></Field>
@@ -526,12 +532,44 @@ function StepPerson({ b, up }: P) {
         <Field label="Возраст"><TextIn value={b.age} onChange={(e) => up({ age: e.target.value })} /></Field>
       </div>
       <Field label="Внешность"><textarea value={b.appearance} onChange={(e) => up({ appearance: e.target.value })} className="w-full min-h-20 p-3 rounded-xl bg-moss-deep border border-moss-light outline-none" /></Field>
-      <Suggest b={b} up={up} />
       <Field label="Характер и манеры"><textarea value={b.personality} onChange={(e) => up({ personality: e.target.value })} className="w-full min-h-20 p-3 rounded-xl bg-moss-deep border border-moss-light outline-none" /></Field>
+      <Suggest b={b} up={up} />
       <Field label="История персонажа"><textarea value={b.backstory} onChange={(e) => up({ backstory: e.target.value })} className="w-full min-h-28 p-3 rounded-xl bg-moss-deep border border-moss-light outline-none" /></Field>
-      <div className="text-xs text-cream/50">Всё это можно оставить пустым и дописать потом прямо на листе.</div>
+      <div className="grid grid-cols-2 gap-2">
+        <Btn onClick={() => up(randomPerson(b))}><Dices size={17} />Случайный вариант</Btn>
+        <Btn onClick={async () => setCopied(await copyPrompt(b))}><Sparkles size={17} />Промпт для нейросети</Btn>
+      </div>
+      {copied === '' && <Note>Промпт скопирован. Вставьте его в ChatGPT или другую нейросеть, а ответ перенесите в поля выше.</Note>}
+      {copied && <Field label="Скопируйте промпт и вставьте в нейросеть"><textarea readOnly value={copied} onFocus={(e) => e.currentTarget.select()} className="w-full min-h-40 p-3 rounded-xl bg-moss-deep border border-moss-light outline-none text-sm" /></Field>}
+      <div className="text-xs text-cream/50">Всё это можно оставить пустым и дописать потом прямо на листе. «Случайный вариант» заполнит пустые поля, «Промпт» скопирует текст: вставьте его в ChatGPT или другую нейросеть и перенесите ответ сюда.</div>
     </div>
   );
+}
+
+const pick = <T,>(a: readonly T[]) => a[Math.floor(Math.random() * a.length)]!;
+const LOOKS = ['Шрам через бровь, взгляд исподлобья', 'Высокий, худой, всегда в потёртом плаще', 'Коренастый, с густой бородой и громким смехом', 'Короткие волосы, татуировка на запястье', 'Аккуратный, в дорогой, но поношенной одежде', 'Веснушки, растрёпанные волосы, вечно в дорожной пыли', 'Бледный, с тёмными кругами под глазами и тихим голосом', 'Крепкие руки в мозолях, шрамы от ожогов'];
+const MANNERS = ['Говорит мало и по делу', 'Не может пройти мимо чужой беды', 'Шутит в самый неподходящий момент', 'Всё записывает в потрёпанный дневник', 'Не доверяет магии и тем, кто ей пользуется', 'Любопытен до безрассудства', 'Вежлив со всеми, даже с врагами', 'Вечно торгуется, даже когда не нужно'];
+const PASTS = ['Вырос в маленькой деревне, которую сожгли разбойники, и ищет тех, кто это сделал.', 'Служил в городской страже, пока не увидел то, что видеть не следовало.', 'Был учеником мастера, который однажды бесследно исчез, оставив лишь загадочную записку.', 'Задолжал опасным людям и отправился в путь, чтобы раздобыть денег.', 'Потерял память после кораблекрушения и знает о себе только имя.', 'Сбежал из богатой семьи, чтобы самому выбирать свою судьбу.', 'Дал клятву защитить друга детства и до сих пор её держит.', 'Нашёл старую карту с отметкой и хочет узнать, что там спрятано.'];
+/** Случайные внешность, характер и история — только в пустые поля. */
+function randomPerson(b: Build): Partial<Build> {
+  const ch = bgOf(b)?.chars;
+  const trait = ch?.personality_traits?.length ? `Черта характера: ${pick(ch.personality_traits)}` : pick(MANNERS);
+  return {
+    ...(b.alignment ? {} : { alignment: pick(ALIGNMENTS) }),
+    ...(b.appearance.trim() ? {} : { appearance: pick(LOOKS) }),
+    ...(b.personality.trim() ? {} : { personality: trait }),
+    ...(b.backstory.trim() ? {} : { backstory: pick(PASTS) }),
+  };
+}
+/** Промпт для нейросети: класс, вид, предыстория — придумай личность. */
+async function copyPrompt(b: Build): Promise<string> {
+  const text = `Придумай персонажа для настольной ролевой игры D&D 5e (редакция ${b.ed}). ${[classOf(b)?.name && `Класс: ${classOf(b)!.name}${b.level ? `, ${b.level} уровень` : ''}`, raceOf(b)?.name && `Вид: ${raceOf(b)!.name}`, bgOf(b)?.name && `Предыстория: ${bgOf(b)!.name}`, b.name && `Имя: ${b.name}`, b.alignment && `Мировоззрение: ${b.alignment}`].filter(Boolean).join('. ')}.
+Напиши коротко и по-русски, четырьмя блоками:
+1. Внешность — 2–3 предложения.
+2. Характер и манеры — 3–4 черты.
+3. История персонажа — один абзац, 5–7 предложений, с одной неразгаданной загадкой из прошлого.
+4. Цель — чего персонаж хочет добиться.`;
+  try { await navigator.clipboard.writeText(text); return ''; } catch { return text; }
 }
 
 function Suggest({ b, up }: P) {
