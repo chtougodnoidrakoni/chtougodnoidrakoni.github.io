@@ -177,7 +177,7 @@ export async function wizard(env: Env, upd: Upd, send: Send, origin: string, now
     case 'intro':
       if (cb === 'skip') d.intro = ''; else if (cb === 'std') d.intro = DEFAULT_INTRO; else if (msg?.text) d.intro = entitiesToHtml(msg.text.slice(0, 2500), msg.entities); else { ok = false; break; }
       // предпросмотр: тот же пост, но сюда, в чат администратора
-      await send(chat, '👀 Так пост будет выглядеть в канале:');
+      await send(chat, '👀 Готовый пост ниже — так он будет выглядеть в канале.\n\nМожно нажать «✅ Выложить в канал», и бот выложит его сам. А можно скопировать текст (зажать сообщение → «Копировать», оформление сохранится), поправить и выложить в канал вручную вместе с картинкой.');
       {
         const r = await postWeek(env, tg, d.week, `${origin}/img/${d.post_image}`, { intro: d.intro, previewTo: chat, extra: ik([[{ text: '✅ Выложить в канал', cb: 'publish' }], [{ text: '✍️ Другая подводка', cb: 'reintro' }, { text: '🖼 Другая картинка', cb: 'reimg' }], [CANCEL]]) });
         if (!r.ok) { await send(chat, `Не получилось собрать пост: ${esc(r.error)}`); return true; }
