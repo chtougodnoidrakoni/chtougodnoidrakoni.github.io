@@ -541,7 +541,7 @@ function StepPerson({ b, up }: P) {
       </div>
       {copied === '' && <Note>Промпт скопирован. Вставьте его в ChatGPT или другую нейросеть, а ответ перенесите в поля выше.</Note>}
       {copied && <Field label="Скопируйте промпт и вставьте в нейросеть"><textarea readOnly value={copied} onFocus={(e) => e.currentTarget.select()} className="w-full min-h-40 p-3 rounded-xl bg-moss-deep border border-moss-light outline-none text-sm" /></Field>}
-      <div className="text-xs text-cream/50">Всё это можно оставить пустым и дописать потом прямо на листе. «Случайный вариант» заполнит пустые поля, «Промпт» скопирует текст: вставьте его в ChatGPT или другую нейросеть и перенесите ответ сюда.</div>
+      <div className="text-xs text-cream/50">Всё это можно оставить пустым и дописать потом прямо на листе. «Случайный вариант» можно жать сколько угодно, своё вписанное он не трогает, «Промпт» скопирует текст: вставьте его в ChatGPT или другую нейросеть и перенесите ответ сюда.</div>
     </div>
   );
 }
@@ -550,15 +550,18 @@ const pick = <T,>(a: readonly T[]) => a[Math.floor(Math.random() * a.length)]!;
 const LOOKS = ['Шрам через бровь, взгляд исподлобья', 'Высокий, худой, всегда в потёртом плаще', 'Коренастый, с густой бородой и громким смехом', 'Короткие волосы, татуировка на запястье', 'Аккуратный, в дорогой, но поношенной одежде', 'Веснушки, растрёпанные волосы, вечно в дорожной пыли', 'Бледный, с тёмными кругами под глазами и тихим голосом', 'Крепкие руки в мозолях, шрамы от ожогов'];
 const MANNERS = ['Говорит мало и по делу', 'Не может пройти мимо чужой беды', 'Шутит в самый неподходящий момент', 'Всё записывает в потрёпанный дневник', 'Не доверяет магии и тем, кто ей пользуется', 'Любопытен до безрассудства', 'Вежлив со всеми, даже с врагами', 'Вечно торгуется, даже когда не нужно'];
 const PASTS = ['Вырос в маленькой деревне, которую сожгли разбойники, и ищет тех, кто это сделал.', 'Служил в городской страже, пока не увидел то, что видеть не следовало.', 'Был учеником мастера, который однажды бесследно исчез, оставив лишь загадочную записку.', 'Задолжал опасным людям и отправился в путь, чтобы раздобыть денег.', 'Потерял память после кораблекрушения и знает о себе только имя.', 'Сбежал из богатой семьи, чтобы самому выбирать свою судьбу.', 'Дал клятву защитить друга детства и до сих пор её держит.', 'Нашёл старую карту с отметкой и хочет узнать, что там спрятано.'];
-/** Случайные внешность, характер и история — только в пустые поля. */
+/** Случайные внешность, характер и история. Каждое нажатие даёт новый вариант;
+ * своё, вписанное руками, не трогаем — меняем только пустые поля и прошлый случайный вариант. */
 function randomPerson(b: Build): Partial<Build> {
   const ch = bgOf(b)?.chars;
-  const trait = ch?.personality_traits?.length ? `Черта характера: ${pick(ch.personality_traits)}` : pick(MANNERS);
+  const traits = ch?.personality_traits?.length ? ch.personality_traits.map((t) => `Черта характера: ${t}`) : MANNERS;
+  const ours = (v: string, pool: readonly string[]) => !v.trim() || pool.includes(v.trim()) || MANNERS.includes(v.trim());
+  const fresh = (pool: readonly string[], cur: string) => { const rest = pool.filter((x) => x !== cur.trim()); return pick(rest.length ? rest : pool); };
   return {
-    ...(b.alignment ? {} : { alignment: pick(ALIGNMENTS) }),
-    ...(b.appearance.trim() ? {} : { appearance: pick(LOOKS) }),
-    ...(b.personality.trim() ? {} : { personality: trait }),
-    ...(b.backstory.trim() ? {} : { backstory: pick(PASTS) }),
+    ...(ours(b.alignment, ALIGNMENTS) ? { alignment: fresh(ALIGNMENTS, b.alignment) } : {}),
+    ...(ours(b.appearance, LOOKS) ? { appearance: fresh(LOOKS, b.appearance) } : {}),
+    ...(ours(b.personality, traits) ? { personality: fresh(traits, b.personality) } : {}),
+    ...(ours(b.backstory, PASTS) ? { backstory: fresh(PASTS, b.backstory) } : {}),
   };
 }
 /** Промпт для нейросети: класс, вид, предыстория — придумай личность. */
