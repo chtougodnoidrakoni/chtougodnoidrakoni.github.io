@@ -188,16 +188,26 @@ describe('сервер записей', () => {
     await tap('d:2026-12-05'); await say('18.30'); await tap('r:green'); await say('Денис'); await say('Объятия матери');
     await tap('s:D&D 5e'); await say('Дарк фэнтези'); await tap('skip'); await say('Старый приют на окраине леса');
     await tap('n:abc'); expect(sent.at(-2)!.text).toMatch(/Не понял/);
-    await tap('n:6'); await tap('p:1200 ₽');
+    await tap('n:6');
     await photo(); expect(sent.at(-1)!.text).toMatch(/Проверьте игру/);
     expect(sent.at(-1)!.text).toContain('🟩 <b>СУББОТА (05.12), 18:30</b>');
     await tap('save'); expect(sent.at(-1)!.text).toMatch(/уже видна в приложении/);
     const list = await call('GET', '/api/games');
     expect(list.data.games.find((g: any) => g.title === 'Объятия матери')).toMatchObject({ room: 'green', master_name: 'Денис', system: 'D&D 5e', seats: 6, starts_at: '2026-12-05T18:30:00+04:00' });
     await tap('post'); expect(sent.at(-1)!.text).toMatch(/Пришлите картинку для поста/);
-    await photo(); expect(sent.at(-1)!.text).toMatch(/выложено в канал, игр в посте: 1/);
+    await photo(); expect(sent.at(-1)!.text).toMatch(/подводку/);
+    await say('Тьма сгущается над Драккенхеймом');
+    // предпросмотр приходит самой Кате, в канал пока ничего
+    const preview = tgCalls.find((c) => c.m === 'sendMessage' && c.b.chat_id === 51)!;
+    expect(preview.b.text.startsWith('Тьма сгущается над Драккенхеймом')).toBe(true);
+    expect(preview.b.text).toContain('〰️〰️🌿〰️〰️');
+    expect(preview.b.text).toContain('Пишите @oh_katiakaterina или через <a href="https://t.me/club_bot">');
+    expect(preview.b.reply_markup.inline_keyboard[0][0].callback_data).toBe('publish');
+    expect(tgCalls.some((c) => c.b.chat_id === '@club')).toBe(false);
+    await tap('publish'); expect(sent.at(-1)!.text).toMatch(/выложено в канал, игр в посте: 1/);
     const post = tgCalls.find((c) => c.m === 'sendMessage' && c.b.chat_id === '@club')!;
     expect(post.b.text).toContain('Объятия матери');
+    expect(post.b.text.startsWith('Тьма сгущается')).toBe(true);
     expect(post.b.link_preview_options.url).toMatch(/^https:\/\/w\.test\/img\/\d+$/);
     // отмена в любой момент
     await say('📅 Составить расписание'); await say('Отмена'); expect(sent.at(-1)!.text).toMatch(/отменил/);

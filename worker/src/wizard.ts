@@ -14,7 +14,7 @@ export interface Upd {
 }
 interface Draft {
   week: string; day?: string; time?: string; room?: 'red' | 'green'; master?: string; title?: string; system?: string;
-  setting?: string; level?: string; description?: string; seats?: number; price?: string; image_id?: number | null;
+  setting?: string; level?: string; description?: string; seats?: number; price?: string; image_id?: number | null; post_image?: number; intro?: string;
 }
 type Kb = { text: string; cb: string }[][];
 const ik = (rows: Kb) => ({ reply_markup: { inline_keyboard: rows.map((r) => r.map((b) => ({ text: b.text, callback_data: b.cb }))) } });
@@ -80,13 +80,15 @@ async function ask(env: Env, send: Send, chat: number, step: string, d: Draft) {
     case 'image': return q('🖼 Картинка для этой игры? Пришлите фото или пропустите', [[SKIP]]);
     case 'confirm': {
       const fake = { id: 0, title: d.title ?? '', starts_at: `${d.day}T${d.time}:00+04:00`, duration_min: 240, room: d.room ?? 'red', master_name: d.master ?? '', master_username: '', setting: d.setting ?? '', system: d.system ?? '', level: d.level ?? '', price: d.price ?? '', seats: d.seats ?? 6, image_id: d.image_id ?? null, description: d.description ?? '', status: 'open', created_by: '', created_at: '' };
-      return q(`Проверьте игру:\n\n${gameBlock(fake, 0)}${d.price ? `\n<b>Стоимость:</b> ${esc(d.price)}` : ''}${d.image_id ? '\n🖼 с картинкой' : ''}`, [[{ text: '✅ Сохранить', cb: 'save' }, { text: '↺ Заново', cb: 'redo' }]]);
+      return q(`Проверьте игру:\n\n${gameBlock(fake, 0)}${d.image_id ? '\n🖼 с картинкой' : ''}`, [[{ text: '✅ Сохранить', cb: 'save' }, { text: '↺ Заново', cb: 'redo' }]]);
     }
     case 'post_image': return q('📣 Пришлите картинку для поста — она будет сверху, под ней расписание недели');
+    case 'review': return q('Что делаем с постом?', [[{ text: '✅ Выложить в канал', cb: 'publish' }], [{ text: '✍️ Другая подводка', cb: 'reintro' }, { text: '🖼 Другая картинка', cb: 'reimg' }]]);
+    case 'intro': return q('✍️ Напишите подводку — текст в начале поста, перед играми. Или пропустите, тогда сверху будут даты недели', [[SKIP]]);
   }
 }
 
-const NEXT: Record<string, string> = { week: 'day', day: 'time', time: 'room', room: 'master', master: 'title', title: 'system', system: 'setting', system_text: 'setting', setting: 'level', level: 'description', description: 'seats', seats: 'price', price: 'image', price_text: 'image', image: 'confirm' };
+const NEXT: Record<string, string> = { week: 'day', day: 'time', time: 'room', room: 'master', master: 'title', title: 'system', system: 'setting', system_text: 'setting', setting: 'level', level: 'description', description: 'seats', seats: 'image', image: 'confirm' };
 
 /** true — сообщение было для мастера расписания и уже обработано. */
 export async function wizard(env: Env, upd: Upd, send: Send, origin: string, now = Date.now()): Promise<boolean> {
@@ -120,7 +122,7 @@ export async function wizard(env: Env, upd: Upd, send: Send, origin: string, now
     case 'system': val = pick('s:'); if (val === '?') { await setState(env, from.id, 'system_text', d, now); await ask(env, send, chat, 'system_text', d); return true; } if (val) d.system = val; else if (text) d.system = text.slice(0, 60); else ok = false; break;
     case 'system_text': if (text) d.system = text.slice(0, 60); else ok = false; break;
     case 'setting': case 'level': case 'description': if (cb === 'skip') d[step] = ''; else if (text) d[step] = text.slice(0, step === 'description' ? 1500 : 120); else ok = false; break;
-    case 'seats': { const n = Number(pick('n:') ?? text); if (Number.isInteger(n) && n >= 1 && n <= 20) d.seats = n; else ok = false; break; }
+    case 'seats': { const n = Number(pick('n:') ?? text); if (Number.isInteger(n) && n >= 1 && n <= 20) { d.seats = n; d.price = '1200 ₽'; } else ok = false; break; }
     case 'price': val = pick('p:'); if (val === '?') { await setState(env, from.id, 'price_text', d, now); await ask(env, send, chat, 'price_text', d); return true; } if (val) d.price = val; else if (text) d.price = text.slice(0, 60); else ok = false; break;
     case 'price_text': if (text) d.price = text.slice(0, 60); else ok = false; break;
     case 'image':
@@ -147,11 +149,27 @@ export async function wizard(env: Env, upd: Upd, send: Send, origin: string, now
       if (!msg?.photo?.length) { ok = false; break; }
       const img = await savePhoto(env, msg.photo);
       if (!img) { await send(chat, 'Не получилось сохранить картинку, пришлите другую.'); return true; }
-      const r = await postWeek(env, tg, d.week, `${origin}/img/${img}`);
-      if (r.ok) { await clearState(env, from.id); await send(chat, `📣 Готово! Расписание выложено в канал, игр в посте: ${r.count}.`, adminKeyboard); }
-      else await send(chat, `Не получилось выложить: ${esc(r.error)}`);
-      return true;
+      d.post_image = img; await setState(env, from.id, 'intro', d, now); await ask(env, send, chat, 'intro', d); return true;
     }
+    case 'intro':
+      if (cb === 'skip') d.intro = ''; else if (text) d.intro = text.slice(0, 2500); else { ok = false; break; }
+      // предпросмотр: тот же пост, но сюда, в чат администратора
+      await send(chat, '👀 Так пост будет выглядеть в канале:');
+      {
+        const r = await postWeek(env, tg, d.week, `${origin}/img/${d.post_image}`, { intro: d.intro, previewTo: chat, extra: ik([[{ text: '✅ Выложить в канал', cb: 'publish' }], [{ text: '✍️ Другая подводка', cb: 'reintro' }, { text: '🖼 Другая картинка', cb: 'reimg' }], [CANCEL]]) });
+        if (!r.ok) { await send(chat, `Не получилось собрать пост: ${esc(r.error)}`); return true; }
+      }
+      await setState(env, from.id, 'review', d, now); return true;
+    case 'review':
+      if (cb === 'reintro') { await setState(env, from.id, 'intro', d, now); await ask(env, send, chat, 'intro', d); return true; }
+      if (cb === 'reimg') { await setState(env, from.id, 'post_image', d, now); await ask(env, send, chat, 'post_image', d); return true; }
+      if (cb === 'publish') {
+        const r = await postWeek(env, tg, d.week, `${origin}/img/${d.post_image}`, { intro: d.intro });
+        if (r.ok) { await clearState(env, from.id); await send(chat, `📣 Готово! Расписание выложено в канал, игр в посте: ${r.count}.`, adminKeyboard); }
+        else await send(chat, `Не получилось выложить: ${esc(r.error)}`);
+        return true;
+      }
+      ok = false; break;
   }
   if (!ok) { await send(chat, step === 'image' || step === 'post_image' ? 'Жду фото 🙂' : 'Не понял ответ, попробуйте ещё раз.'); await ask(env, send, chat, step, d); return true; }
   step = NEXT[step] ?? step;

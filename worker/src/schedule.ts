@@ -33,16 +33,17 @@ export function gameBlock(g: Game, taken: number): string {
 }
 
 /** Части поста: первая (с картинкой) и, если всё не влезло в 4096 знаков, продолжения. */
-export async function buildPost(env: Env, monday: string): Promise<{ parts: string[]; count: number }> {
+export async function buildPost(env: Env, monday: string, intro = ''): Promise<{ parts: string[]; count: number }> {
   const [from, to] = weekRange(monday);
   const games = (await env.DB.prepare(`SELECT g.*, (SELECT COUNT(*) FROM signups s WHERE s.game_id = g.id AND s.status = 'main') AS taken FROM games g
     WHERE g.status = 'open' AND g.starts_at >= ? AND g.starts_at < ? ORDER BY g.starts_at, CASE g.room WHEN 'red' THEN 0 ELSE 1 END`).bind(monday, new Date(Date.parse(to) + 2 * 864e5).toISOString().slice(0, 10)).all<Game & { taken: number }>()).results
     // в базе время с поясом +04:00: SQL берёт с запасом по дате, точно отсекаем по времени
     .filter((g) => Date.parse(g.starts_at) >= Date.parse(from) && Date.parse(g.starts_at) < Date.parse(to));
   const a = local(Date.parse(from)); const z = local(Date.parse(to) - 864e5);
-  const head = `🗓 <b>Расписание на неделю ${pad(a.getUTCDate())}.${pad(a.getUTCMonth() + 1)} — ${pad(z.getUTCDate())}.${pad(z.getUTCMonth() + 1)}</b>`;
-  const bot = env.BOT_USERNAME ? `@${env.BOT_USERNAME}` : 'наш бот';
-  const foot = `🪙 <b>Стоимость</b>\n1200 ₽ за 4–5 часовую игру\n\n❓ <b>Как записаться</b>\nПишите @oh_katiakaterina — ответим на вопросы и запишем. Или смотрите расписание в ${bot}`;
+  // подводку пишет администратор; без неё — заголовок с датами
+  const head = intro.trim() ? esc(intro.trim()) : `🗓 <b>Расписание на неделю ${pad(a.getUTCDate())}.${pad(a.getUTCMonth() + 1)} — ${pad(z.getUTCDate())}.${pad(z.getUTCMonth() + 1)}</b>`;
+  const app = env.BOT_USERNAME ? `<a href="https://t.me/${env.BOT_USERNAME}">приложение клуба</a>` : 'приложение клуба';
+  const foot = `〰️〰️🌿〰️〰️\n\n🪙 <b>Стоимость</b>\n1200 ₽ за 4–5 часовую игру\n\n❓ <b>Как записаться</b>\nПишите @oh_katiakaterina или через ${app}`;
   const blocks = games.map((g) => gameBlock(g, g.taken));
   const parts: string[] = []; let cur = head;
   for (const b of [...blocks, foot]) {
@@ -59,24 +60,25 @@ export const tgApi = (token: string): TgApi => async (method, body) => {
 };
 
 /** Выкладывает пост: картинка сверху (превью ссылки), под ней расписание. */
-export async function postWeek(env: Env, api: TgApi, monday: string, imageUrl: string): Promise<{ ok: true; count: number } | { ok: false; error: string }> {
-  if (!env.CHANNEL) return { ok: false, error: 'Не указан канал клуба' };
-  const { parts, count } = await buildPost(env, monday);
+export async function postWeek(env: Env, api: TgApi, monday: string, imageUrl: string, opts: { intro?: string; previewTo?: number; extra?: Record<string, unknown> } = {}): Promise<{ ok: true; count: number } | { ok: false; error: string }> {
+  const chat = opts.previewTo ?? env.CHANNEL;
+  if (!chat) return { ok: false, error: 'Не указан канал клуба' };
+  const { parts, count } = await buildPost(env, monday, opts.intro);
   if (!count) return { ok: false, error: 'На этой неделе нет ни одной игры' };
   const button = env.BOT_USERNAME ? { reply_markup: { inline_keyboard: [[{ text: '🐉 Расписание и запись', url: `https://t.me/${env.BOT_USERNAME}` }]] } } : {};
   for (let i = 0; i < parts.length; i++) {
     const last = i === parts.length - 1;
     const r = await api('sendMessage', {
-      chat_id: env.CHANNEL, text: parts[i], parse_mode: 'HTML',
+      chat_id: chat, text: parts[i], parse_mode: 'HTML',
       link_preview_options: i === 0 ? { url: imageUrl, prefer_large_media: true, show_above_text: true } : { is_disabled: true },
-      ...(last ? button : {}),
+      ...(last ? (opts.previewTo ? opts.extra ?? {} : button) : {}),
     });
     if (!r.ok) {
       const d = r.description ?? '';
       return { ok: false, error: /not enough rights|administrator|chat not found|member/i.test(d) ? 'Бот не может писать в канал: добавьте его в администраторы канала с правом публикации' : `Telegram не принял пост: ${d}` };
     }
   }
-  await env.DB.prepare('INSERT INTO meta(key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value').bind(`posted:${monday}`, new Date().toISOString()).run();
+  if (!opts.previewTo) await env.DB.prepare('INSERT INTO meta(key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value').bind(`posted:${monday}`, new Date().toISOString()).run();
   return { ok: true, count };
 }
 
