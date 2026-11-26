@@ -161,4 +161,46 @@ describe('сервер записей', () => {
     await put(players[0], { id: 'abc123', updatedAt: 300, pages: [] });
     expect((await call('GET', '/api/sheets', players[0])).data.sheets).toHaveLength(1);
   });
+  it('«Составить расписание» в чате с ботом: вопросы → игра в приложении → пост в канал с картинкой', async () => {
+    env.CHANNEL = '@club'; env.BOT_USERNAME = 'club_bot';
+    const tgCalls: { m: string; b: any }[] = [];
+    const spy = vi.spyOn(globalThis, 'fetch').mockImplementation(async (u, init) => {
+      const url = String(u);
+      if (url.includes('/file/bot')) return new Response(new Uint8Array([255, 216, 255, 0]));
+      const m = url.split('/').pop()!; const b = init?.body ? JSON.parse(String(init.body)) : {};
+      tgCalls.push({ m, b });
+      if (m === 'getFile') return new Response(JSON.stringify({ ok: true, result: { file_path: 'photos/a.jpg' } }));
+      return new Response(JSON.stringify({ ok: true, result: { message_id: 1 } }));
+    });
+    const kate: TgUser = { id: 51, first_name: 'Катя', username: 'oh_katiakaterina' };
+    env.ADMIN_USERNAMES = 'astrakhan_trener, oh_katiakaterina';
+    let n = 0;
+    const hook = async (u: object) => { await handle(new Request('https://w.test/bot/s3cret', { method: 'POST', body: JSON.stringify({ update_id: ++n, ...u }) }), env, ctx, send, NOW); await Promise.all(pending); pending = []; };
+    const say = (text: string) => hook({ message: { chat: { id: 51 }, from: kate, text } });
+    const tap = (data: string) => hook({ callback_query: { id: 'q' + n, from: kate, data, message: { chat: { id: 51 }, message_id: 9 } } });
+    const photo = () => hook({ message: { chat: { id: 51 }, from: kate, photo: [{ file_id: 'f1', file_size: 1000, width: 800 }] } });
+    // обычный игрок кнопку не получает и в диалог не попадает
+    await hook({ message: { chat: { id: 100 }, from: players[0], text: '📅 Составить расписание' } });
+    expect(sent.at(-1)!.text).toMatch(/в приложении/);
+    await say('/start'); expect(sent.at(-1)!.text).toMatch(/Вы администратор/);
+    await say('📅 Составить расписание'); expect(sent.at(-1)!.text).toMatch(/На какую неделю/);
+    await tap('w:2026-11-30'); expect(sent.at(-1)!.text).toMatch(/Какой день/);
+    await tap('d:2026-12-05'); await say('18.30'); await tap('r:green'); await say('Денис'); await say('Объятия матери');
+    await tap('s:D&D 5e'); await say('Дарк фэнтези'); await tap('skip'); await say('Старый приют на окраине леса');
+    await tap('n:abc'); expect(sent.at(-2)!.text).toMatch(/Не понял/);
+    await tap('n:6'); await tap('p:1200 ₽');
+    await photo(); expect(sent.at(-1)!.text).toMatch(/Проверьте игру/);
+    expect(sent.at(-1)!.text).toContain('🟩 <b>СУББОТА (05.12), 18:30</b>');
+    await tap('save'); expect(sent.at(-1)!.text).toMatch(/уже видна в приложении/);
+    const list = await call('GET', '/api/games');
+    expect(list.data.games.find((g: any) => g.title === 'Объятия матери')).toMatchObject({ room: 'green', master_name: 'Денис', system: 'D&D 5e', seats: 6, starts_at: '2026-12-05T18:30:00+04:00' });
+    await tap('post'); expect(sent.at(-1)!.text).toMatch(/Пришлите картинку для поста/);
+    await photo(); expect(sent.at(-1)!.text).toMatch(/выложено в канал, игр в посте: 1/);
+    const post = tgCalls.find((c) => c.m === 'sendMessage' && c.b.chat_id === '@club')!;
+    expect(post.b.text).toContain('Объятия матери');
+    expect(post.b.link_preview_options.url).toMatch(/^https:\/\/w\.test\/img\/\d+$/);
+    // отмена в любой момент
+    await say('📅 Составить расписание'); await say('Отмена'); expect(sent.at(-1)!.text).toMatch(/отменил/);
+    spy.mockRestore();
+  });
 });

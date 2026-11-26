@@ -1,3 +1,4 @@
+import { adminKeyboard, isAdmin, SCHEDULE_BTN, wizard, type Upd } from './wizard';
 import { buildPost, mondayOf, postWeek, scheduleReminders, tgApi } from './schedule';
 // Сервер записей на игры клуба «Что угодно и драконы». Cloudflare Worker + база D1.
 import { esc, telegramSender, verifyInitData, type Send, type TgUser } from './telegram';
@@ -102,10 +103,14 @@ export async function handle(req: Request, env: Env, ctx: Ctx, send: Send = tele
     // ---------- бот
     if (path.startsWith('/bot/')) {
       if (!env.BOT_SECRET || path !== `/bot/${env.BOT_SECRET}`) return fail('нет доступа', 403);
-      const upd = await req.json() as { message?: { chat: { id: number }; text?: string; from?: TgUser } };
+      const upd = await req.json() as Upd;
+      if (await wizard(env, upd, send, url.origin, now)) return json({ ok: true });
       const m = upd.message; if (!m?.text) return json({ ok: true });
       if (m.from) await env.DB.prepare('INSERT INTO users(id, name, username, started) VALUES (?, ?, ?, 1) ON CONFLICT(id) DO UPDATE SET started = 1, name = excluded.name, username = excluded.username').bind(m.from.id, nameOf(m.from), (m.from.username ?? '').toLowerCase()).run();
-      if (m.text.startsWith('/start')) later(send(m.chat.id, 'Привет! Это бот клуба «Что угодно и драконы» 🐉\n\nЗдесь ближайшие игры — записывайтесь, пока есть места. Я напомню о игре заранее.', openBtn(env)));
+      if (m.text.startsWith('/start')) later((async () => {
+        await send(m.chat.id, 'Привет! Это бот клуба «Что угодно и драконы» 🐉\n\nЗдесь ближайшие игры — записывайтесь, пока есть места. Я напомню о игре заранее.', openBtn(env));
+        if (isAdmin(env, m.from?.username)) await send(m.chat.id, `Вы администратор. Чтобы составить расписание и выложить его в канал, нажмите «${SCHEDULE_BTN}» внизу.`, adminKeyboard);
+      })());
       else if (m.text.startsWith('/id')) later(send(m.chat.id, `Ваш id: <code>${m.chat.id}</code>${m.from?.username ? `, username: @${esc(m.from.username)}` : ''}`));
       else later(send(m.chat.id, 'Все игры и запись — в приложении:', openBtn(env)));
       return json({ ok: true });
@@ -325,5 +330,5 @@ export async function remind(env: Env, send: Send = telegramSender(env.BOT_TOKEN
 
 export default {
   fetch: (req: Request, env: Env, ctx: Ctx) => handle(req, env, ctx),
-  scheduled: (_e: unknown, env: Env, ctx: Ctx) => ctx.waitUntil(Promise.all([remind(env), scheduleReminders(env, telegramSender(env.BOT_TOKEN), Date.now(), openBtn(env)).catch(() => {})])),
+  scheduled: (_e: unknown, env: Env, ctx: Ctx) => ctx.waitUntil(Promise.all([remind(env), scheduleReminders(env, telegramSender(env.BOT_TOKEN), Date.now(), adminKeyboard).catch(() => {})])),
 };
