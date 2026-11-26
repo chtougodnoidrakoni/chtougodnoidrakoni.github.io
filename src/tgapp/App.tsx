@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { ArrowLeft, Baby, Star, CalendarDays, Crown, Info, Cake, Coins, Heart, Ticket, ChevronDown, ImagePlus, Plus, Settings, Sparkles, Swords, ScrollText, Users, X } from 'lucide-react';
+import { ArrowLeft, Baby, Megaphone, Star, CalendarDays, Crown, Info, Cake, Coins, Heart, Ticket, ChevronDown, ImagePlus, Plus, Settings, Sparkles, Swords, ScrollText, Users, X } from 'lucide-react';
 import { Btn, Field, TextIn } from '../Panels';
 import { api, fmtDay, fmtTime, imgUrl, loadConfig, toIso, toLocal, type Game, type Player, type Role } from './api';
 import { confirmBox, haptic, openLink, setupTelegram, tg } from './tg';
@@ -83,7 +83,7 @@ export function App() {
         ) : null}
         {ready === 'load' && <div className="py-16 text-center text-cream/60">Загружаю…</div>}
         {ready === 'noapi' && <div className="mt-6 rounded-2xl border border-amber-300/50 bg-amber-300/10 p-4 text-sm text-amber-100">Сервер записей ещё не подключён. Как только администратор его включит, здесь появятся игры.</div>}
-        {ready === 'ok' && view.name === 'list' && <Week say={say} staff={staff} />}
+        {ready === 'ok' && view.name === 'list' && <Week say={say} staff={staff} admin={role === 'admin'} />}
         {ready === 'ok' && view.name === 'my' && <My />}
         {view.name === 'info' && <ClubInfo />}
         {ready === 'ok' && view.name === 'game' && <GamePage id={view.id} say={say} role={role} />}
@@ -182,7 +182,8 @@ function EmptyTile({ room, day, past, staff }: { room: 'red' | 'green'; day: str
   return can ? <button aria-label={`Поставить игру: ${dayTitle(day)}, ${room === 'green' ? 'зелёная' : 'красная'}`} onClick={() => go(`new/${day}/${room}`)} className={cls}>{body}</button> : <div className={cls}>{body}</div>;
 }
 
-function Week({ say, staff }: { say: (t: string) => void; staff: boolean }) {
+function Week({ say, staff, admin }: { say: (t: string) => void; staff: boolean; admin: boolean }) {
+  const [posting, setPosting] = useState(false);
   const [games, setGames] = useState<Game[] | null>(null);
   const today = dayKey(new Date());
   const [start, setStart] = useState(() => { const w = new URLSearchParams(location.search).get('week'); return w && /^\d{4}-\d{2}-\d{2}$/.test(w) ? mondayOf(w) : mondayOf(today); });
@@ -206,6 +207,10 @@ function Week({ say, staff }: { say: (t: string) => void; staff: boolean }) {
   return (
     <>
       <div className="mt-4">{nav}</div>
+      {admin && start >= thisWeek && (
+        <button onClick={() => setPosting(true)} className="mt-3 w-full h-12 rounded-2xl border border-sand/60 bg-sand/10 text-sand-light font-semibold inline-flex items-center justify-center gap-2"><Megaphone size={18} />Расписание готово — выложить в канал</button>
+      )}
+      {posting && <PostWeek week={start} title={rangeTitle(days[0]!, days[6]!)} say={say} onClose={() => setPosting(false)} />}
       <div className="grid gap-4 mt-4">
         {days.map((d) => {
           const list = (byDay.get(d) ?? []).sort((a, b) => a.starts_at.localeCompare(b.starts_at));
@@ -629,6 +634,48 @@ function ClubInfo() {
           <Btn className="h-12" onClick={() => openLink('https://t.me/aalkhutova')}>@aalkhutova</Btn>
         </div>
       </InfoCard>
+    </div>
+  );
+}
+
+/** Выкладка расписания недели в канал: предпросмотр поста, картинка, кнопка «Выложить». */
+function PostWeek({ week, title, say, onClose }: { week: string; title: string; say: (t: string) => void; onClose: () => void }) {
+  const [p, setP] = useState<{ text: string; count: number; posted: string | null } | null>(null);
+  const [img, setImg] = useState<{ id: number; url: string } | null>(null);
+  const [busy, setBusy] = useState(false);
+  useEffect(() => { api.schedulePreview(week).then(setP).catch((e) => { say((e as Error).message); onClose(); }); }, [week, say, onClose]);
+  const post = async () => {
+    if (!img || busy) return;
+    if (!(await confirmBox(`Выложить расписание ${title} в канал?`))) return;
+    setBusy(true);
+    try { const r = await api.schedulePost(week, img.id); haptic('success'); say(`Пост в канале — игр в нём: ${r.count}`); onClose(); }
+    catch (e) { haptic('error'); say((e as Error).message); } finally { setBusy(false); }
+  };
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60" onClick={onClose}>
+      <div role="dialog" aria-modal="true" aria-label="Выложить в канал" onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-xl rounded-t-3xl bg-[#1f2521] border-t border-sand/40 px-5 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] max-h-[92dvh] overflow-y-auto">
+        <div className="mx-auto w-10 h-1 rounded-full bg-cream/25 mb-4" />
+        <h2 className="font-display-sc text-2xl text-sand-light">Пост в канал</h2>
+        <div className="text-sm text-cream/65 mt-1">{title}{p ? ` · игр: ${p.count}` : ''}</div>
+        {p?.posted && <div className="mt-3 rounded-xl bg-sand/10 border border-sand/40 px-3 py-2 text-sm text-sand-light">Эта неделя уже выкладывалась. Если нажать ещё раз, в канале появится второй пост.</div>}
+        <div className="mt-4 text-xs text-cream/55 mb-1.5">1. Картинка для поста — она будет сверху</div>
+        <label className={cx('block rounded-2xl border border-dashed overflow-hidden cursor-pointer', img ? 'border-sand/60' : 'border-moss-light')}>
+          {img ? <img src={img.url} alt="" className="w-full max-h-56 object-cover" /> : <div className="h-28 grid place-items-center text-sm text-cream/60"><span className="inline-flex items-center gap-2"><ImagePlus size={18} />{busy ? 'Загружаю…' : 'Выбрать картинку'}</span></div>}
+          <input type="file" accept="image/*" aria-label="Картинка для поста" className="hidden" onChange={async (e) => {
+            const file = e.target.files?.[0]; if (!file) return;
+            try { setBusy(true); const c = await compress(file); const r = await api.image(c.mime, c.data); setImg({ id: r.id, url: c.url }); } catch (err) { say((err as Error).message || 'Не удалось загрузить картинку'); } finally { setBusy(false); }
+          }} />
+        </label>
+        <div className="mt-4 text-xs text-cream/55 mb-1.5">2. Так будет выглядеть текст под картинкой</div>
+        <div className="rounded-2xl bg-moss-deep/70 border border-moss-light/60 p-3 text-[13px] leading-relaxed text-cream/90 whitespace-pre-wrap max-h-72 overflow-y-auto"
+          dangerouslySetInnerHTML={{ __html: p ? p.text : 'Собираю пост…' }} />
+        {p && !p.count && <div className="text-sm text-red-300 mt-2">На этой неделе нет ни одной игры — выкладывать нечего.</div>}
+        <div className="grid gap-2 mt-5">
+          <Btn tone="gold" className="h-12" disabled={!img || !p?.count || busy} onClick={post}><Megaphone size={17} />{busy ? '…' : 'Выложить в канал'}</Btn>
+          <Btn className="h-12" onClick={onClose}>Отмена</Btn>
+        </div>
+      </div>
     </div>
   );
 }

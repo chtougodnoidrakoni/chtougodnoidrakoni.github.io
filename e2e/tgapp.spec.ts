@@ -114,3 +114,14 @@ test('Telegram-приложение: из «Изменить игру» можн
   await expect(admin.locator('section[aria-label]').first()).toBeVisible();
   await expect(admin).not.toHaveURL(/#game|#edit/);
 });
+
+test('Telegram-приложение: администратор открывает пост недели для канала', async ({ browser }) => {
+  const admin = await (await browser.newContext()).newPage();
+  await as(admin, 'id=1&username=astrakhan_trener&name=Замир');
+  await admin.goto('./app/');
+  await admin.getByRole('button', { name: /выложить в канал/ }).click();
+  const d = admin.getByRole('dialog', { name: 'Выложить в канал' });
+  await expect(d).toContainText('Расписание на неделю');
+  await expect(d.getByRole('button', { name: 'Выложить в канал' })).toBeDisabled(); // без картинки нельзя
+  await admin.screenshot({ path: 'e2e/shots/t5-post.png' });
+});

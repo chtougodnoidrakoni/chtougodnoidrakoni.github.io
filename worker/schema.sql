@@ -36,3 +36,6 @@ CREATE INDEX IF NOT EXISTS signups_game ON signups(game_id, status, created_at);
 CREATE TABLE IF NOT EXISTS images (id INTEGER PRIMARY KEY AUTOINCREMENT, mime TEXT NOT NULL, data TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS roles (username TEXT PRIMARY KEY, role TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, name TEXT NOT NULL, username TEXT NOT NULL DEFAULT '', started INTEGER NOT NULL DEFAULT 0);
+
+-- служебные отметки: какие напоминания уже ушли, какие недели выложены в канал
+CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);

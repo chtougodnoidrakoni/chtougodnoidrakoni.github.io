@@ -35,6 +35,8 @@ export const api = {
   update: (id: number, g: Partial<Game>) => req('PUT', `/api/games/${id}`, g),
   act: (id: number, a: 'cancel' | 'reopen' | 'kick' | 'add' | 'attended', body?: unknown) => req('POST', `/api/games/${id}/${a}`, body ?? {}),
   image: (mime: string, data: string) => req<{ id: number }>('POST', '/api/images', { mime, data }),
+  schedulePreview: (week: string) => req<{ week: string; text: string; count: number; posted: string | null }>('GET', `/api/schedule/preview?week=${week}`),
+  schedulePost: (week: string, image_id: number) => req<{ ok: true; count: number }>('POST', '/api/schedule/post', { week, image_id }),
   roles: () => req<{ roles: { username: string; role: string }[] }>('GET', '/api/roles'),
   setRole: (username: string, role: 'master' | null) => req('POST', '/api/roles', { username, role }),
 };

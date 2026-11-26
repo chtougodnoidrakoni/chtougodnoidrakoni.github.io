@@ -1,10 +1,11 @@
+import { buildPost, mondayOf, postWeek, scheduleReminders, tgApi } from './schedule';
 // Сервер записей на игры клуба «Что угодно и драконы». Cloudflare Worker + база D1.
 import { esc, telegramSender, verifyInitData, type Send, type TgUser } from './telegram';
 
 // --- минимальное описание D1, чтобы не тянуть типы Cloudflare
 export interface Stmt { bind(...v: unknown[]): Stmt; first<T = Record<string, unknown>>(): Promise<T | null>; all<T = Record<string, unknown>>(): Promise<{ results: T[] }>; run(): Promise<{ meta: { changes: number; last_row_id: number } }> }
 export interface DB { prepare(sql: string): Stmt; batch(s: Stmt[]): Promise<unknown[]> }
-export interface Env { DB: DB; BOT_TOKEN: string; ADMIN_USERNAMES?: string; APP_URL?: string; BOT_SECRET?: string; CHANNEL?: string }
+export interface Env { DB: DB; BOT_TOKEN: string; ADMIN_USERNAMES?: string; APP_URL?: string; BOT_SECRET?: string; CHANNEL?: string; BOT_USERNAME?: string; SCHEDULE_ADMINS?: string }
 export interface Ctx { waitUntil(p: Promise<unknown>): void }
 
 type Role = 'admin' | 'master' | 'player';
@@ -225,6 +226,23 @@ export async function handle(req: Request, env: Env, ctx: Ctx, send: Send = tele
       const r = await env.DB.prepare('INSERT INTO images(mime, data) VALUES (?, ?)').bind(mime, data).run();
       return json({ id: r.meta.last_row_id });
     }
+    // ---------- расписание недели в канал
+    if (path === '/api/schedule/preview' && req.method === 'GET') {
+      if (m?.role !== 'admin') return fail('Только для администратора', 403);
+      const week = url.searchParams.get('week') ?? mondayOf(now + 7 * 864e5);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(week)) return fail('неверная неделя');
+      const { parts, count } = await buildPost(env, week);
+      const posted = await env.DB.prepare('SELECT value FROM meta WHERE key = ?').bind(`posted:${week}`).first<{ value: string }>();
+      return json({ week, text: parts.join('\n\n'), count, posted: posted?.value ?? null });
+    }
+    if (path === '/api/schedule/post' && req.method === 'POST') {
+      if (m?.role !== 'admin') return fail('Только для администратора', 403);
+      const { week, image_id } = await req.json() as { week: string; image_id: number };
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(week ?? '')) return fail('неверная неделя');
+      if (!image_id || !(await env.DB.prepare('SELECT 1 FROM images WHERE id = ?').bind(image_id).first())) return fail('Прикрепите картинку для поста');
+      const r = await postWeek(env, tgApi(env.BOT_TOKEN), week, `${url.origin}/img/${image_id}`);
+      return r.ok ? json(r) : fail(r.error);
+    }
     if (path === '/api/roles') {
       if (m?.role !== 'admin') return fail('Только для администратора', 403);
       if (req.method === 'GET') return json({ roles: (await env.DB.prepare('SELECT username, role FROM roles ORDER BY username').all()).results });
@@ -259,5 +277,5 @@ export async function remind(env: Env, send: Send = telegramSender(env.BOT_TOKEN
 
 export default {
   fetch: (req: Request, env: Env, ctx: Ctx) => handle(req, env, ctx),
-  scheduled: (_e: unknown, env: Env, ctx: Ctx) => ctx.waitUntil(remind(env)),
+  scheduled: (_e: unknown, env: Env, ctx: Ctx) => ctx.waitUntil(Promise.all([remind(env), scheduleReminders(env, telegramSender(env.BOT_TOKEN), Date.now(), openBtn(env)).catch(() => {})])),
 };

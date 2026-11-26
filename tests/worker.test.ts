@@ -1,5 +1,7 @@
 import { describe, expect, it, beforeEach } from 'vitest';
 import { handle, remind, type Env } from '../worker/src/index';
+import { buildPost, mondayOf, scheduleReminders } from '../worker/src/schedule';
+import { vi } from 'vitest';
 import { localDB } from '../worker/src/local-db';
 import { signInitData, verifyInitData, type TgUser } from '../worker/src/telegram';
 
@@ -93,5 +95,49 @@ describe('сервер записей', () => {
     let extra: any; const send2 = async (to: number | string, text: string, e?: Record<string, unknown>) => { sent.push({ to, text }); extra = e; };
     await handle(new Request('https://w.test/bot/s3cret', { method: 'POST', body: JSON.stringify(upd) }), env, ctx, send2, NOW); await Promise.all(pending);
     expect(sent[0]!.to).toBe(55); expect(extra.reply_markup.inline_keyboard[0][0].web_app.url).toBe('https://app.test/app/');
+  });
+  it('пост расписания: оформление как в канале, картинка сверху, без «Запись также»', async () => {
+    env.CHANNEL = '@club'; env.BOT_USERNAME = 'club_bot';
+    const id = (await call('POST', '/api/games', admin, { ...game, starts_at: '2026-11-29T12:00:00+04:00', level: '4, ваншот', description: 'Старый приют.\n\nЗапись также у @oh_katiakaterina' })).data.id;
+    await call('POST', `/api/games/${id}/join`, players[0]);
+    await call('POST', '/api/games', admin, { ...game, title: 'Следующая неделя', starts_at: '2026-12-01T12:00:00+04:00' });
+    const { parts, count } = await buildPost(env, '2026-11-23');
+    expect(count).toBe(1);
+    expect(parts[0]).toContain('🟩 <b>ВОСКРЕСЕНЬЕ (29.11), 12:00</b> — <i>осталось 5 мест</i>');
+    expect(parts[0]).toContain('<b>Мастер:</b> Катя');
+    expect(parts[0]).toContain('<b>В двух словах:</b> Старый приют.');
+    expect(parts[0]).not.toContain('Запись также');
+    expect(parts[0]).not.toContain('Следующая неделя');
+    // игрок выложить не может, администратор — да
+    expect((await call('POST', '/api/schedule/post', players[1], { week: '2026-11-23', image_id: 1 })).status).toBe(403);
+    const img = (await call('POST', '/api/images', admin, { mime: 'image/png', data: 'iVBORw0KGgo=' })).data.id;
+    const calls: any[] = [];
+    const spy = vi.spyOn(globalThis, 'fetch').mockImplementation(async (_u, init) => { calls.push(JSON.parse(String(init!.body))); return new Response(JSON.stringify({ ok: true, result: { message_id: 7 } })); });
+    const r = await call('POST', '/api/schedule/post', admin, { week: '2026-11-23', image_id: img });
+    spy.mockRestore();
+    expect(r.data).toMatchObject({ ok: true, count: 1 });
+    expect(calls[0]).toMatchObject({ chat_id: '@club', parse_mode: 'HTML', link_preview_options: { url: `https://w.test/img/${img}`, show_above_text: true } });
+    expect(calls[0].reply_markup.inline_keyboard[0][0].url).toBe('https://t.me/club_bot');
+    expect((await call('GET', '/api/schedule/preview?week=2026-11-23', admin)).data.posted).toBeTruthy();
+  });
+  it('бот не админ канала — понятная ошибка', async () => {
+    env.CHANNEL = '@club';
+    await call('POST', '/api/games', admin, { ...game, starts_at: '2026-11-29T12:00:00+04:00' });
+    const img = (await call('POST', '/api/images', admin, { mime: 'image/png', data: 'iVBORw0KGgo=' })).data.id;
+    const spy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(JSON.stringify({ ok: false, description: 'Bad Request: need administrator rights in the channel chat' })));
+    const r = await call('POST', '/api/schedule/post', admin, { week: '2026-11-23', image_id: img });
+    spy.mockRestore();
+    expect(r.data.error).toMatch(/администраторы канала/);
+  });
+  it('напоминания админам: в среду и пятницу после 12:00, по разу, не после выкладки недели', async () => {
+    env.SCHEDULE_ADMINS = 'oh_katiakaterina, aalkhutova';
+    await env.DB.prepare('INSERT INTO users(id, name, username, started) VALUES (51, ?, ?, 1), (52, ?, ?, 1)').bind('Катя К', 'oh_katiakaterina', 'Настя', 'aalkhutova').run();
+    const wed = Date.parse('2026-12-02T12:30:00+04:00'), fri = Date.parse('2026-12-04T13:00:00+04:00');
+    await scheduleReminders(env, send, Date.parse('2026-12-02T10:00:00+04:00'), {}); expect(sent).toHaveLength(0);
+    await scheduleReminders(env, send, wed, {}); await scheduleReminders(env, send, wed + 900000, {});
+    expect(sent.map((x) => x.to)).toEqual([51, 52]);
+    expect(sent[0]!.text).toMatch(/Катя, привет! Не забудь подготовить расписание на следующую неделю/);
+    await env.DB.prepare("INSERT INTO meta(key, value) VALUES (?, 'x')").bind(`posted:${mondayOf(fri + 7 * 864e5)}`).run();
+    await scheduleReminders(env, send, fri, {}); expect(sent).toHaveLength(2);
   });
 });
