@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { ArrowLeft, Baby, CalendarDays, Crown, Info, Cake, Coins, Heart, Ticket, ChevronDown, ImagePlus, Plus, Settings, Sparkles, Swords, ScrollText, Users, X } from 'lucide-react';
+import { ArrowLeft, Baby, Star, CalendarDays, Crown, Info, Cake, Coins, Heart, Ticket, ChevronDown, ImagePlus, Plus, Settings, Sparkles, Swords, ScrollText, Users, X } from 'lucide-react';
 import { Btn, Field, TextIn } from '../Panels';
 import { api, fmtDay, fmtTime, imgUrl, loadConfig, toIso, toLocal, type Game, type Player, type Role } from './api';
 import { confirmBox, haptic, openLink, setupTelegram, tg } from './tg';
@@ -616,6 +616,18 @@ function ClubInfo() {
         </ul>
         <p className="text-sm text-cream/65">Стоимость — 9500 ₽. Берём игроков от 12 лет.</p>
         <Btn tone="gold" className="h-12 mt-1" onClick={() => openLink(adminLink('Здравствуйте! Хочу устроить ДнД-день рождения. Расскажите подробности?'))}>Обсудить праздник</Btn>
+      </InfoCard>
+      <InfoCard icon={<Star size={18} />} title="Отзывы">
+        <p>Понравилось у нас? Расскажите друзьям и оставьте отзыв — это очень помогает клубу.</p>
+        <div className="grid grid-cols-2 gap-2">
+          <Btn className="h-12" onClick={() => openLink('https://2gis.ru/astrakhan/firm/70000001111078348')}>2ГИС</Btn>
+          <Btn className="h-12" onClick={() => openLink('https://yandex.ru/maps/org/chto_ugodno_i_drakony/101909403177/')}>Яндекс Карты</Btn>
+        </div>
+        <p className="mt-1">Хотите сказать спасибо создателям или пожаловаться? Напишите нам:</p>
+        <div className="grid grid-cols-2 gap-2">
+          <Btn className="h-12" onClick={() => openLink('https://t.me/oh_katiakaterina')}>@oh_katiakaterina</Btn>
+          <Btn className="h-12" onClick={() => openLink('https://t.me/aalkhutova')}>@aalkhutova</Btn>
+        </div>
       </InfoCard>
     </div>
   );
