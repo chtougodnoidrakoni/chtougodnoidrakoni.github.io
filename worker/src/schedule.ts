@@ -84,7 +84,7 @@ export async function postWeek(env: Env, api: TgApi, monday: string, imageUrl: s
 }
 
 /** Напоминания администраторам расписания: в среду и пятницу с 12:00, один раз за день. */
-export async function scheduleReminders(env: Env, send: Send, now: number, openBtn: Record<string, unknown>) {
+export async function scheduleReminders(env: Env, send: Send, now: number, openBtn: Record<string, unknown> | ((username: string) => Record<string, unknown>)) {
   const d = local(now); const wd = d.getUTCDay();
   if ((wd !== 3 && wd !== 5) || d.getUTCHours() < 12) return;
   const key = `remind:${d.toISOString().slice(0, 10)}`;
@@ -100,6 +100,6 @@ export async function scheduleReminders(env: Env, send: Send, now: number, openB
     const text = wd === 3
       ? `🗓 ${first}, привет! Не забудь подготовить расписание на следующую неделю.\n\nНажми «📅 Составить расписание» внизу чата — я спрошу про каждую игру и сам выложу пост в канал.`
       : `⏳ ${first}, следующая неделя уже близко — успей подготовить расписание.\n\nНажми «📅 Составить расписание» внизу чата — это пара минут.`;
-    await send(row.id, text, openBtn);
+    await send(row.id, text, typeof openBtn === 'function' ? openBtn(u) : openBtn);
   }
 }

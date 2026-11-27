@@ -1,5 +1,6 @@
 import { dayText, signedText, soonText, waitText } from './flavor';
-import { adminKeyboard, isAdmin, SCHEDULE_BTN, wizard, type Upd } from './wizard';
+import { wizard, type Upd } from './wizard';
+import { isAdmin, keyboardFor, masterBot, masterOf, MASTER_BTN, SCHEDULE_BTN } from './masters';
 import { buildPost, mondayOf, postWeek, scheduleReminders, tgApi } from './schedule';
 // Сервер записей на игры клуба «Что угодно и драконы». Cloudflare Worker + база D1.
 import { esc, telegramSender, verifyInitData, type Send, type TgUser } from './telegram';
@@ -7,7 +8,7 @@ import { esc, telegramSender, verifyInitData, type Send, type TgUser } from './t
 // --- минимальное описание D1, чтобы не тянуть типы Cloudflare
 export interface Stmt { bind(...v: unknown[]): Stmt; first<T = Record<string, unknown>>(): Promise<T | null>; all<T = Record<string, unknown>>(): Promise<{ results: T[] }>; run(): Promise<{ meta: { changes: number; last_row_id: number } }> }
 export interface DB { prepare(sql: string): Stmt; batch(s: Stmt[]): Promise<unknown[]> }
-export interface Env { DB: DB; BOT_TOKEN: string; ADMIN_USERNAMES?: string; APP_URL?: string; BOT_SECRET?: string; CHANNEL?: string; BOT_USERNAME?: string; SCHEDULE_ADMINS?: string }
+export interface Env { DB: DB; BOT_TOKEN: string; ADMIN_USERNAMES?: string; APP_URL?: string; BOT_SECRET?: string; CHANNEL?: string; BOT_USERNAME?: string; SCHEDULE_ADMINS?: string; MASTERS?: string }
 export interface Ctx { waitUntil(p: Promise<unknown>): void }
 
 type Role = 'admin' | 'master' | 'player';
@@ -123,12 +124,14 @@ export async function handle(req: Request, env: Env, ctx: Ctx, send: Send = tele
     if (path.startsWith('/bot/')) {
       if (!env.BOT_SECRET || path !== `/bot/${env.BOT_SECRET}`) return fail('нет доступа', 403);
       const upd = await req.json() as Upd;
+      if (await masterBot(env, upd, send, now)) return json({ ok: true });
       if (await wizard(env, upd, send, url.origin, now)) return json({ ok: true });
       const m = upd.message; if (!m?.text) return json({ ok: true });
       if (m.from) await env.DB.prepare('INSERT INTO users(id, name, username, started) VALUES (?, ?, ?, 1) ON CONFLICT(id) DO UPDATE SET started = 1, name = excluded.name, username = excluded.username').bind(m.from.id, nameOf(m.from), (m.from.username ?? '').toLowerCase()).run();
       if (m.text.startsWith('/start')) later((async () => {
         await send(m.chat.id, 'Привет! Это бот клуба «Что угодно и драконы» 🐉\n\nЗдесь ближайшие игры — записывайтесь, пока есть места. Я напомню о игре заранее.', openBtn(env));
-        if (isAdmin(env, m.from?.username)) await send(m.chat.id, `Вы администратор. Чтобы составить расписание и выложить его в канал, нажмите «${SCHEDULE_BTN}» внизу.`, adminKeyboard);
+        const u = m.from?.username, adm = isAdmin(env, u), ms = masterOf(env, u);
+        if (adm || ms) await send(m.chat.id, [adm ? `Вы администратор. Чтобы составить расписание и выложить его в канал, нажмите «${SCHEDULE_BTN}» внизу.` : '', ms ? `${adm ? 'И вы мастер' : `${esc(ms.name)}, вы мастер клуба`}: все игры, которые вы ведёте, — по кнопке «${MASTER_BTN}».` : ''].filter(Boolean).join('\n\n'), keyboardFor(env, u));
       })());
       else if (m.text.startsWith('/id')) later(send(m.chat.id, `Ваш id: <code>${m.chat.id}</code>${m.from?.username ? `, username: @${esc(m.from.username)}` : ''}`));
       else later(send(m.chat.id, 'Все игры и запись — в приложении:', openBtn(env)));
@@ -358,5 +361,5 @@ export async function remind(env: Env, send: Send = telegramSender(env.BOT_TOKEN
 
 export default {
   fetch: (req: Request, env: Env, ctx: Ctx) => handle(req, env, ctx),
-  scheduled: (_e: unknown, env: Env, ctx: Ctx) => ctx.waitUntil(Promise.all([remind(env), scheduleReminders(env, telegramSender(env.BOT_TOKEN), Date.now(), adminKeyboard).catch(() => {})])),
+  scheduled: (_e: unknown, env: Env, ctx: Ctx) => ctx.waitUntil(Promise.all([remind(env), scheduleReminders(env, telegramSender(env.BOT_TOKEN), Date.now(), (u) => keyboardFor(env, u)).catch(() => {})])),
 };

@@ -216,6 +216,52 @@ describe('сервер записей', () => {
     await say('📅 Составить расписание'); await say('Отмена'); expect(sent.at(-1)!.text).toMatch(/отменил/);
     spy.mockRestore();
   });
+  it('мастера: админ выбирает мастера кнопкой, мастер видит свои игры в боте', async () => {
+    const spy = vi.spyOn(globalThis, 'fetch').mockImplementation(async () => new Response(JSON.stringify({ ok: true, result: { message_id: 1 } })));
+    env.ADMIN_USERNAMES = 'astrakhan_trener, oh_katiakaterina';
+    env.MASTERS = 'Катя:oh_katiakaterina, Денис:@I_Koschei_I';
+    const kate: TgUser = { id: 51, first_name: 'Катя', username: 'oh_katiakaterina' };
+    const denis: TgUser = { id: 61, first_name: 'Денис', username: 'I_Koschei_I' };
+    const out: { to: number | string; text: string; extra?: any }[] = [];
+    const s2 = async (to: number | string, text: string, extra?: Record<string, unknown>) => { out.push({ to, text, extra }); };
+    let n = 0;
+    const hook = async (u: object) => { await handle(new Request('https://w.test/bot/s3cret', { method: 'POST', body: JSON.stringify({ update_id: ++n, ...u }) }), env, ctx, s2, NOW); await Promise.all(pending); pending = []; };
+    const say = (who: TgUser, text: string) => hook({ message: { chat: { id: who.id }, from: who, text } });
+    const tap = (who: TgUser, data: string) => hook({ callback_query: { id: 'q' + n, from: who, data, message: { chat: { id: who.id }, message_id: 9 } } });
+    const kb = (e: any) => (e?.reply_markup?.keyboard ?? []).flat().map((b: any) => b.text);
+    // Денис заходит в бота: у него кнопка мастера, но нет кнопки расписания
+    await say(denis, '/start');
+    expect(out.at(-1)!.text).toMatch(/Денис, вы мастер клуба/);
+    expect(kb(out.at(-1)!.extra)).toEqual(['🎲 Игры, которые я веду']);
+    await say(denis, '🎲 Игры, которые я веду'); expect(out.at(-1)!.text).toMatch(/пока нет запланированных игр/);
+    // Катя — и админ, и мастер: две кнопки
+    await say(kate, '/start'); expect(kb(out.at(-1)!.extra)).toEqual(['📅 Составить расписание', '🎲 Игры, которые я веду']);
+    // старая игра без ника, где мастер записан именем, тоже попадает Денису
+    await call('POST', '/api/games', admin, { ...game, title: 'Старая', master_name: 'Денис', master_username: '' });
+    await say(kate, '📅 Составить расписание'); await tap(kate, 'w:2026-11-30'); await tap(kate, 'd:2026-12-05'); await say(kate, '18:30'); await tap(kate, 'r:red');
+    const ask = out.at(-1)!;
+    expect(ask.text).toMatch(/Кто мастер\? Нажмите имя/);
+    const btns = ask.extra.reply_markup.inline_keyboard.flat().map((b: any) => b.callback_data);
+    expect(btns).toEqual(expect.arrayContaining(['m:oh_katiakaterina', 'm:i_koschei_i', 'm:?']));
+    await tap(kate, 'm:i_koschei_i'); expect(out.at(-1)!.text).toMatch(/Название игры/);
+    await say(kate, 'Объятия матери'); await tap(kate, 's:D&D 5e'); await tap(kate, 'skip'); await tap(kate, 'skip'); await tap(kate, 'skip'); await tap(kate, 'n:5'); await tap(kate, 'skip');
+    out.length = 0;
+    await tap(kate, 'save');
+    expect(out.find((m) => m.to === 61)?.text).toMatch(/Вас поставили мастером: <b>Объятия матери<\/b>, Сб 05\.12 в 18:30, Красная/);
+    const g = (await call('GET', '/api/games')).data.games.find((x: any) => x.title === 'Объятия матери');
+    expect(g).toMatchObject({ master_name: 'Денис', master_username: 'i_koschei_i' });
+    await call('POST', `/api/games/${g.id}/join`, players[0]);
+    // Денис открывает свои игры: обе, по порядку, с записью
+    await say(denis, '🎲 Игры, которые я веду');
+    const list = out.at(-1)!;
+    expect(list.text.indexOf('Старая')).toBeLessThan(list.text.indexOf('Объятия матери'));
+    expect(list.text).toMatch(/Объятия матери\nЗаписались 1 из 5/);
+    await tap(denis, `mg:${g.id}`); expect(out.at(-1)!.text).toMatch(/Игроки: 1 из 5\n1\. Игрок0/);
+    // чужой игрок кнопку мастера не получает
+    await say(players[1]!, '🎲 Игры, которые я веду'); expect(out.at(-1)!.text).toMatch(/для мастеров клуба/);
+    await tap(players[1]!, `mg:${g.id}`); expect(out.at(-1)!.text).not.toMatch(/Игрок0/);
+    spy.mockRestore();
+  });
   it('подводка: оформление из Telegram (жирный, курсив, цитата, ссылка) переносится в пост, лишнее экранируется', () => {
     const t = 'Два стола свободны (уже нет)\nПриходите <смело>';
     const html = entitiesToHtml(t, [{ type: 'bold', offset: 0, length: 18 }, { type: 'italic', offset: 19, length: 9 }, { type: 'blockquote', offset: 29, length: 17 }, { type: 'mention', offset: 0, length: 3 }]);

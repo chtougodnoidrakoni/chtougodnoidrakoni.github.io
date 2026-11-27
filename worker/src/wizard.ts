@@ -5,8 +5,9 @@
 import { esc, type Send, type TgUser } from './telegram';
 import type { Env } from './index';
 import { gameBlock, mondayOf, postWeek, tgApi } from './schedule';
+import { isAdmin, keyboardFor, masters, SCHEDULE_BTN } from './masters';
+export { isAdmin, SCHEDULE_BTN };
 
-export const SCHEDULE_BTN = '📅 Составить расписание';
 type Photo = { file_id: string; file_size?: number; width: number };
 type Entity = { type: string; offset: number; length: number; url?: string };
 export interface Upd {
@@ -14,7 +15,7 @@ export interface Upd {
   callback_query?: { id: string; from: TgUser; data?: string; message?: { chat: { id: number }; message_id: number } };
 }
 interface Draft {
-  week: string; day?: string; time?: string; room?: 'red' | 'green'; master?: string; title?: string; system?: string;
+  week: string; day?: string; time?: string; room?: 'red' | 'green'; master?: string; master_username?: string; title?: string; system?: string;
   setting?: string; level?: string; description?: string; seats?: number; price?: string; image_id?: number | null; post_image?: number; intro?: string;
 }
 type Kb = { text: string; cb: string }[][];
@@ -26,8 +27,6 @@ const addDays = (d: string, n: number) => new Date(Date.parse(`${d}T12:00:00Z`) 
 const dm = (d: string) => `${d.slice(8, 10)}.${d.slice(5, 7)}`;
 const wdOf = (d: string) => WD[new Date(`${d}T12:00:00Z`).getUTCDay()]!;
 
-export const isAdmin = (env: Env, username?: string) => !!username && (env.ADMIN_USERNAMES ?? '').toLowerCase().split(/[\s,]+/).map((x) => x.replace(/^@/, '')).includes(username.toLowerCase());
-export const adminKeyboard = { reply_markup: { keyboard: [[{ text: SCHEDULE_BTN }]], resize_keyboard: true, is_persistent: true } };
 
 async function getState(env: Env, uid: number) {
   const r = await env.DB.prepare('SELECT step, data FROM bot_state WHERE user_id = ?').bind(uid).first<{ step: string; data: string }>();
@@ -90,7 +89,14 @@ async function ask(env: Env, send: Send, chat: number, step: string, d: Draft) {
     }
     case 'time': return q(`🕐 Во сколько начало? Нажмите или напишите, например 18:30`, [[{ text: '12:00', cb: 't:12:00' }, { text: '17:00', cb: 't:17:00' }, { text: '18:00', cb: 't:18:00' }], [{ text: '18:30', cb: 't:18:30' }, { text: '19:00', cb: 't:19:00' }]]);
     case 'room': return q('🚪 Какая комната?', [[{ text: '🟥 Красная', cb: 'r:red' }, { text: '🟩 Зелёная', cb: 'r:green' }]]);
-    case 'master': return q('🎲 Кто мастер? Напишите имя');
+    case 'master': {
+      const ms = masters(env);
+      if (!ms.length) return q('🎲 Кто мастер? Напишите имя');
+      const b = ms.map((m) => ({ text: m.name, cb: `m:${m.username}` }));
+      const rows: Kb = []; for (let i = 0; i < b.length; i += 3) rows.push(b.slice(i, i + 3));
+      return q('🎲 Кто мастер? Нажмите имя — игра сразу попадёт в его список «Игры, которые я веду»', [...rows, [{ text: '✍️ Другой мастер, напишу имя', cb: 'm:?' }]]);
+    }
+    case 'master_text': return q('Напишите имя мастера');
     case 'title': return q('📜 Название игры или приключения?');
     case 'system': return q('⚙️ Система?', [[{ text: 'D&D 5e', cb: 's:D&D 5e' }, { text: 'D&D 2014', cb: 's:D&D 2014' }, { text: 'D&D 2024', cb: 's:D&D 2024' }], [{ text: 'Зов Ктулху', cb: 's:Зов Ктулху' }, { text: 'Другая — напишу', cb: 's:?' }]]);
     case 'system_text': return q('Напишите систему');
@@ -102,7 +108,7 @@ async function ask(env: Env, send: Send, chat: number, step: string, d: Draft) {
     case 'price_text': return q('Напишите стоимость');
     case 'image': return q('🖼 Картинка для этой игры? Пришлите фото или пропустите', [[SKIP]]);
     case 'confirm': {
-      const fake = { id: 0, title: d.title ?? '', starts_at: `${d.day}T${d.time}:00+04:00`, duration_min: 240, room: d.room ?? 'red', master_name: d.master ?? '', master_username: '', setting: d.setting ?? '', system: d.system ?? '', level: d.level ?? '', price: d.price ?? '', seats: d.seats ?? 6, image_id: d.image_id ?? null, description: d.description ?? '', status: 'open', created_by: '', created_at: '' };
+      const fake = { id: 0, title: d.title ?? '', starts_at: `${d.day}T${d.time}:00+04:00`, duration_min: 240, room: d.room ?? 'red', master_name: d.master ?? '', master_username: d.master_username ?? '', setting: d.setting ?? '', system: d.system ?? '', level: d.level ?? '', price: d.price ?? '', seats: d.seats ?? 6, image_id: d.image_id ?? null, description: d.description ?? '', status: 'open', created_by: '', created_at: '' };
       return q(`Проверьте игру:\n\n${gameBlock(fake, 0)}${d.image_id ? '\n🖼 с картинкой' : ''}`, [[{ text: '✅ Сохранить', cb: 'save' }, { text: '↺ Заново', cb: 'redo' }]]);
     }
     case 'post_image': return q('📣 Пришлите картинку для поста — она будет сверху, под ней расписание недели');
@@ -111,7 +117,7 @@ async function ask(env: Env, send: Send, chat: number, step: string, d: Draft) {
   }
 }
 
-const NEXT: Record<string, string> = { week: 'day', day: 'time', time: 'room', room: 'master', master: 'title', title: 'system', system: 'setting', system_text: 'setting', setting: 'level', level: 'description', description: 'seats', seats: 'image', image: 'confirm' };
+const NEXT: Record<string, string> = { week: 'day', day: 'time', time: 'room', room: 'master', master: 'title', master_text: 'title', title: 'system', system: 'setting', system_text: 'setting', setting: 'level', level: 'description', description: 'seats', seats: 'image', image: 'confirm' };
 
 /** true — сообщение было для мастера расписания и уже обработано. */
 export async function wizard(env: Env, upd: Upd, send: Send, origin: string, now = Date.now()): Promise<boolean> {
@@ -130,7 +136,7 @@ export async function wizard(env: Env, upd: Upd, send: Send, origin: string, now
   if (text.startsWith('/start')) { await clearState(env, from.id); return false; }
   const st = await getState(env, from.id);
   if (!st) return false;
-  if (cb === 'x' || /^(\/cancel|отмена)$/i.test(text)) { await clearState(env, from.id); await send(chat, 'Ок, отменил. Сохранённые игры остались в расписании.', adminKeyboard); return true; }
+  if (cb === 'x' || /^(\/cancel|отмена)$/i.test(text)) { await clearState(env, from.id); await send(chat, 'Ок, отменил. Сохранённые игры остались в расписании.', keyboardFor(env, from.username)); return true; }
   const d = st.d; let step = st.step; let val: string | undefined; let ok = true;
   const pick = (p: string) => (cb.startsWith(p) ? cb.slice(p.length) : undefined);
   switch (step) {
@@ -140,7 +146,14 @@ export async function wizard(env: Env, upd: Upd, send: Send, origin: string, now
       val = pick('d:'); if (val) d.day = val; else ok = false; break;
     case 'time': { const t = pick('t:') ?? text; const m = t.match(/^(\d{1,2})[:.](\d{2})$/); if (m && +m[1]! < 24 && +m[2]! < 60) d.time = `${m[1]!.padStart(2, '0')}:${m[2]}`; else ok = false; break; }
     case 'room': val = pick('r:'); if (val === 'red' || val === 'green') d.room = val; else ok = false; break;
-    case 'master': if (text) d.master = text.slice(0, 80); else ok = false; break;
+    case 'master': {
+      val = pick('m:');
+      if (val === '?') { await setState(env, from.id, 'master_text', d, now); await ask(env, send, chat, 'master_text', d); return true; }
+      const m = val ? masters(env).find((x) => x.username === val) : undefined;
+      if (m) { d.master = m.name; d.master_username = m.username; } else if (text) { d.master = text.slice(0, 80); d.master_username = ''; } else ok = false;
+      break;
+    }
+    case 'master_text': if (text) { d.master = text.slice(0, 80); d.master_username = ''; } else ok = false; break;
     case 'title': if (text) d.title = text.slice(0, 120); else ok = false; break;
     case 'system': val = pick('s:'); if (val === '?') { await setState(env, from.id, 'system_text', d, now); await ask(env, send, chat, 'system_text', d); return true; } if (val) d.system = val; else if (text) d.system = text.slice(0, 60); else ok = false; break;
     case 'system_text': if (text) d.system = text.slice(0, 60); else ok = false; break;
@@ -156,7 +169,11 @@ export async function wizard(env: Env, upd: Upd, send: Send, origin: string, now
       if (cb === 'redo') { const nd: Draft = { week: d.week }; await setState(env, from.id, 'day', nd, now); await ask(env, send, chat, 'day', nd); return true; }
       if (cb !== 'save') { ok = false; break; }
       await env.DB.prepare(`INSERT INTO games(title, starts_at, duration_min, room, master_name, master_username, setting, system, level, price, seats, image_id, description, created_by, created_at)
-        VALUES (?, ?, 240, ?, ?, '', ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(d.title, `${d.day}T${d.time}:00+04:00`, d.room, d.master ?? '', d.setting ?? '', d.system ?? '', d.level ?? '', d.price ?? '', d.seats ?? 6, d.image_id ?? null, d.description ?? '', (from.username ?? '').toLowerCase(), new Date(now).toISOString()).run();
+        VALUES (?, ?, 240, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).bind(d.title, `${d.day}T${d.time}:00+04:00`, d.room, d.master ?? '', d.master_username ?? '', d.setting ?? '', d.system ?? '', d.level ?? '', d.price ?? '', d.seats ?? 6, d.image_id ?? null, d.description ?? '', (from.username ?? '').toLowerCase(), new Date(now).toISOString()).run();
+      if (d.master_username) { // мастеру — весточка, что его поставили на игру
+        const u = await env.DB.prepare('SELECT id FROM users WHERE username = ? AND started = 1').bind(d.master_username).first<{ id: number }>();
+        if (u && u.id !== from.id) await send(u.id, `🎲 Вас поставили мастером: <b>${esc(d.title ?? '')}</b>, ${wdOf(d.day!)} ${dm(d.day!)} в ${d.time}, ${d.room === 'green' ? 'Зелёная' : 'Красная'} комната.\nВсе ваши игры — по кнопке «🎲 Игры, которые я веду».`, keyboardFor(env, d.master_username)).catch(() => undefined);
+      }
       {
         const n = await env.DB.prepare("SELECT COUNT(*) AS n FROM games WHERE status = 'open' AND starts_at >= ? AND starts_at < ?").bind(d.week, addDays(d.week, 7)).first<{ n: number }>();
         await setState(env, from.id, 'after', { week: d.week }, now);
@@ -166,7 +183,7 @@ export async function wizard(env: Env, upd: Upd, send: Send, origin: string, now
     case 'after':
       if (cb === 'more') { const nd: Draft = { week: d.week }; await setState(env, from.id, 'day', nd, now); await ask(env, send, chat, 'day', nd); return true; }
       if (cb === 'post') { await setState(env, from.id, 'post_image', d, now); await ask(env, send, chat, 'post_image', d); return true; }
-      if (cb === 'done') { await clearState(env, from.id); await send(chat, 'Готово. Чтобы выложить неделю в канал позже — нажмите «📅 Составить расписание», выберите неделю и «📣 Выложить неделю в канал».', adminKeyboard); return true; }
+      if (cb === 'done') { await clearState(env, from.id); await send(chat, 'Готово. Чтобы выложить неделю в канал позже — нажмите «📅 Составить расписание», выберите неделю и «📣 Выложить неделю в канал».', keyboardFor(env, from.username)); return true; }
       ok = false; break;
     case 'post_image': {
       if (!msg?.photo?.length) { ok = false; break; }
@@ -188,7 +205,7 @@ export async function wizard(env: Env, upd: Upd, send: Send, origin: string, now
       if (cb === 'reimg') { await setState(env, from.id, 'post_image', d, now); await ask(env, send, chat, 'post_image', d); return true; }
       if (cb === 'publish') {
         const r = await postWeek(env, tg, d.week, `${origin}/img/${d.post_image}`, { intro: d.intro });
-        if (r.ok) { await clearState(env, from.id); await send(chat, `📣 Готово! Расписание выложено в канал, игр в посте: ${r.count}.`, adminKeyboard); }
+        if (r.ok) { await clearState(env, from.id); await send(chat, `📣 Готово! Расписание выложено в канал, игр в посте: ${r.count}.`, keyboardFor(env, from.username)); }
         else await send(chat, `Не получилось выложить: ${esc(r.error)}`);
         return true;
       }
