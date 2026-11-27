@@ -37,7 +37,14 @@ async function me(req: Request, env: Env): Promise<Me | null> {
   if (username && admins.includes(username)) role = 'admin';
   else if (username) { const r = await env.DB.prepare('SELECT role FROM roles WHERE username = ?').bind(username).first<{ role: string }>(); if (r?.role === 'master') role = 'master'; }
   await env.DB.prepare('INSERT INTO users(id, name, username) VALUES (?, ?, ?) ON CONFLICT(id) DO UPDATE SET name = excluded.name, username = excluded.username').bind(u.id, nameOf(u), username).run();
+  if (username) await claimGuest(env, u.id, username);
   return { user: u, role, username, name: nameOf(u) };
+}
+/** Админ записал человека по нику («Коля @kolya»): когда тот откроет приложение, запись становится его — видна в «Мои», приходят напоминания. */
+const tagOf = (name: string) => name.match(/@([a-z0-9_]{4,32})\b/i)?.[1]?.toLowerCase();
+async function claimGuest(env: Env, uid: number, username: string) {
+  const rows = (await env.DB.prepare("SELECT game_id, user_id, name FROM signups WHERE user_id < 0 AND instr(lower(name), '@' || ?) > 0").bind(username).all<{ game_id: number; user_id: number; name: string }>()).results;
+  for (const r of rows) if (tagOf(r.name) === username) await env.DB.prepare('UPDATE OR IGNORE signups SET user_id = ? WHERE game_id = ? AND user_id = ?').bind(uid, r.game_id, r.user_id).run();
 }
 const canEdit = (m: Me | null, g: Game) => !!m && (m.role === 'admin' || (m.role === 'master' && (g.created_by === m.username || g.master_username.toLowerCase() === m.username)));
 
@@ -212,8 +219,12 @@ export async function handle(req: Request, env: Env, ctx: Ctx, send: Send = tele
       if (act === 'add' && req.method === 'POST') {
         const { name } = await req.json() as { name: string };
         if (!name?.trim()) return fail('Нужно имя');
+        // указан ник и человек уже заходил в бота — записываем его самого, иначе гостем (заберёт запись, когда зайдёт)
+        const tag = tagOf(name);
+        const known = tag ? await env.DB.prepare('SELECT id FROM users WHERE username = ?').bind(tag).first<{ id: number }>() : null;
+        if (known && await env.DB.prepare('SELECT 1 FROM signups WHERE game_id = ? AND user_id = ?').bind(id, known.id).first()) return fail('Этот человек уже записан');
         const r = await env.DB.prepare(`INSERT INTO signups(game_id, user_id, name, status, created_at)
-          SELECT ?1, ?2, ?3, CASE WHEN (SELECT COUNT(*) FROM signups WHERE game_id = ?1 AND status = 'main') < (SELECT seats FROM games WHERE id = ?1) THEN 'main' ELSE 'wait' END, ?4 RETURNING status`).bind(id, -now - Math.floor(Math.random() * 1000), name.trim().slice(0, 80), new Date(now).toISOString()).first<{ status: string }>();
+          SELECT ?1, ?2, ?3, CASE WHEN (SELECT COUNT(*) FROM signups WHERE game_id = ?1 AND status = 'main') < (SELECT seats FROM games WHERE id = ?1) THEN 'main' ELSE 'wait' END, ?4 RETURNING status`).bind(id, known?.id ?? -now - Math.floor(Math.random() * 1000), name.trim().slice(0, 80), new Date(now).toISOString()).first<{ status: string }>();
         return json({ status: r?.status });
       }
       if (act === 'attended' && req.method === 'POST') {

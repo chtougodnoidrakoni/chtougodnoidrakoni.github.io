@@ -220,4 +220,18 @@ describe('сервер записей', () => {
     expect(html).toBe('<b>Два стола свободны</b> <i>(уже нет)</i>\n<blockquote>Приходите &lt;смело&gt;</blockquote>');
     expect(entitiesToHtml('тут', [{ type: 'text_link', offset: 0, length: 3, url: 'javascript:alert(1)' }])).toBe('тут');
   });
+  it('админ записывает по нику: игрок видит игру в «Мои» — и если уже заходил, и если зайдёт позже', async () => {
+    const id = (await call('POST', '/api/games', admin, game)).data.id;
+    const p1: TgUser = { id: 301, first_name: 'Знакомый', username: 'old_friend' }, p0: TgUser = { id: 300, first_name: 'Коля', username: 'kolya_new' };
+    await call('GET', '/api/me', p1); // этот уже заходил в бота
+    const u1 = p1.username!, u0 = p0.username!;
+    await call('POST', `/api/games/${id}/add`, admin, { name: `Знакомый @${u1}` });
+    await call('POST', `/api/games/${id}/add`, admin, { name: `Коля @${u0}` });
+    expect((await call('POST', `/api/games/${id}/add`, admin, { name: `ещё раз @${u1}` })).status).toBe(400);
+    expect((await call('GET', '/api/me', p1)).data.games.map((g: any) => g.id)).toContain(id);
+    // Коля заходит впервые — запись по нику становится его
+    const me0 = await call('GET', '/api/me', p0);
+    expect(me0.data.games.find((g: any) => g.id === id)?.mine).toBe('main');
+    expect((await call('GET', '/api/games', p0)).data.games.find((g: any) => g.id === id).mine).toBe('main');
+  });
 });

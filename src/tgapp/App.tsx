@@ -154,11 +154,9 @@ const GUEST = /^записан\(а\) через канал$/i;
 const newbie = (g: Game) => /новичк/i.test(`${g.level} ${g.description}`);
 function Tile({ g }: { g: Game }) {
   return (
-    <button onClick={() => go(`game/${g.id}`)} aria-label={g.title} className={cx('text-left rounded-2xl border p-2.5 min-h-[7.5rem] flex flex-col', g.room === 'green' ? 'bg-emerald-950/50 border-emerald-500/50' : 'bg-red-950/40 border-red-500/45', g.mine && 'ring-2 ring-sand', g.status === 'cancelled' && 'opacity-55')}>
-      <div className="flex items-center justify-between gap-1">
-        <span className="text-lg font-semibold text-cream leading-none">{fmtTime(g.starts_at)}</span>
-        <span className={cx('w-2.5 h-2.5 rounded-full shrink-0', g.room === 'green' ? 'bg-emerald-400' : 'bg-red-400')} />
-      </div>
+    <button onClick={() => go(`game/${g.id}`)} aria-label={g.title} className={cx('text-left rounded-2xl border-2 bg-moss-deep/60 p-2.5 min-h-[7.5rem] flex flex-col', g.status === 'cancelled' ? 'border-moss-light' : free(g) ? 'border-emerald-500/70' : 'border-red-500/70', g.mine && 'ring-2 ring-sand ring-offset-1 ring-offset-[#1f2521]', g.status === 'cancelled' && 'opacity-55')}>
+      {/* обводка: зелёная — есть места, красная — мест нет; комната — внутри игры */}
+      <span className="text-lg font-semibold text-cream leading-none">{fmtTime(g.starts_at)}</span>
       <div className="font-display-sc text-[15px] text-sand-light leading-tight mt-1.5 line-clamp-2">{g.title}</div>
       <div className="text-[11px] text-cream/65 mt-0.5 truncate">{g.master_name ? `Мастер: ${g.master_name}` : g.system}</div>
       {newbie(g) && <span className="self-start mt-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-sand/90 text-moss-deep">Подходит новичкам</span>}
@@ -173,7 +171,7 @@ function EmptyTile({ room, day, past, staff }: { room: 'red' | 'green'; day: str
   const can = staff && !past;
   const body = (
     <>
-      <div className={cx('text-[11px] font-medium inline-flex items-center gap-1.5', room === 'green' ? 'text-emerald-300/70' : 'text-red-300/70')}><span className={cx('w-2 h-2 rounded-full', room === 'green' ? 'bg-emerald-400/60' : 'bg-red-400/60')} />{room === 'green' ? 'Зелёная' : 'Красная'}</div>
+      <div className={cx('text-[11px] font-medium inline-flex items-center gap-1.5', room === 'green' ? 'text-emerald-300/70' : 'text-red-300/70')}><span className={cx('w-2 h-2 rounded-full', room === 'green' ? 'bg-emerald-400/60' : 'bg-red-400/60')} />{room === 'green' ? 'Зелёная комната' : 'Красная комната'}</div>
       <div className="text-xs text-cream/40 mt-2 leading-snug">{past ? 'День прошёл' : 'Свободно — игра не запланирована'}</div>
       {can && <div className="mt-auto text-[11px] text-sand-light/80 inline-flex items-center gap-1"><Plus size={12} />Поставить игру</div>}
     </>
@@ -402,6 +400,11 @@ function GamePage({ id, say, role }: { id: number; say: (t: string) => void; rol
           <Btn className="text-sm" onClick={() => openLink(SITES.sheet)}><ScrollText size={16} />Заполнить лист</Btn>
         </div>
         {sheet && <Booking kind={sheet} g={g} onClose={() => setSheet(null)} />}
+        <button onClick={() => openLink(adminLink(`Здравствуйте! Хотим выкупить стол для своей компании на «${g.title}» (${when(g)}). Подскажите, как это сделать?`))}
+          className="mt-4 w-full rounded-2xl border border-sand/50 bg-sand/10 p-3 text-left">
+          <div className="text-sand-light font-semibold inline-flex items-center gap-2"><Users size={17} />Выкуп стола</div>
+          <div className="text-xs text-cream/60 mt-0.5">Хотите играть только своей компанией? Напишите администратору — 7000 ₽ за стол, до 6 человек.</div>
+        </button>
         {d.canEdit && (
           <div className="mt-6 rounded-2xl border border-moss-light p-3 grid gap-2">
             <div className="text-sm text-sand-light inline-flex items-center gap-1.5"><Crown size={15} />Управление игрой</div>
@@ -409,7 +412,7 @@ function GamePage({ id, say, role }: { id: number; say: (t: string) => void; rol
               <Btn className="text-sm" onClick={() => go(`edit/${g.id}`)}>Изменить</Btn>
               <Btn className="text-sm" onClick={() => go(`copy/${g.id}`)}>Дублировать</Btn>
             </div>
-            <div className="flex gap-2"><TextIn aria-label="Имя гостя" placeholder="Записать гостя без Telegram" value={guest} onChange={(e) => setGuest(e.target.value)} /><Btn disabled={!guest.trim()} onClick={async () => { await api.act(g.id, 'add', { name: guest }); setGuest(''); void load(); }}><Plus size={16} /></Btn></div>
+            <div className="flex gap-2"><TextIn aria-label="Имя гостя" placeholder="Имя и ник: Коля @kolya" value={guest} onChange={(e) => setGuest(e.target.value)} /><Btn disabled={!guest.trim()} onClick={async () => { await api.act(g.id, 'add', { name: guest }); setGuest(''); void load(); }}><Plus size={16} /></Btn></div>
             {g.status === 'open'
               ? <Btn tone="danger" className="text-sm" onClick={async () => { if (await confirmBox('Отменить игру? Всем записанным придёт сообщение.')) { await api.act(g.id, 'cancel'); say('Игра отменена, игроки оповещены'); void load(); } }}>Отменить игру</Btn>
               : <Btn className="text-sm" onClick={async () => { await api.act(g.id, 'reopen'); void load(); }}>Вернуть игру</Btn>}
