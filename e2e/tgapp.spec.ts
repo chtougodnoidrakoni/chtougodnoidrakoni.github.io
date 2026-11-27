@@ -41,7 +41,8 @@ test('Telegram-приложение: администратор создаёт �
   await card.locator('..').screenshot({ path: 'e2e/shots/t6-tiles.png' });
   // в тот же день красная комната пустая — заглушка; игроку поставить игру нельзя
   const day = player.locator('section', { has: card });
-  await expect(day.getByText('Свободно — игра не запланирована')).toBeVisible();
+  await expect(day.getByText('Стол свободен для выкупа.')).toBeVisible();
+  await expect(day.getByRole('button', { name: /Выкупить стол/ })).toBeVisible();
   await expect(player.getByText('Поставить игру')).toHaveCount(0);
   await expect(player.locator('section[aria-label]')).toHaveCount(7);
   await expect(player.getByRole('button', { name: 'Админ' })).toHaveCount(0);

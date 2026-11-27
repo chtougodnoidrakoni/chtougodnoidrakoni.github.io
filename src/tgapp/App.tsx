@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { ArrowLeft, Baby, Megaphone, Star, CalendarDays, Crown, Info, Cake, Coins, Heart, Ticket, ChevronDown, ImagePlus, Plus, Settings, Sparkles, Swords, ScrollText, Users, X } from 'lucide-react';
+import { ArrowLeft, Baby, LifeBuoy, Lightbulb, MessageCircle, Megaphone, Star, CalendarDays, Crown, Info, Cake, Coins, Heart, Ticket, ChevronDown, ImagePlus, Plus, Settings, Sparkles, Swords, ScrollText, Users, X } from 'lucide-react';
 import { Btn, Field, TextIn } from '../Panels';
 import { api, fmtDay, fmtTime, imgUrl, loadConfig, toIso, toLocal, type Game, type Player, type Role } from './api';
 import { confirmBox, haptic, openLink, setupTelegram, tg } from './tg';
@@ -11,6 +11,8 @@ const LINKS = [
   { t: 'Telegram-канал', u: 'https://t.me/chto_ugodno_i_drakon' },
   { t: 'Чат клуба', u: 'https://t.me/+a1t_Jic-Wpc1ZDIy' },
 ];
+/** Разработчик приложения: пожелания и поддержка. */
+const DEV = 'astrakhan_trener';
 /** Кому писать по записи и предоплате. */
 export const ADMIN = 'oh_katiakaterina';
 export const PREPAY = 700;
@@ -90,7 +92,13 @@ export function App() {
         {ready === 'ok' && view.name === 'admin' && staff && <Admin role={role} say={say} />}
         {ready === 'ok' && view.name === 'edit' && staff && <Edit id={view.id} copy={view.copy} day={view.day} room={view.room} say={say} />}
         {(view.name === 'list' || view.name === 'my') && <Links />}
-        <div className="text-center text-[11px] text-cream/35 mt-8">Разработано inst: zamir.digital</div>
+        {(view.name === 'list' || view.name === 'my' || view.name === 'info') && (
+          <div className="grid grid-cols-2 gap-2 mt-6">
+            <button onClick={() => openLink(`https://t.me/${DEV}?text=${encodeURIComponent('Пожелание по приложению клуба «Что угодно и драконы»: ')}`)} className="h-11 rounded-xl border border-moss-light text-sm text-cream/80 inline-flex items-center justify-center gap-1.5"><Lightbulb size={16} />Пожелания</button>
+            <button onClick={() => openLink(`https://t.me/${DEV}?text=${encodeURIComponent('Поддержка: в приложении клуба «Что угодно и драконы» ')}`)} className="h-11 rounded-xl border border-moss-light text-sm text-cream/80 inline-flex items-center justify-center gap-1.5"><LifeBuoy size={16} />Поддержка</button>
+          </div>
+        )}
+        <div className="text-center text-[11px] text-cream/40 mt-6">Разработано inst: <button onClick={() => openLink('https://instagram.com/zamir.digital')} className="text-sand-light/80 underline underline-offset-2">zamir.digital</button></div>
       </div>
       {toast && <div role="status" className="fixed left-1/2 -translate-x-1/2 bottom-[max(1.5rem,env(safe-area-inset-bottom))] z-50 px-4 py-2.5 rounded-2xl bg-sand text-moss-deep text-sm font-medium shadow-lg max-w-[90vw] text-center">{toast}</div>}
     </div>
@@ -174,12 +182,17 @@ function EmptyTile({ room, day, past, staff }: { room: 'red' | 'green'; day: str
   const body = (
     <>
       <div className="text-[11px] font-medium text-cream/55">{room === 'green' ? 'Зелёная комната' : 'Красная комната'}</div>
-      <div className="text-xs text-cream/40 mt-2 leading-snug">{past ? 'День прошёл' : 'Свободно — игра не запланирована'}</div>
+      {past || staff ? <div className="text-xs text-cream/40 mt-2 leading-snug">{past ? 'День прошёл' : 'Свободно — игра не запланирована'}</div>
+        : <div className="text-xs text-cream/70 mt-2 leading-snug"><b className="text-cream/90">Стол свободен для выкупа.</b> Забронируй весь стол под свою компанию</div>}
       {can && <div className="mt-auto text-[11px] text-sand-light/80 inline-flex items-center gap-1"><Plus size={12} />Поставить игру</div>}
+      {!past && !staff && <span className="mt-auto pt-2 text-[11px] font-semibold text-sand-light inline-flex items-center gap-1"><MessageCircle size={12} />Написать админу</span>}
     </>
   );
   const cls = 'text-left rounded-2xl border border-dashed border-moss-light/60 bg-moss-deep/30 p-2.5 min-h-[7.5rem] flex flex-col';
-  return can ? <button aria-label={`Поставить игру: ${dayTitle(day)}, ${room === 'green' ? 'зелёная' : 'красная'}`} onClick={() => go(`new/${day}/${room}`)} className={cls}>{body}</button> : <div className={cls}>{body}</div>;
+  if (can) return <button aria-label={`Поставить игру: ${dayTitle(day)}, ${room === 'green' ? 'зелёная' : 'красная'}`} onClick={() => go(`new/${day}/${room}`)} className={cls}>{body}</button>;
+  if (!past && !staff) return <button aria-label={`Выкупить стол: ${dayTitle(day)}, ${room === 'green' ? 'зелёная' : 'красная'} комната`} className={cls}
+    onClick={() => openLink(adminLink(`Здравствуйте! Хотим выкупить стол для своей компании: ${dayTitle(day).toLowerCase()}, ${room === 'green' ? 'зелёная' : 'красная'} комната. Какое время свободно?`))}>{body}</button>;
+  return <div className={cls}>{body}</div>;
 }
 
 function Week({ say, staff, admin }: { say: (t: string) => void; staff: boolean; admin: boolean }) {

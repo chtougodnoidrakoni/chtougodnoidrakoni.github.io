@@ -78,12 +78,10 @@ export function App() {
 const CLUB_LINKS = [
   { label: 'Чат', href: 'https://t.me/+a1t_Jic-Wpc1ZDIy', icon: 'chat' },
   { label: 'Канал', href: 'https://t.me/chto_ugodno_i_drakon', icon: 'tg' },
-  { label: 'Instagram', href: 'https://www.instagram.com/chto_ugodno_i_drakoni', icon: 'ig' },
 ] as const;
 function LinkIcon({ k }: { k: (typeof CLUB_LINKS)[number]['icon'] }) {
   const p = { width: 17, height: 17, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
   if (k === 'tg') return <svg {...p}><path d="M21.5 4.5 2.8 11.6c-.8.3-.8 1.4 0 1.7l4.6 1.6 1.8 5.6c.2.7 1.1.9 1.6.4l2.6-2.5 4.8 3.5c.6.4 1.4.1 1.6-.6l3.1-15.4c.2-.9-.7-1.6-1.4-1.4Z" /><path d="m7.5 14.9 9.6-6.4-6.9 7.5" /></svg>;
-  if (k === 'ig') return <svg {...p}><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.3" cy="6.7" r=".9" fill="currentColor" stroke="none" /></svg>;
   return <svg {...p}><path d="M20 12a8 8 0 0 1-11.8 7L4 20l1.1-4A8 8 0 1 1 20 12Z" /><path d="M8.5 11h7M8.5 14h4.5" /></svg>;
 }
 function ClubLinks() {
