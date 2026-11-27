@@ -36,7 +36,9 @@ test('Telegram-приложение: администратор создаёт �
   const card = player.getByRole('button', { name: 'Тени Драккенхейма' });
   await expect(card).toContainText('18:30');
   await expect(card).toContainText('Мастер: Катя');
-  await expect(card).toContainText('6 св.');
+  await expect(card).toContainText('6 мест');
+  await expect(card).toContainText('Зелёная комната');
+  await card.locator('..').screenshot({ path: 'e2e/shots/t6-tiles.png' });
   // в тот же день красная комната пустая — заглушка; игроку поставить игру нельзя
   const day = player.locator('section', { has: card });
   await expect(day.getByText('Свободно — игра не запланирована')).toBeVisible();

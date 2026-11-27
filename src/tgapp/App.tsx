@@ -148,21 +148,23 @@ const rangeTitle = (a: string, b: string) => {
   return a.slice(5, 7) === b.slice(5, 7) ? `${f(a, { day: 'numeric' })}–${f(b, { day: 'numeric', month: 'long' })}` : `${f(a, { day: 'numeric', month: 'short' })} – ${f(b, { day: 'numeric', month: 'short' })}`;
 };
 
+const plural = (n: number, a: string, b: string, c: string) => (n % 10 === 1 && n % 100 !== 11 ? a : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? b : c);
 /** Гости, записанные администратором через канал: игрокам их имя не показываем. */
 const GUEST = /^записан\(а\) через канал$/i;
 /** Игра для новичков: так написано в уровне или описании. */
 const newbie = (g: Game) => /новичк/i.test(`${g.level} ${g.description}`);
 function Tile({ g }: { g: Game }) {
   return (
-    <button onClick={() => go(`game/${g.id}`)} aria-label={g.title} className={cx('text-left rounded-2xl border-2 bg-moss-deep/60 p-2.5 min-h-[7.5rem] flex flex-col', g.status === 'cancelled' ? 'border-moss-light' : free(g) ? 'border-emerald-500/70' : 'border-red-500/70', g.mine && 'ring-2 ring-sand ring-offset-1 ring-offset-[#1f2521]', g.status === 'cancelled' && 'opacity-55')}>
-      {/* обводка: зелёная — есть места, красная — мест нет; комната — внутри игры */}
+    <button onClick={() => go(`game/${g.id}`)} aria-label={g.title} className={cx('text-left rounded-2xl border bg-moss-deep/60 border-moss-light p-2.5 min-h-[7.5rem] flex flex-col', g.mine && 'ring-2 ring-sand', g.status === 'cancelled' && 'opacity-55')}>
+      {/* все плитки одного цвета; комната — словами, места — цветом внизу */}
       <span className="text-lg font-semibold text-cream leading-none">{fmtTime(g.starts_at)}</span>
+      <span className="text-[11px] text-cream/55 mt-1">{g.room === 'green' ? 'Зелёная комната' : 'Красная комната'}</span>
       <div className="font-display-sc text-[15px] text-sand-light leading-tight mt-1.5 line-clamp-2">{g.title}</div>
       <div className="text-[11px] text-cream/65 mt-0.5 truncate">{g.master_name ? `Мастер: ${g.master_name}` : g.system}</div>
       {newbie(g) && <span className="self-start mt-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-sand/90 text-moss-deep">Подходит новичкам</span>}
       <div className="mt-auto pt-1.5 flex items-center justify-between gap-1">
         <Seats g={g} />
-        <span className={cx('text-[10px]', g.mine ? 'text-sand-light font-medium' : 'text-cream/55')}>{g.status === 'cancelled' ? 'отменена' : g.mine === 'main' ? 'вы идёте' : g.mine === 'wait' ? 'в очереди' : free(g) ? `${free(g)} св.` : 'мест нет'}</span>
+        <span className={cx('text-[12px] font-bold whitespace-nowrap', g.status === 'cancelled' ? 'text-cream/55 font-normal' : g.mine ? 'text-sand-light' : free(g) ? 'text-emerald-400' : 'text-red-500')}>{g.status === 'cancelled' ? 'отменена' : g.mine === 'main' ? 'вы идёте' : g.mine === 'wait' ? 'в очереди' : free(g) ? `${free(g)} ${plural(free(g), 'место', 'места', 'мест')}` : 'мест нет'}</span>
       </div>
     </button>
   );
@@ -171,7 +173,7 @@ function EmptyTile({ room, day, past, staff }: { room: 'red' | 'green'; day: str
   const can = staff && !past;
   const body = (
     <>
-      <div className={cx('text-[11px] font-medium inline-flex items-center gap-1.5', room === 'green' ? 'text-emerald-300/70' : 'text-red-300/70')}><span className={cx('w-2 h-2 rounded-full', room === 'green' ? 'bg-emerald-400/60' : 'bg-red-400/60')} />{room === 'green' ? 'Зелёная комната' : 'Красная комната'}</div>
+      <div className="text-[11px] font-medium text-cream/55">{room === 'green' ? 'Зелёная комната' : 'Красная комната'}</div>
       <div className="text-xs text-cream/40 mt-2 leading-snug">{past ? 'День прошёл' : 'Свободно — игра не запланирована'}</div>
       {can && <div className="mt-auto text-[11px] text-sand-light/80 inline-flex items-center gap-1"><Plus size={12} />Поставить игру</div>}
     </>
