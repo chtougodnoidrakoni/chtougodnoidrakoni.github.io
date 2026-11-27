@@ -3,6 +3,7 @@ import { handle, type Env } from '../worker/src/index';
 import { buildPost, mondayOf, scheduleReminders } from '../worker/src/schedule';
 import { entitiesToHtml } from '../worker/src/wizard';
 import { masterDigest } from '../worker/src/masters';
+import { askReviews, reviewText } from '../worker/src/reviews';
 import { vi } from 'vitest';
 import { localDB } from '../worker/src/local-db';
 import { signInitData, verifyInitData, type TgUser } from '../worker/src/telegram';
@@ -292,6 +293,29 @@ describe('сервер записей', () => {
     expect(d[0]!.text).toMatch(/Лёня, завтра ваша игра/); expect(d[0]!.text).toContain('Завтрашняя'); expect(d[0]!.text).not.toContain('Потом');
     expect(d[0]!.text).toMatch(/Игроки: 2 из 6\n1\. Игрок0\n2\. Игрок1/);
     expect(await masterDigest(env, send, evening + 3600_000)).toBe(0);
+  });
+  it('на следующий день после игры — одна просьба об отзыве с кнопками 2ГИС и Яндекс', async () => {
+    const out: { to: number | string; text: string; extra?: any }[] = [];
+    const s2 = async (to: number | string, text: string, extra?: Record<string, unknown>) => { out.push({ to, text, extra }); };
+    const a = (await call('POST', '/api/games', admin, { ...game, title: 'Объятия матери', starts_at: '2026-11-25T18:00:00+04:00' })).data.id;
+    const b = (await call('POST', '/api/games', admin, { ...game, title: 'Вторая вчерашняя', starts_at: '2026-11-25T22:00:00+04:00' })).data.id;
+    const c = (await call('POST', '/api/games', admin, { ...game, title: 'Отменённая', starts_at: '2026-11-25T12:00:00+04:00' })).data.id;
+    for (const p of players.slice(0, 3)) await call('GET', '/api/me', p);
+    // запись до начала игр
+    await call('POST', `/api/games/${a}/join`, players[0]); await call('POST', `/api/games/${a}/join`, players[1]);
+    await call('POST', `/api/games/${b}/join`, players[0]); await call('POST', `/api/games/${c}/join`, players[2]);
+    await call('POST', `/api/games/${c}/cancel`, admin);
+    // бота открывали только игроки 0 и 2 — Игрок1 не нажимал Старт, ему писать нельзя
+    for (const p of [players[0]!, players[2]!]) await handle(new Request('https://w.test/bot/s3cret', { method: 'POST', body: JSON.stringify({ message: { chat: { id: p.id }, from: p, text: '/start' } }) }), env, ctx, send, NOW);
+    await Promise.all(pending); pending = [];
+    const nextDay = Date.parse('2026-11-26T13:00:00+04:00');
+    expect(await askReviews(env, s2, nextDay)).toBe(1);
+    expect(out).toHaveLength(1);
+    expect(out[0]!.to).toBe(players[0]!.id);
+    expect(out[0]!.text).toMatch(/Игрок0/);
+    expect(out[0]!.extra.reply_markup.inline_keyboard[0].map((x: any) => x.url)).toEqual([expect.stringContaining('2gis.ru'), expect.stringContaining('yandex.ru/maps')]);
+    expect(await askReviews(env, s2, nextDay + 3600_000)).toBe(0);
+    expect(reviewText('<Лиса>', 'Тьма', 2)).toContain('&lt;Лиса&gt;');
   });
   it('подводка: оформление из Telegram (жирный, курсив, цитата, ссылка) переносится в пост, лишнее экранируется', () => {
     const t = 'Два стола свободны (уже нет)\nПриходите <смело>';

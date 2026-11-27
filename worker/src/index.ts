@@ -1,4 +1,5 @@
 import { signedText, waitText } from './flavor';
+import { askReviews } from './reviews';
 import { wizard, type Upd } from './wizard';
 import { addMaster, cleanUsername, isAdmin, keyboardFor, masterBot, masterDigest, masterOf, masters, MASTER_BTN, removeMaster, SCHEDULE_BTN } from './masters';
 import { buildPost, mondayOf, postWeek, tgApi } from './schedule';
@@ -354,6 +355,9 @@ export async function handle(req: Request, env: Env, ctx: Ctx, send: Send = tele
 
 export default {
   fetch: (req: Request, env: Env, ctx: Ctx) => handle(req, env, ctx),
-  // вечерняя сводка мастерам о завтрашних играх
-  scheduled: (_e: unknown, env: Env, ctx: Ctx) => ctx.waitUntil(masterDigest(env, telegramSender(env.BOT_TOKEN), Date.now()).catch(() => 0)),
+  // 19:00 — сводка мастерам о завтрашних играх; 13:00 — просьба об отзыве тем, кто был на игре вчера
+  scheduled: (e: { cron?: string }, env: Env, ctx: Ctx) => {
+    const send = telegramSender(env.BOT_TOKEN), now = Date.now();
+    ctx.waitUntil((e.cron === '0 9 * * *' ? askReviews(env, send, now) : masterDigest(env, send, now)).catch(() => 0));
+  },
 };
