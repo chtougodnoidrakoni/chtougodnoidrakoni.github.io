@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach } from 'vitest';
-import { handle, remind, type Env } from '../worker/src/index';
+import { handle, type Env } from '../worker/src/index';
 import { buildPost, mondayOf, scheduleReminders } from '../worker/src/schedule';
 import { entitiesToHtml } from '../worker/src/wizard';
 import { vi } from 'vitest';
@@ -78,18 +78,9 @@ describe('сервер записей', () => {
     expect((await call('GET', `/api/games/${id}`)).data.players.map((p: { name: string }) => p.name)).toContain('Гость без Telegram');
   });
 
-  it('началась — запись закрыта; напоминания за сутки и за 2 часа уходят один раз', async () => {
+  it('началась — запись закрыта; напоминаний игрокам больше нет', async () => {
     const { data: { id } } = await call('POST', '/api/games', admin, { ...game, starts_at: '2026-11-25T09:00:00+04:00' });
     expect((await call('POST', `/api/games/${id}/join`, players[0])).data.error).toMatch(/началась/);
-    const { data: { id: g2 } } = await call('POST', '/api/games', admin, { ...game, starts_at: '2026-11-26T09:00:00+04:00' });
-    await call('POST', `/api/games/${g2}/join`, players[0]);
-    sent = [];
-    await remind(env, send, NOW); await remind(env, send, NOW);
-    expect(sent).toHaveLength(1);
-    expect(sent[0]!.text).toMatch(/[Зз]автра/); expect(sent[0]!.text).toContain('09:00');
-    await remind(env, send, Date.parse('2026-11-26T07:00:00+04:00'));
-    expect(sent).toHaveLength(2);
-    expect(sent[1]!.text).toContain('09:00');
   });
 
   it('вебхук бота защищён секретом и отвечает кнопкой приложения', async () => {
@@ -98,6 +89,17 @@ describe('сервер записей', () => {
     let extra: any; const send2 = async (to: number | string, text: string, e?: Record<string, unknown>) => { sent.push({ to, text }); extra = e; };
     await handle(new Request('https://w.test/bot/s3cret', { method: 'POST', body: JSON.stringify(upd) }), env, ctx, send2, NOW); await Promise.all(pending);
     expect(sent[0]!.to).toBe(55); expect(extra.reply_markup.inline_keyboard[0][0].web_app.url).toBe('https://app.test/app/');
+    // меню клиента прямо в боте: приложение, канал, чат
+    env.CHANNEL = '@club'; env.CHAT_URL = 'https://t.me/+chat';
+    await handle(new Request('https://w.test/bot/s3cret', { method: 'POST', body: JSON.stringify({ message: { ...upd.message, text: 'привет' } }) }), env, ctx, send2, NOW); await Promise.all(pending);
+    expect(extra.reply_markup.inline_keyboard[1].map((b: any) => b.url)).toEqual(['https://t.me/club', 'https://t.me/+chat']);
+    // запись: анонс в духе D&D, зовём в чат, кнопка чата первой
+    const id = (await call('POST', '/api/games', admin, game)).data.id;
+    const h: Record<string, string> = { 'content-type': 'application/json', 'x-init-data': await signInitData(players[0]!, TOKEN, Math.floor(NOW / 1000)) };
+    sent = [];
+    await handle(new Request(`https://w.test/api/games/${id}/join`, { method: 'POST', headers: h }), env, ctx, send2, NOW); await Promise.all(pending); pending = [];
+    expect(sent.at(-1)!.text).toMatch(/чат/); expect(sent.at(-1)!.text).not.toMatch(/напомн|напишу ещё/i);
+    expect(extra.reply_markup.inline_keyboard[0][0]).toEqual({ text: '💬 Перейти в чат клуба', url: 'https://t.me/+chat' });
   });
   it('пост расписания: оформление как в канале, картинка сверху, без «Запись также»', async () => {
     env.CHANNEL = '@club'; env.BOT_USERNAME = 'club_bot';

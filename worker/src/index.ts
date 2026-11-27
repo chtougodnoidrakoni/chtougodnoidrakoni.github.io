@@ -1,4 +1,4 @@
-import { dayText, signedText, soonText, waitText } from './flavor';
+import { signedText, waitText } from './flavor';
 import { wizard, type Upd } from './wizard';
 import { isAdmin, keyboardFor, masterBot, masterOf, MASTER_BTN, SCHEDULE_BTN } from './masters';
 import { buildPost, mondayOf, postWeek, scheduleReminders, tgApi } from './schedule';
@@ -8,7 +8,7 @@ import { esc, telegramSender, verifyInitData, type Send, type TgUser } from './t
 // --- минимальное описание D1, чтобы не тянуть типы Cloudflare
 export interface Stmt { bind(...v: unknown[]): Stmt; first<T = Record<string, unknown>>(): Promise<T | null>; all<T = Record<string, unknown>>(): Promise<{ results: T[] }>; run(): Promise<{ meta: { changes: number; last_row_id: number } }> }
 export interface DB { prepare(sql: string): Stmt; batch(s: Stmt[]): Promise<unknown[]> }
-export interface Env { DB: DB; BOT_TOKEN: string; ADMIN_USERNAMES?: string; APP_URL?: string; BOT_SECRET?: string; CHANNEL?: string; BOT_USERNAME?: string; SCHEDULE_ADMINS?: string; MASTERS?: string }
+export interface Env { DB: DB; BOT_TOKEN: string; ADMIN_USERNAMES?: string; APP_URL?: string; BOT_SECRET?: string; CHANNEL?: string; BOT_USERNAME?: string; SCHEDULE_ADMINS?: string; MASTERS?: string; CHAT_URL?: string }
 export interface Ctx { waitUntil(p: Promise<unknown>): void }
 
 type Role = 'admin' | 'master' | 'player';
@@ -94,17 +94,18 @@ async function notifyGame(env: Env, send: Send, gameId: number, text: string, on
   await Promise.all(rows.map((r) => send(r.user_id, text)));
 }
 /** Каждому записанному — своё сообщение (с именем). */
-async function notifyEach(env: Env, send: Send, gameId: number, text: (name: string) => string, extra?: Record<string, unknown>) {
-  const rows = (await env.DB.prepare(`SELECT s.user_id, COALESCE(u.name, s.name) AS name FROM signups s LEFT JOIN users u ON u.id = s.user_id WHERE s.game_id = ? AND s.status = 'main' AND s.user_id > 0`).bind(gameId).all<{ user_id: number; name: string }>()).results;
-  await Promise.all(rows.map((r) => send(r.user_id, text(firstName(r.name)), extra)));
-}
 const firstName = (n: string) => (n || 'приключенец').split(/\s+/)[0]!;
 async function notifyMaster(env: Env, send: Send, g: Game, text: string) {
   if (!g.master_username) return;
   const u = await env.DB.prepare('SELECT id FROM users WHERE username = ?').bind(g.master_username.toLowerCase()).first<{ id: number }>();
   if (u) await send(u.id, text);
 }
-const openBtn = (env: Env, gameId?: number) => (env.APP_URL ? { reply_markup: { inline_keyboard: [[{ text: '🐉 Открыть приложение', web_app: { url: env.APP_URL + (gameId ? `#game/${gameId}` : '') } }]] } } : {});
+const channelUrl = (env: Env) => (env.CHANNEL?.startsWith('@') ? `https://t.me/${env.CHANNEL.slice(1)}` : '');
+const appRow = (env: Env, gameId?: number) => (env.APP_URL ? [{ text: '🐉 Открыть приложение', web_app: { url: env.APP_URL + (gameId ? `#game/${gameId}` : '') } }] : []);
+/** Под сообщением о записи: чат клуба (вся дальнейшая информация там) и приложение. */
+const signedBtns = (env: Env, gameId?: number) => ({ reply_markup: { inline_keyboard: [env.CHAT_URL ? [{ text: '💬 Перейти в чат клуба', url: env.CHAT_URL }] : [], appRow(env, gameId)].filter((r) => r.length) } });
+/** Меню клиента прямо в боте: приложение, канал, чат. */
+const clubBtns = (env: Env) => ({ reply_markup: { inline_keyboard: [appRow(env), [...(channelUrl(env) ? [{ text: '📣 Канал', url: channelUrl(env) }] : []), ...(env.CHAT_URL ? [{ text: '💬 Чат', url: env.CHAT_URL }] : [])]].filter((r) => r.length) } });
 
 /** Освобождает место: если в очереди кто-то есть и места хватает — переводит первого в основной состав. */
 async function promote(env: Env, gameId: number): Promise<{ user_id: number; name: string } | null> {
@@ -129,12 +130,12 @@ export async function handle(req: Request, env: Env, ctx: Ctx, send: Send = tele
       const m = upd.message; if (!m?.text) return json({ ok: true });
       if (m.from) await env.DB.prepare('INSERT INTO users(id, name, username, started) VALUES (?, ?, ?, 1) ON CONFLICT(id) DO UPDATE SET started = 1, name = excluded.name, username = excluded.username').bind(m.from.id, nameOf(m.from), (m.from.username ?? '').toLowerCase()).run();
       if (m.text.startsWith('/start')) later((async () => {
-        await send(m.chat.id, 'Привет! Это бот клуба «Что угодно и драконы» 🐉\n\nЗдесь ближайшие игры — записывайтесь, пока есть места. Я напомню о игре заранее.', openBtn(env));
+        await send(m.chat.id, 'Привет! Это бот клуба «Что угодно и драконы» 🐉\n\nВ приложении ближайшие игры и запись. В канале расписание и новости клуба, в чате общаемся и решаем всё по играм.', clubBtns(env));
         const u = m.from?.username, adm = isAdmin(env, u), ms = masterOf(env, u);
         if (adm || ms) await send(m.chat.id, [adm ? `Вы администратор. Чтобы составить расписание и выложить его в канал, нажмите «${SCHEDULE_BTN}» внизу.` : '', ms ? `${adm ? 'И вы мастер' : `${esc(ms.name)}, вы мастер клуба`}: все игры, которые вы ведёте, — по кнопке «${MASTER_BTN}».` : ''].filter(Boolean).join('\n\n'), keyboardFor(env, u));
       })());
       else if (m.text.startsWith('/id')) later(send(m.chat.id, `Ваш id: <code>${m.chat.id}</code>${m.from?.username ? `, username: @${esc(m.from.username)}` : ''}`));
-      else later(send(m.chat.id, 'Все игры и запись — в приложении:', openBtn(env)));
+      else later(send(m.chat.id, 'Игры и запись в приложении, новости в канале, общение в чате:', clubBtns(env)));
       return json({ ok: true });
     }
     // ---------- картинки
@@ -150,7 +151,7 @@ export async function handle(req: Request, env: Env, ctx: Ctx, send: Send = tele
     // запись, сделанную админом по нику, человек «забрал» — шлём ему анонс
     for (const gid of m?.claimed ?? []) {
       const g = await env.DB.prepare('SELECT * FROM games WHERE id = ?').bind(gid).first<Game>();
-      if (g) later(send(m!.user.id, signedText(g, firstName(m!.name), true), openBtn(env, gid)));
+      if (g) later(send(m!.user.id, signedText(g, firstName(m!.name), true), signedBtns(env, gid)));
     }
     const need = () => (m ? null : fail('Откройте приложение из Telegram, чтобы записаться', 401));
     const staff = () => (m && (m.role === 'admin' || m.role === 'master') ? null : fail('Только для мастеров и администратора', 403));
@@ -195,7 +196,7 @@ export async function handle(req: Request, env: Env, ctx: Ctx, send: Send = tele
           WHERE true ON CONFLICT(game_id, user_id) DO NOTHING RETURNING status`).bind(id, m!.user.id, m!.name, m!.username, new Date(now).toISOString()).first<{ status: string }>();
         if (!r) return fail('Вы уже записаны на эту игру');
         const pos = r.status === 'wait' ? (await env.DB.prepare(`SELECT COUNT(*) AS n FROM signups WHERE game_id = ? AND status = 'wait'`).bind(id).first<{ n: number }>())!.n : 0;
-        later(send(m!.user.id, r.status === 'main' ? signedText(g, firstName(m!.name)) : waitText(g, firstName(m!.name), pos), openBtn(env, id)));
+        later(send(m!.user.id, r.status === 'main' ? signedText(g, firstName(m!.name)) : waitText(g, firstName(m!.name), pos), signedBtns(env, id)));
         later(notifyMaster(env, send, g, `${r.status === 'main' ? '➕' : '🕯'} ${esc(m!.name)}${m!.username ? ` (@${esc(m!.username)})` : ''} ${r.status === 'main' ? 'записался' : 'встал в очередь'} на «${esc(g.title)}»`));
         return json({ status: r.status, position: pos });
       }
@@ -206,7 +207,7 @@ export async function handle(req: Request, env: Env, ctx: Ctx, send: Send = tele
         if (!r) return fail('Вы не записаны');
         if (r.status === 'main') {
           const p = await promote(env, id);
-          if (p && p.user_id > 0) later(send(p.user_id, `🎉 Освободилось место — вы записаны на «${esc(g.title)}»!\n${fmtDate(g.starts_at)}`, openBtn(env, id)));
+          if (p && p.user_id > 0) later(send(p.user_id, `🎉 Освободилось место — вы записаны на «${esc(g.title)}»!\n${fmtDate(g.starts_at)}`, signedBtns(env, id)));
           later(notifyMaster(env, send, g, `➖ ${esc(m!.name)} отменил запись на «${esc(g.title)}»${p ? `, место занял ${esc(p.name)}` : ''}`));
         }
         return json({ ok: true });
@@ -218,7 +219,7 @@ export async function handle(req: Request, env: Env, ctx: Ctx, send: Send = tele
         const keys = Object.keys(v!); if (!keys.length) return json({ ok: true });
         await env.DB.prepare(`UPDATE games SET ${keys.map((k) => `${k} = ?`).join(', ')}${'starts_at' in v! ? ', reminded_day = 0, reminded_soon = 0' : ''} WHERE id = ?`).bind(...keys.map((k) => v![k]), id).run();
         // мест стало больше — подтягиваем очередь
-        if ('seats' in v!) for (let i = 0; i < 30; i++) { const p = await promote(env, id); if (!p) break; if (p.user_id > 0) later(send(p.user_id, `🎉 Добавили места — вы записаны на «${esc(g.title)}»!`, openBtn(env, id))); }
+        if ('seats' in v!) for (let i = 0; i < 30; i++) { const p = await promote(env, id); if (!p) break; if (p.user_id > 0) later(send(p.user_id, `🎉 Добавили места — вы записаны на «${esc(g.title)}»!`, signedBtns(env, id))); }
         if ('starts_at' in v! && v!.starts_at !== g.starts_at) later(notifyGame(env, send, id, `📅 Игра «${esc(g.title)}» перенесена: ${fmtDate(String(v!.starts_at))}`));
         return json({ ok: true });
       }
@@ -231,7 +232,7 @@ export async function handle(req: Request, env: Env, ctx: Ctx, send: Send = tele
       if (act === 'kick' && req.method === 'POST') {
         const { user_id } = await req.json() as { user_id: number };
         const r = await env.DB.prepare('DELETE FROM signups WHERE game_id = ? AND user_id = ? RETURNING status').bind(id, user_id).first<{ status: string }>();
-        if (r?.status === 'main') { const p = await promote(env, id); if (p && p.user_id > 0) later(send(p.user_id, `🎉 Освободилось место — вы записаны на «${esc(g.title)}»!`, openBtn(env, id))); }
+        if (r?.status === 'main') { const p = await promote(env, id); if (p && p.user_id > 0) later(send(p.user_id, `🎉 Освободилось место — вы записаны на «${esc(g.title)}»!`, signedBtns(env, id))); }
         return json({ ok: true });
       }
       if (act === 'add' && req.method === 'POST') {
@@ -244,7 +245,7 @@ export async function handle(req: Request, env: Env, ctx: Ctx, send: Send = tele
         const r = await env.DB.prepare(`INSERT INTO signups(game_id, user_id, name, status, created_at)
           SELECT ?1, ?2, ?3, CASE WHEN (SELECT COUNT(*) FROM signups WHERE game_id = ?1 AND status = 'main') < (SELECT seats FROM games WHERE id = ?1) THEN 'main' ELSE 'wait' END, ?4 RETURNING status`).bind(id, known?.id ?? -now - Math.floor(Math.random() * 1000), name.trim().slice(0, 80), new Date(now).toISOString()).first<{ status: string }>();
         // записанному по нику — анонс в личку от бота
-        if (known && r?.status === 'main') { const u = await env.DB.prepare('SELECT name FROM users WHERE id = ?').bind(known.id).first<{ name: string }>(); later(send(known.id, signedText(g, firstName(u?.name ?? name), true), openBtn(env, id))); }
+        if (known && r?.status === 'main') { const u = await env.DB.prepare('SELECT name FROM users WHERE id = ?').bind(known.id).first<{ name: string }>(); later(send(known.id, signedText(g, firstName(u?.name ?? name), true), signedBtns(env, id))); }
         return json({ status: r?.status });
       }
       if (act === 'attended' && req.method === 'POST') {
@@ -343,23 +344,7 @@ export async function handle(req: Request, env: Env, ctx: Ctx, send: Send = tele
   }
 }
 
-/** Напоминания: за сутки и за два часа до начала. Запускается по расписанию раз в 15 минут. */
-export async function remind(env: Env, send: Send = telegramSender(env.BOT_TOKEN), now = Date.now()) {
-  const games = (await env.DB.prepare(`SELECT * FROM games WHERE status = 'open' AND (reminded_day = 0 OR reminded_soon = 0)`).all<Game & { reminded_day: number; reminded_soon: number }>()).results;
-  for (const g of games) {
-    const left = Date.parse(g.starts_at) - now;
-    if (left <= 0) continue;
-    if (!g.reminded_soon && left <= 2.5 * 3600000) {
-      await env.DB.prepare('UPDATE games SET reminded_soon = 1, reminded_day = 1 WHERE id = ?').bind(g.id).run();
-      await notifyEach(env, send, g.id, (n) => soonText(g, n), openBtn(env, g.id));
-    } else if (!g.reminded_day && left <= 26 * 3600000 && left > 2.5 * 3600000) {
-      await env.DB.prepare('UPDATE games SET reminded_day = 1 WHERE id = ?').bind(g.id).run();
-      await notifyEach(env, send, g.id, (n) => dayText(g, n), openBtn(env, g.id));
-    }
-  }
-}
-
 export default {
   fetch: (req: Request, env: Env, ctx: Ctx) => handle(req, env, ctx),
-  scheduled: (_e: unknown, env: Env, ctx: Ctx) => ctx.waitUntil(Promise.all([remind(env), scheduleReminders(env, telegramSender(env.BOT_TOKEN), Date.now(), (u) => keyboardFor(env, u)).catch(() => {})])),
+  scheduled: (_e: unknown, env: Env, ctx: Ctx) => ctx.waitUntil(Promise.all([scheduleReminders(env, telegramSender(env.BOT_TOKEN), Date.now(), (u) => keyboardFor(env, u)).catch(() => {})])),
 };
