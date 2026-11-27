@@ -5,7 +5,7 @@ account_id = "ea02390c0a20b131134814fbd0121c16"
 compatibility_date = "2024-11-01"
 
 [triggers]
-crons = ["*/15 * * * *"]
+crons = [] # напоминания отключены
 
 [[d1_databases]]
 binding = "DB"

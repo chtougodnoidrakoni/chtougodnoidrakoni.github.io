@@ -1,7 +1,7 @@
 import { signedText, waitText } from './flavor';
 import { wizard, type Upd } from './wizard';
 import { isAdmin, keyboardFor, masterBot, masterOf, MASTER_BTN, SCHEDULE_BTN } from './masters';
-import { buildPost, mondayOf, postWeek, scheduleReminders, tgApi } from './schedule';
+import { buildPost, mondayOf, postWeek, tgApi } from './schedule';
 // Сервер записей на игры клуба «Что угодно и драконы». Cloudflare Worker + база D1.
 import { esc, telegramSender, verifyInitData, type Send, type TgUser } from './telegram';
 
@@ -346,5 +346,4 @@ export async function handle(req: Request, env: Env, ctx: Ctx, send: Send = tele
 
 export default {
   fetch: (req: Request, env: Env, ctx: Ctx) => handle(req, env, ctx),
-  scheduled: (_e: unknown, env: Env, ctx: Ctx) => ctx.waitUntil(Promise.all([scheduleReminders(env, telegramSender(env.BOT_TOKEN), Date.now(), (u) => keyboardFor(env, u)).catch(() => {})])),
 };
