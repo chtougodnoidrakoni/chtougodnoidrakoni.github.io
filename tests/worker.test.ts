@@ -85,9 +85,11 @@ describe('сервер записей', () => {
     await call('POST', `/api/games/${g2}/join`, players[0]);
     sent = [];
     await remind(env, send, NOW); await remind(env, send, NOW);
-    expect(sent.filter((m) => /Завтра игра/.test(m.text))).toHaveLength(1);
+    expect(sent).toHaveLength(1);
+    expect(sent[0]!.text).toMatch(/[Зз]автра/); expect(sent[0]!.text).toContain('09:00');
     await remind(env, send, Date.parse('2026-11-26T07:00:00+04:00'));
-    expect(sent.filter((m) => /Скоро игра/.test(m.text))).toHaveLength(1);
+    expect(sent).toHaveLength(2);
+    expect(sent[1]!.text).toContain('09:00');
   });
 
   it('вебхук бота защищён секретом и отвечает кнопкой приложения', async () => {
@@ -233,5 +235,17 @@ describe('сервер записей', () => {
     const me0 = await call('GET', '/api/me', p0);
     expect(me0.data.games.find((g: any) => g.id === id)?.mine).toBe('main');
     expect((await call('GET', '/api/games', p0)).data.games.find((g: any) => g.id === id).mine).toBe('main');
+  });
+  it('при записи бот присылает анонс игры в духе D&D — и самому записавшемуся, и тому, кого записал админ', async () => {
+    const id = (await call('POST', '/api/games', admin, { ...game, title: 'Объятия матери', description: 'Старый приют.\nЗапись также у @x' })).data.id;
+    sent = [];
+    await call('POST', `/api/games/${id}/join`, players[2]); await Promise.all(pending);
+    const t = sent.find((m) => m.to === players[2]!.id)!.text;
+    expect(t).toContain('<b>Объятия матери</b>'); expect(t).toContain('Мастер:'); expect(t).toContain('Старый приют.'); expect(t).not.toContain('Запись также');
+    expect(t).toContain('Игрок2');
+    const known: TgUser = { id: 401, first_name: 'Коля', username: 'kolya_k' };
+    await call('GET', '/api/me', known); sent = [];
+    await call('POST', `/api/games/${id}/add`, admin, { name: 'Коля @kolya_k' }); await Promise.all(pending);
+    expect(sent.find((m) => m.to === 401)!.text).toContain('Объятия матери');
   });
 });

@@ -1,3 +1,4 @@
+import { dayText, signedText, soonText, waitText } from './flavor';
 import { adminKeyboard, isAdmin, SCHEDULE_BTN, wizard, type Upd } from './wizard';
 import { buildPost, mondayOf, postWeek, scheduleReminders, tgApi } from './schedule';
 // Сервер записей на игры клуба «Что угодно и драконы». Cloudflare Worker + база D1.
@@ -10,7 +11,7 @@ export interface Env { DB: DB; BOT_TOKEN: string; ADMIN_USERNAMES?: string; APP_
 export interface Ctx { waitUntil(p: Promise<unknown>): void }
 
 type Role = 'admin' | 'master' | 'player';
-interface Me { user: TgUser; role: Role; username: string; name: string }
+interface Me { user: TgUser; role: Role; username: string; name: string; claimed?: number[] }
 export interface Game {
   id: number; title: string; starts_at: string; duration_min: number; room: string; master_name: string; master_username: string;
   setting: string; system: string; level: string; price: string; seats: number; image_id: number | null; description: string;
@@ -37,14 +38,19 @@ async function me(req: Request, env: Env): Promise<Me | null> {
   if (username && admins.includes(username)) role = 'admin';
   else if (username) { const r = await env.DB.prepare('SELECT role FROM roles WHERE username = ?').bind(username).first<{ role: string }>(); if (r?.role === 'master') role = 'master'; }
   await env.DB.prepare('INSERT INTO users(id, name, username) VALUES (?, ?, ?) ON CONFLICT(id) DO UPDATE SET name = excluded.name, username = excluded.username').bind(u.id, nameOf(u), username).run();
-  if (username) await claimGuest(env, u.id, username);
-  return { user: u, role, username, name: nameOf(u) };
+  const claimed = username ? await claimGuest(env, u.id, username) : [];
+  return { user: u, role, username, name: nameOf(u), claimed };
 }
 /** Админ записал человека по нику («Коля @kolya»): когда тот откроет приложение, запись становится его — видна в «Мои», приходят напоминания. */
 const tagOf = (name: string) => name.match(/@([a-z0-9_]{4,32})\b/i)?.[1]?.toLowerCase();
-async function claimGuest(env: Env, uid: number, username: string) {
+async function claimGuest(env: Env, uid: number, username: string): Promise<number[]> {
+  const claimed: number[] = [];
   const rows = (await env.DB.prepare("SELECT game_id, user_id, name FROM signups WHERE user_id < 0 AND instr(lower(name), '@' || ?) > 0").bind(username).all<{ game_id: number; user_id: number; name: string }>()).results;
-  for (const r of rows) if (tagOf(r.name) === username) await env.DB.prepare('UPDATE OR IGNORE signups SET user_id = ? WHERE game_id = ? AND user_id = ?').bind(uid, r.game_id, r.user_id).run();
+  for (const r of rows) if (tagOf(r.name) === username) {
+    const ch = await env.DB.prepare('UPDATE OR IGNORE signups SET user_id = ? WHERE game_id = ? AND user_id = ?').bind(uid, r.game_id, r.user_id).run();
+    if (ch.meta.changes) claimed.push(r.game_id);
+  }
+  return claimed;
 }
 const canEdit = (m: Me | null, g: Game) => !!m && (m.role === 'admin' || (m.role === 'master' && (g.created_by === m.username || g.master_username.toLowerCase() === m.username)));
 
@@ -86,6 +92,12 @@ async function notifyGame(env: Env, send: Send, gameId: number, text: string, on
   const rows = (await env.DB.prepare(`SELECT user_id FROM signups WHERE game_id = ? ${only ? 'AND status = ?' : ''} AND user_id > 0`).bind(...(only ? [gameId, only] : [gameId])).all<{ user_id: number }>()).results;
   await Promise.all(rows.map((r) => send(r.user_id, text)));
 }
+/** Каждому записанному — своё сообщение (с именем). */
+async function notifyEach(env: Env, send: Send, gameId: number, text: (name: string) => string, extra?: Record<string, unknown>) {
+  const rows = (await env.DB.prepare(`SELECT s.user_id, COALESCE(u.name, s.name) AS name FROM signups s LEFT JOIN users u ON u.id = s.user_id WHERE s.game_id = ? AND s.status = 'main' AND s.user_id > 0`).bind(gameId).all<{ user_id: number; name: string }>()).results;
+  await Promise.all(rows.map((r) => send(r.user_id, text(firstName(r.name)), extra)));
+}
+const firstName = (n: string) => (n || 'приключенец').split(/\s+/)[0]!;
 async function notifyMaster(env: Env, send: Send, g: Game, text: string) {
   if (!g.master_username) return;
   const u = await env.DB.prepare('SELECT id FROM users WHERE username = ?').bind(g.master_username.toLowerCase()).first<{ id: number }>();
@@ -132,6 +144,11 @@ export async function handle(req: Request, env: Env, ctx: Ctx, send: Send = tele
     }
     if (!path.startsWith('/api/')) return json({ ok: true, service: 'chd-games' });
     const m = await me(req, env);
+    // запись, сделанную админом по нику, человек «забрал» — шлём ему анонс
+    for (const gid of m?.claimed ?? []) {
+      const g = await env.DB.prepare('SELECT * FROM games WHERE id = ?').bind(gid).first<Game>();
+      if (g) later(send(m!.user.id, signedText(g, firstName(m!.name), true), openBtn(env, gid)));
+    }
     const need = () => (m ? null : fail('Откройте приложение из Telegram, чтобы записаться', 401));
     const staff = () => (m && (m.role === 'admin' || m.role === 'master') ? null : fail('Только для мастеров и администратора', 403));
 
@@ -175,9 +192,7 @@ export async function handle(req: Request, env: Env, ctx: Ctx, send: Send = tele
           WHERE true ON CONFLICT(game_id, user_id) DO NOTHING RETURNING status`).bind(id, m!.user.id, m!.name, m!.username, new Date(now).toISOString()).first<{ status: string }>();
         if (!r) return fail('Вы уже записаны на эту игру');
         const pos = r.status === 'wait' ? (await env.DB.prepare(`SELECT COUNT(*) AS n FROM signups WHERE game_id = ? AND status = 'wait'`).bind(id).first<{ n: number }>())!.n : 0;
-        later(send(m!.user.id, r.status === 'main'
-          ? `✅ Вы записаны на «${esc(g.title)}»\n${fmtDate(g.starts_at)} · ${g.room === 'green' ? 'зелёная' : 'красная'} комната${g.master_name ? `\nМастер: ${esc(g.master_name)}` : ''}\n\nНапомню за день и за пару часов до игры.`
-          : `🕯 Мест на «${esc(g.title)}» нет — вы в листе ожидания, место ${pos}. Если кто-то откажется, я сразу напишу.`, openBtn(env, id)));
+        later(send(m!.user.id, r.status === 'main' ? signedText(g, firstName(m!.name)) : waitText(g, firstName(m!.name), pos), openBtn(env, id)));
         later(notifyMaster(env, send, g, `${r.status === 'main' ? '➕' : '🕯'} ${esc(m!.name)}${m!.username ? ` (@${esc(m!.username)})` : ''} ${r.status === 'main' ? 'записался' : 'встал в очередь'} на «${esc(g.title)}»`));
         return json({ status: r.status, position: pos });
       }
@@ -225,6 +240,8 @@ export async function handle(req: Request, env: Env, ctx: Ctx, send: Send = tele
         if (known && await env.DB.prepare('SELECT 1 FROM signups WHERE game_id = ? AND user_id = ?').bind(id, known.id).first()) return fail('Этот человек уже записан');
         const r = await env.DB.prepare(`INSERT INTO signups(game_id, user_id, name, status, created_at)
           SELECT ?1, ?2, ?3, CASE WHEN (SELECT COUNT(*) FROM signups WHERE game_id = ?1 AND status = 'main') < (SELECT seats FROM games WHERE id = ?1) THEN 'main' ELSE 'wait' END, ?4 RETURNING status`).bind(id, known?.id ?? -now - Math.floor(Math.random() * 1000), name.trim().slice(0, 80), new Date(now).toISOString()).first<{ status: string }>();
+        // записанному по нику — анонс в личку от бота
+        if (known && r?.status === 'main') { const u = await env.DB.prepare('SELECT name FROM users WHERE id = ?').bind(known.id).first<{ name: string }>(); later(send(known.id, signedText(g, firstName(u?.name ?? name), true), openBtn(env, id))); }
         return json({ status: r?.status });
       }
       if (act === 'attended' && req.method === 'POST') {
@@ -331,10 +348,10 @@ export async function remind(env: Env, send: Send = telegramSender(env.BOT_TOKEN
     if (left <= 0) continue;
     if (!g.reminded_soon && left <= 2.5 * 3600000) {
       await env.DB.prepare('UPDATE games SET reminded_soon = 1, reminded_day = 1 WHERE id = ?').bind(g.id).run();
-      await notifyGame(env, send, g.id, `⏳ Скоро игра «${esc(g.title)}» — ${fmtDate(g.starts_at)}, ${g.room === 'green' ? 'зелёная' : 'красная'} комната. Ждём вас!`, 'main');
+      await notifyEach(env, send, g.id, (n) => soonText(g, n), openBtn(env, g.id));
     } else if (!g.reminded_day && left <= 26 * 3600000 && left > 2.5 * 3600000) {
       await env.DB.prepare('UPDATE games SET reminded_day = 1 WHERE id = ?').bind(g.id).run();
-      await notifyGame(env, send, g.id, `🐉 Завтра игра «${esc(g.title)}» — ${fmtDate(g.starts_at)}. Если не сможете прийти, отмените запись в приложении: место ждут другие.`, 'main');
+      await notifyEach(env, send, g.id, (n) => dayText(g, n), openBtn(env, g.id));
     }
   }
 }
