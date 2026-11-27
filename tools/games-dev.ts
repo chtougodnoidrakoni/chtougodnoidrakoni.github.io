@@ -5,7 +5,7 @@ import { localDB } from '../worker/src/local-db';
 import { signInitData } from '../worker/src/telegram';
 
 const PORT = Number(process.env.PORT ?? 8787);
-const env: Env = { DB: localDB(':memory:', new URL(`file://${process.cwd()}/worker/schema.sql`)), BOT_TOKEN: '123456:DEV', ADMIN_USERNAMES: 'astrakhan_trener', BOT_SECRET: 'dev' };
+const env: Env = { DB: localDB(':memory:', new URL(`file://${process.cwd()}/worker/schema.sql`)), BOT_TOKEN: '123456:DEV', ADMIN_USERNAMES: 'astrakhan_trener', BOT_SECRET: 'dev', MASTERS: 'Катя:oh_katiakaterina,Денис:i_koschei_i' };
 const ctx = { waitUntil: (p: Promise<unknown>) => void p };
 const send = async (to: number | string, text: string) => { console.log(`[бот → ${to}] ${text.replace(/\n/g, ' ')}`); };
 

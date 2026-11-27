@@ -15,13 +15,22 @@ test('Telegram-приложение: администратор создаёт �
   await admin.goto('./app/');
   await expect(admin.getByText('Привет, Замир!')).toBeVisible();
   await admin.getByRole('button', { name: 'Админ' }).click();
+  // список мастеров: стартовые уже есть, добавляем нового
+  await expect(admin.getByText('@i_koschei_i')).toBeVisible();
+  await admin.getByLabel('Имя мастера').fill('Лёня'); await admin.getByLabel('Ник мастера').fill('@Krodys');
+  await admin.getByRole('button', { name: 'Добавить мастера' }).click();
+  await expect(admin.getByText('@krodys')).toBeVisible();
+  await admin.screenshot({ path: 'e2e/shots/t7-masters.png' });
   await admin.getByRole('button', { name: 'Новая игра' }).click();
+  await expect(admin.getByRole('group', { name: 'Мастер' }).getByRole('button', { name: 'Лёня' })).toBeVisible();
   await admin.locator('input[type=file]').setInputFiles('public/icons/icon-512.png');
   await admin.locator('label:has-text("Название") input').fill('Тени Драккенхейма');
   const d = new Date(Date.now() + 3 * 86400000); const local = new Date(d.getTime() + 4 * 3600000).toISOString().slice(0, 10) + 'T18:30';
   await admin.getByLabel('Дата и время').fill(local);
   await admin.getByRole('button', { name: 'Зелёная комната' }).click();
-  await admin.locator('label:has-text("Мастер") input').first().fill('Катя');
+  // мастер — кнопкой из списка, а новый мастер добавляется во вкладке «Админ»
+  await admin.getByRole('group', { name: 'Мастер' }).getByRole('button', { name: 'Катя' }).click();
+  await expect(admin.getByRole('group', { name: 'Мастер' }).getByRole('button', { name: 'Катя' })).toHaveAttribute('aria-pressed', 'true');
   await admin.locator('label:has-text("Сеттинг") input').fill('Тёмное фэнтези');
   await admin.locator('label:has-text("Описание") textarea').fill('Город, павший под метеоритом. Ваншот для новичков.');
   await expect(admin.locator('img[src*="/img/"]')).toHaveCount(0);

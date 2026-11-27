@@ -28,8 +28,8 @@ export function Sheet({ open, onClose, title, children, footer }: { open: boolea
   );
 }
 
-export const Btn = ({ children, onClick, tone = 'base', className, disabled }: { children: ReactNode; onClick?: () => void; tone?: 'base' | 'gold' | 'danger' | 'ghost'; className?: string; disabled?: boolean }) => (
-  <button disabled={disabled} onClick={onClick} className={cx('h-11 px-4 rounded-xl inline-flex items-center justify-center gap-2 transition disabled:opacity-40',
+export const Btn = ({ children, onClick, tone = 'base', className, disabled, 'aria-label': label }: { children: ReactNode; onClick?: () => void; tone?: 'base' | 'gold' | 'danger' | 'ghost'; className?: string; disabled?: boolean; 'aria-label'?: string }) => (
+  <button aria-label={label} disabled={disabled} onClick={onClick} className={cx('h-11 px-4 rounded-xl inline-flex items-center justify-center gap-2 transition disabled:opacity-40',
     tone === 'gold' ? 'bg-gradient-to-b from-sand-light to-sand text-moss-deep font-semibold' : tone === 'danger' ? 'border border-red-400/60 text-red-300' : tone === 'ghost' ? 'text-cream/80' : 'bg-moss border border-moss-light text-cream', className)}>{children}</button>
 );
 export const Field = ({ label, children }: { label: string; children: ReactNode }) => <label className="block"><div className="text-xs text-cream/60 mb-1 px-1">{label}</div>{children}</label>;

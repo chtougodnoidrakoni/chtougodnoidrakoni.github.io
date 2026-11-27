@@ -40,10 +40,12 @@ export const api = {
   sheets: () => req<{ sheets: { id: string; name: string; updated_at: number }[]; off: boolean }>('GET', '/api/sheets'),
   deleteSheets: () => req('DELETE', '/api/sheets'),
   sheetsOn: () => req('POST', '/api/sheets/on'),
-  roles: () => req<{ roles: { username: string; role: string }[] }>('GET', '/api/roles'),
-  setRole: (username: string, role: 'master' | null) => req('POST', '/api/roles', { username, role }),
+  masters: () => req<{ masters: Master[] }>('GET', '/api/masters'),
+  addMaster: (name: string, username: string) => req<{ masters: Master[] }>('POST', '/api/masters', { name, username }),
+  removeMaster: (username: string) => req<{ masters: Master[] }>('DELETE', `/api/masters/${encodeURIComponent(username)}`),
 };
 
+export interface Master { name: string; username: string }
 const TZ = 'Europe/Astrakhan';
 export const fmtDay = (iso: string) => new Date(iso).toLocaleDateString('ru-RU', { timeZone: TZ, weekday: 'short', day: 'numeric', month: 'long' });
 export const fmtTime = (iso: string) => new Date(iso).toLocaleTimeString('ru-RU', { timeZone: TZ, hour: '2-digit', minute: '2-digit' });

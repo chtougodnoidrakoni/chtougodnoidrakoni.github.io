@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { ArrowLeft, Baby, LifeBuoy, Lightbulb, MessageCircle, Megaphone, Star, CalendarDays, Crown, Info, Cake, Coins, Heart, Ticket, ChevronDown, ImagePlus, Plus, Settings, Sparkles, Swords, ScrollText, Users, X } from 'lucide-react';
 import { Btn, Field, TextIn } from '../Panels';
-import { api, fmtDay, fmtTime, imgUrl, loadConfig, toIso, toLocal, type Game, type Player, type Role } from './api';
+import { api, fmtDay, fmtTime, imgUrl, loadConfig, toIso, toLocal, type Game, type Master, type Player, type Role } from './api';
 import { confirmBox, haptic, openLink, setupTelegram, tg } from './tg';
 
 const cx = (...c: (string | false | undefined | null)[]) => c.filter(Boolean).join(' ');
@@ -442,10 +442,10 @@ function GamePage({ id, say, role }: { id: number; say: (t: string) => void; rol
 
 function Admin({ role, say }: { role: Role; say: (t: string) => void }) {
   const [games, setGames] = useState<Game[]>([]);
-  const [roles, setRoles] = useState<{ username: string }[]>([]);
-  const [nu, setNu] = useState('');
-  const loadRoles = useCallback(() => { if (role === 'admin') api.roles().then((r) => setRoles(r.roles)).catch(() => {}); }, [role]);
-  useEffect(() => { api.games().then((r) => setGames(r.games)).catch(() => {}); loadRoles(); }, [loadRoles]);
+  const [ms, setMs] = useState<Master[]>([]);
+  const [nn, setNn] = useState(''); const [nu, setNu] = useState('');
+  const loadMs = useCallback(() => { if (role === 'admin') api.masters().then((r) => setMs(r.masters)).catch(() => {}); }, [role]);
+  useEffect(() => { api.games().then((r) => setGames(r.games)).catch(() => {}); loadMs(); }, [loadMs]);
   return (
     <div className="mt-4 grid gap-3">
       <Btn tone="gold" className="h-12" onClick={() => go('new')}><Plus size={18} />Новая игра</Btn>
@@ -460,9 +460,18 @@ function Admin({ role, say }: { role: Role; say: (t: string) => void }) {
       {role === 'admin' && (
         <div className="mt-4 rounded-2xl border border-moss-light p-3">
           <div className="text-sm text-sand-light mb-1">Мастера</div>
-          <div className="text-xs text-cream/60 mb-2">Мастер может создавать игры и управлять своими. Впишите его username в Telegram.</div>
-          <div className="flex gap-2"><TextIn aria-label="Username мастера" placeholder="@username" value={nu} onChange={(e) => setNu(e.target.value)} /><Btn disabled={!nu.trim()} onClick={async () => { try { await api.setRole(nu, 'master'); setNu(''); loadRoles(); say('Мастер добавлен'); } catch (e) { say((e as Error).message); } }}><Plus size={16} /></Btn></div>
-          <div className="grid gap-1 mt-2">{roles.map((r) => <div key={r.username} className="flex items-center text-sm h-9 px-2 rounded-lg bg-moss-deep/60">@{r.username}<button aria-label={`Убрать мастера ${r.username}`} className="ml-auto text-cream/50" onClick={async () => { await api.setRole(r.username, null); loadRoles(); }}><X size={15} /></button></div>)}</div>
+          <div className="text-xs text-cream/60 mb-2">Из этого списка мастера выбираются в игре и в боте. У мастера в боте есть кнопка «Игры, которые я веду», а вечером накануне игры бот присылает ему список игроков. Админских прав у мастеров нет.</div>
+          <div className="grid grid-cols-[1fr_1fr_auto] gap-2">
+            <TextIn aria-label="Имя мастера" placeholder="Имя" value={nn} onChange={(e) => setNn(e.target.value)} />
+            <TextIn aria-label="Ник мастера" placeholder="@ник" value={nu} onChange={(e) => setNu(e.target.value)} />
+            <Btn aria-label="Добавить мастера" disabled={!nn.trim() || !nu.trim()} onClick={async () => { try { setMs((await api.addMaster(nn, nu)).masters); setNn(''); setNu(''); say('Мастер добавлен'); } catch (e) { say((e as Error).message); } }}><Plus size={16} /></Btn>
+          </div>
+          <div className="grid gap-1 mt-2">{ms.map((x) => (
+            <div key={x.username} className="flex items-center gap-2 text-sm h-9 px-2 rounded-lg bg-moss-deep/60">
+              <span className="text-cream">{x.name}</span><span className="text-cream/50 truncate">@{x.username}</span>
+              <button aria-label={`Убрать мастера ${x.name}`} className="ml-auto text-cream/50 h-8 w-8 grid place-items-center" onClick={async () => { if (!confirm(`Убрать ${x.name} из мастеров?`)) return; try { setMs((await api.removeMaster(x.username)).masters); } catch (e) { say((e as Error).message); } }}><X size={15} /></button>
+            </div>
+          ))}</div>
         </div>
       )}
     </div>
@@ -493,6 +502,11 @@ function Edit({ id, copy, day, room, say }: { id?: number; copy?: number; day?: 
     }).catch((e) => say((e as Error).message));
   }, [id, copy, say]);
   const set = (p: Partial<Game>) => setF((x) => ({ ...x, ...p }));
+  const [masters, setMasters] = useState<Master[]>([]);
+  const [ownMaster, setOwnMaster] = useState(false);
+  useEffect(() => { api.masters().then((r) => setMasters(r.masters)).catch(() => {}); }, []);
+  // старая игра, где мастер вписан руками и его нет в списке, — показываем поля ввода
+  useEffect(() => { if (masters.length && f.master_name && !masters.some((x) => x.username === (f.master_username ?? '').toLowerCase())) setOwnMaster(true); }, [masters, f.master_name, f.master_username]);
   const save = async () => {
     if (!f.title?.trim() || !when) { say('Нужны название, дата и время'); return; }
     setBusy(true);
@@ -523,10 +537,22 @@ function Edit({ id, copy, day, room, say }: { id?: number; copy?: number; day?: 
         <div className="grid grid-cols-2 gap-2">
           {(['red', 'green'] as const).map((r) => <button key={r} onClick={() => set({ room: r })} className={cx('h-11 rounded-xl border text-sm font-medium', f.room === r ? (r === 'red' ? 'bg-red-500/30 border-red-400 text-red-100' : 'bg-emerald-500/30 border-emerald-400 text-emerald-100') : 'border-moss-light text-cream/70')}>{r === 'red' ? 'Красная комната' : 'Зелёная комната'}</button>)}
         </div>
-        <div className="grid grid-cols-2 gap-2">
-          <Field label="Мастер"><TextIn value={f.master_name ?? ''} onChange={(e) => set({ master_name: e.target.value })} /></Field>
-          <Field label="Его @username"><TextIn value={f.master_username ?? ''} placeholder="@username" onChange={(e) => set({ master_username: e.target.value })} /></Field>
+        <div role="group" aria-label="Мастер">
+          <div className="text-xs text-cream/60 mb-1 px-1">Мастер</div>
+          <div className="flex flex-wrap gap-1.5">
+            {masters.map((x) => { const on = (f.master_username ?? '').toLowerCase() === x.username; return (
+              <button key={x.username} aria-pressed={on} onClick={() => { setOwnMaster(false); set(on ? { master_name: '', master_username: '' } : { master_name: x.name, master_username: x.username }); }}
+                className={cx('h-9 px-3 rounded-xl border text-sm', on ? 'bg-sand text-moss-deep border-sand font-medium' : 'border-moss-light text-cream/80')}>{x.name}</button>
+            ); })}
+            <button aria-pressed={ownMaster} onClick={() => { setOwnMaster(true); set({ master_username: '' }); }} className={cx('h-9 px-3 rounded-xl border text-sm', ownMaster ? 'bg-sand text-moss-deep border-sand font-medium' : 'border-moss-light text-cream/80')}>{masters.length ? 'Другой' : 'Вписать'}</button>
+          </div>
         </div>
+        {ownMaster && (
+          <div className="grid grid-cols-2 gap-2">
+            <TextIn aria-label="Имя мастера" placeholder="Имя мастера" value={f.master_name ?? ''} onChange={(e) => set({ master_name: e.target.value })} />
+            <TextIn aria-label="Ник мастера" placeholder="@ник, если есть" value={f.master_username ?? ''} onChange={(e) => set({ master_username: e.target.value })} />
+          </div>
+        )}
         <Field label="Система / редакция">
           <select aria-label="Система" value={other ? '__other' : f.system ?? ''} onChange={(e) => { if (e.target.value === '__other') { setOther(true); set({ system: '' }); } else { setOther(false); set({ system: e.target.value }); } }} className="w-full h-11 px-2 rounded-xl bg-moss-deep border border-moss-light text-cream">
             {SYSTEMS.map((s) => <option key={s}>{s}</option>)}<option value="__other">Другая…</option>

@@ -1,6 +1,6 @@
 import { signedText, waitText } from './flavor';
 import { wizard, type Upd } from './wizard';
-import { isAdmin, keyboardFor, masterBot, masterOf, MASTER_BTN, SCHEDULE_BTN } from './masters';
+import { addMaster, cleanUsername, isAdmin, keyboardFor, masterBot, masterDigest, masterOf, masters, MASTER_BTN, removeMaster, SCHEDULE_BTN } from './masters';
 import { buildPost, mondayOf, postWeek, tgApi } from './schedule';
 // Сервер записей на игры клуба «Что угодно и драконы». Cloudflare Worker + база D1.
 import { esc, telegramSender, verifyInitData, type Send, type TgUser } from './telegram';
@@ -95,11 +95,6 @@ async function notifyGame(env: Env, send: Send, gameId: number, text: string, on
 }
 /** Каждому записанному — своё сообщение (с именем). */
 const firstName = (n: string) => (n || 'приключенец').split(/\s+/)[0]!;
-async function notifyMaster(env: Env, send: Send, g: Game, text: string) {
-  if (!g.master_username) return;
-  const u = await env.DB.prepare('SELECT id FROM users WHERE username = ?').bind(g.master_username.toLowerCase()).first<{ id: number }>();
-  if (u) await send(u.id, text);
-}
 const channelUrl = (env: Env) => (env.CHANNEL?.startsWith('@') ? `https://t.me/${env.CHANNEL.slice(1)}` : '');
 const appRow = (env: Env, gameId?: number) => (env.APP_URL ? [{ text: '🐉 Открыть приложение', web_app: { url: env.APP_URL + (gameId ? `#game/${gameId}` : '') } }] : []);
 /** Под сообщением о записи: чат клуба (вся дальнейшая информация там) и приложение. */
@@ -131,8 +126,8 @@ export async function handle(req: Request, env: Env, ctx: Ctx, send: Send = tele
       if (m.from) await env.DB.prepare('INSERT INTO users(id, name, username, started) VALUES (?, ?, ?, 1) ON CONFLICT(id) DO UPDATE SET started = 1, name = excluded.name, username = excluded.username').bind(m.from.id, nameOf(m.from), (m.from.username ?? '').toLowerCase()).run();
       if (m.text.startsWith('/start')) later((async () => {
         await send(m.chat.id, 'Привет! Это бот клуба «Что угодно и драконы» 🐉\n\nВ приложении ближайшие игры и запись. В канале расписание и новости клуба, в чате общаемся и решаем всё по играм.', clubBtns(env));
-        const u = m.from?.username, adm = isAdmin(env, u), ms = masterOf(env, u);
-        if (adm || ms) await send(m.chat.id, [adm ? `Вы администратор. Чтобы составить расписание и выложить его в канал, нажмите «${SCHEDULE_BTN}» внизу.` : '', ms ? `${adm ? 'И вы мастер' : `${esc(ms.name)}, вы мастер клуба`}: все игры, которые вы ведёте, — по кнопке «${MASTER_BTN}».` : ''].filter(Boolean).join('\n\n'), keyboardFor(env, u));
+        const u = m.from?.username, adm = isAdmin(env, u), ms = await masterOf(env, u);
+        if (adm || ms) await send(m.chat.id, [adm ? `Вы администратор. Чтобы составить расписание и выложить его в канал, нажмите «${SCHEDULE_BTN}» внизу.` : '', ms ? `${adm ? 'И вы мастер' : `${esc(ms.name)}, вы мастер клуба`}: все игры, которые вы ведёте, — по кнопке «${MASTER_BTN}».` : ''].filter(Boolean).join('\n\n'), await keyboardFor(env, u));
       })());
       else if (m.text.startsWith('/id')) later(send(m.chat.id, `Ваш id: <code>${m.chat.id}</code>${m.from?.username ? `, username: @${esc(m.from.username)}` : ''}`));
       else later(send(m.chat.id, 'Игры и запись в приложении, новости в канале, общение в чате:', clubBtns(env)));
@@ -197,7 +192,6 @@ export async function handle(req: Request, env: Env, ctx: Ctx, send: Send = tele
         if (!r) return fail('Вы уже записаны на эту игру');
         const pos = r.status === 'wait' ? (await env.DB.prepare(`SELECT COUNT(*) AS n FROM signups WHERE game_id = ? AND status = 'wait'`).bind(id).first<{ n: number }>())!.n : 0;
         later(send(m!.user.id, r.status === 'main' ? signedText(g, firstName(m!.name)) : waitText(g, firstName(m!.name), pos), signedBtns(env, id)));
-        later(notifyMaster(env, send, g, `${r.status === 'main' ? '➕' : '🕯'} ${esc(m!.name)}${m!.username ? ` (@${esc(m!.username)})` : ''} ${r.status === 'main' ? 'записался' : 'встал в очередь'} на «${esc(g.title)}»`));
         return json({ status: r.status, position: pos });
       }
       if (act === 'leave' && req.method === 'POST') {
@@ -208,7 +202,6 @@ export async function handle(req: Request, env: Env, ctx: Ctx, send: Send = tele
         if (r.status === 'main') {
           const p = await promote(env, id);
           if (p && p.user_id > 0) later(send(p.user_id, `🎉 Освободилось место — вы записаны на «${esc(g.title)}»!\n${fmtDate(g.starts_at)}`, signedBtns(env, id)));
-          later(notifyMaster(env, send, g, `➖ ${esc(m!.name)} отменил запись на «${esc(g.title)}»${p ? `, место занял ${esc(p.name)}` : ''}`));
         }
         return json({ ok: true });
       }
@@ -328,6 +321,21 @@ export async function handle(req: Request, env: Env, ctx: Ctx, send: Send = tele
       const r = await postWeek(env, tgApi(env.BOT_TOKEN), week, `${url.origin}/img/${image_id}`);
       return r.ok ? json(r) : fail(r.error);
     }
+    if (path === '/api/masters') {
+      if (!m || (m.role !== 'admin' && m.role !== 'master')) return fail('Только для мастеров и администратора', 403);
+      if (req.method === 'GET') return json({ masters: await masters(env) });
+      if (m.role !== 'admin') return fail('Только для администратора', 403);
+      const b = await req.json().catch(() => ({})) as { name?: string; username?: string };
+      const name = String(b.name ?? '').trim().slice(0, 30), u = cleanUsername(String(b.username ?? ''));
+      if (!name) return fail('Впишите имя мастера', 400);
+      if (!/^[a-z0-9_]{4,32}$/.test(u)) return fail('Ник в Телеграме — латиница, цифры и _, от 4 символов', 400);
+      await addMaster(env, name, u); return json({ masters: await masters(env) });
+    }
+    const dm = path.match(/^\/api\/masters\/([A-Za-z0-9_]+)$/);
+    if (dm && req.method === 'DELETE') {
+      if (m?.role !== 'admin') return fail('Только для администратора', 403);
+      await removeMaster(env, dm[1]!.toLowerCase()); return json({ masters: await masters(env) });
+    }
     if (path === '/api/roles') {
       if (m?.role !== 'admin') return fail('Только для администратора', 403);
       if (req.method === 'GET') return json({ roles: (await env.DB.prepare('SELECT username, role FROM roles ORDER BY username').all()).results });
@@ -346,4 +354,6 @@ export async function handle(req: Request, env: Env, ctx: Ctx, send: Send = tele
 
 export default {
   fetch: (req: Request, env: Env, ctx: Ctx) => handle(req, env, ctx),
+  // вечерняя сводка мастерам о завтрашних играх
+  scheduled: (_e: unknown, env: Env, ctx: Ctx) => ctx.waitUntil(masterDigest(env, telegramSender(env.BOT_TOKEN), Date.now()).catch(() => 0)),
 };

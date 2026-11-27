@@ -2,6 +2,7 @@ import { describe, expect, it, beforeEach } from 'vitest';
 import { handle, type Env } from '../worker/src/index';
 import { buildPost, mondayOf, scheduleReminders } from '../worker/src/schedule';
 import { entitiesToHtml } from '../worker/src/wizard';
+import { masterDigest } from '../worker/src/masters';
 import { vi } from 'vitest';
 import { localDB } from '../worker/src/local-db';
 import { signInitData, verifyInitData, type TgUser } from '../worker/src/telegram';
@@ -263,6 +264,34 @@ describe('сервер записей', () => {
     await say(players[1]!, '🎲 Игры, которые я веду'); expect(out.at(-1)!.text).toMatch(/для мастеров клуба/);
     await tap(players[1]!, `mg:${g.id}`); expect(out.at(-1)!.text).not.toMatch(/Игрок0/);
     spy.mockRestore();
+  });
+  it('список мастеров правит админ в приложении; вечером мастеру сводка на завтра, без сообщений на каждую запись', async () => {
+    env.MASTERS = 'Катя:oh_katiakaterina';
+    const kate: TgUser = { id: 51, first_name: 'Катя', username: 'oh_katiakaterina' };
+    const lenya: TgUser = { id: 71, first_name: 'Леонид', username: 'Krodys' };
+    expect((await call('GET', '/api/masters', players[0])).status).toBe(403);
+    expect((await call('GET', '/api/masters', admin)).data.masters).toEqual([{ name: 'Катя', username: 'oh_katiakaterina' }]);
+    expect((await call('POST', '/api/masters', admin, { name: 'Лёня', username: 'ой' })).data.error).toMatch(/латиница/);
+    expect((await call('POST', '/api/masters', admin, { name: 'Лёня', username: 'https://t.me/Krodys' })).data.masters.map((m: any) => m.username)).toEqual(['oh_katiakaterina', 'krodys']);
+    // удалённый стартовый мастер не возвращается сам
+    await call('DELETE', '/api/masters/oh_katiakaterina', admin);
+    expect((await call('GET', '/api/masters', admin)).data.masters.map((m: any) => m.name)).toEqual(['Лёня']);
+    expect((await call('DELETE', '/api/masters/krodys', kate)).status).toBe(403);
+    // игра Лёни завтра и игра через три дня
+    const id = (await call('POST', '/api/games', admin, { ...game, title: 'Завтрашняя', starts_at: '2026-11-26T18:00:00+04:00', master_name: 'Лёня', master_username: 'krodys' })).data.id;
+    await call('POST', '/api/games', admin, { ...game, title: 'Потом', starts_at: '2026-11-28T18:00:00+04:00', master_name: 'Лёня', master_username: 'krodys' });
+    await call('GET', '/api/me', lenya);
+    await handle(new Request('https://w.test/bot/s3cret', { method: 'POST', body: JSON.stringify({ message: { chat: { id: 71 }, from: lenya, text: '/start' } }) }), env, ctx, send, NOW); await Promise.all(pending); pending = [];
+    sent = [];
+    await call('POST', `/api/games/${id}/join`, players[0]); await call('POST', `/api/games/${id}/join`, players[1]);
+    expect(sent.filter((m) => m.to === 71)).toHaveLength(0);
+    const evening = Date.parse('2026-11-25T19:00:00+04:00');
+    expect(await masterDigest(env, send, evening)).toBe(1);
+    const d = sent.filter((m) => m.to === 71);
+    expect(d).toHaveLength(1);
+    expect(d[0]!.text).toMatch(/Лёня, завтра ваша игра/); expect(d[0]!.text).toContain('Завтрашняя'); expect(d[0]!.text).not.toContain('Потом');
+    expect(d[0]!.text).toMatch(/Игроки: 2 из 6\n1\. Игрок0\n2\. Игрок1/);
+    expect(await masterDigest(env, send, evening + 3600_000)).toBe(0);
   });
   it('подводка: оформление из Telegram (жирный, курсив, цитата, ссылка) переносится в пост, лишнее экранируется', () => {
     const t = 'Два стола свободны (уже нет)\nПриходите <смело>';

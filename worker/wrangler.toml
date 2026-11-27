@@ -5,7 +5,7 @@ account_id = "ea02390c0a20b131134814fbd0121c16"
 compatibility_date = "2024-11-01"
 
 [triggers]
-crons = [] # напоминания отключены
+crons = ["0 15 * * *"] # 19:00 по Самаре — сводка мастерам на завтра
 
 [[d1_databases]]
 binding = "DB"
