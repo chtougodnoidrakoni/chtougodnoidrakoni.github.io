@@ -60,7 +60,7 @@ export function App() {
   const staff = role === 'admin' || role === 'master';
 
   return (
-    <div className="min-h-dvh pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+    <div className="app-glow relative isolate min-h-dvh pb-[max(1.5rem,env(safe-area-inset-bottom))]">
       <div className="max-w-xl mx-auto px-4 pt-[max(.75rem,env(safe-area-inset-top))]">
         {view.name === 'list' || view.name === 'my' || view.name === 'info' || view.name === 'admin' ? (
           <>
@@ -163,7 +163,7 @@ const GUEST = /^записан\(а\) через канал$/i;
 const newbie = (g: Game) => /новичк/i.test(`${g.level} ${g.description}`);
 function Tile({ g }: { g: Game }) {
   return (
-    <button onClick={() => go(`game/${g.id}`)} aria-label={g.title} className={cx('text-left rounded-2xl border bg-moss-deep/60 border-moss-light p-2.5 min-h-[7.5rem] flex flex-col', g.mine && 'ring-2 ring-sand', g.status === 'cancelled' && 'opacity-55')}>
+    <button onClick={() => go(`game/${g.id}`)} aria-label={g.title} className={cx('glass-tile text-left rounded-2xl p-2.5 min-h-[7.5rem] flex flex-col', g.mine && 'ring-2 ring-sand', g.status === 'cancelled' && 'opacity-55')}>
       {/* все плитки одного цвета; комната — словами, места — цветом внизу */}
       <span className="text-lg font-semibold text-cream leading-none">{fmtTime(g.starts_at)}</span>
       <span className="text-[11px] text-cream/55 mt-1">{g.room === 'green' ? 'Зелёная комната' : 'Красная комната'}</span>

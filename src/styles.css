@@ -531,3 +531,23 @@ body:has(.z-50) .nav-fab, body:has(.z-\[60\]) .nav-fab { display: none; }
 .fmt-float button { width: 34px; height: 30px; font-size: 15px; }
 /* компетентность: второе кольцо вокруг отметки владения */
 .dot.exp { box-shadow: inset 0 0 0 calc(var(--u) * .35) #fff, 0 0 0 calc(var(--u) * .3) #fff, 0 0 0 calc(var(--u) * .55) var(--color-moss); }
+
+/* Telegram-приложение: плитки игр «стекло» — матовое, с золотистым бликом сверху */
+.glass-tile {
+  position: relative; overflow: hidden;
+  background: linear-gradient(150deg, rgba(240, 223, 184, .16) 0%, rgba(240, 223, 184, .05) 38%, rgba(160, 200, 185, .06) 100%);
+  border: 1px solid rgba(240, 223, 184, .22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), inset 0 -1px 0 rgba(0, 0, 0, .25), 0 10px 28px rgba(0, 0, 0, .38);
+  -webkit-backdrop-filter: blur(14px) saturate(140%); backdrop-filter: blur(14px) saturate(140%);
+  transition: transform .15s ease, border-color .15s ease;
+}
+.glass-tile::before { /* блик */
+  content: ''; position: absolute; inset: 0 0 auto 0; height: 46%; pointer-events: none;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .10), rgba(255, 255, 255, 0));
+  border-radius: inherit;
+}
+.glass-tile:active { transform: scale(.98); border-color: rgba(240, 223, 184, .4); }
+/* мягкие пятна света за стеклом */
+.app-glow::before, .app-glow::after { content: ''; position: fixed; z-index: -1; border-radius: 9999px; filter: blur(70px); pointer-events: none; }
+.app-glow::before { width: 60vw; height: 60vw; left: -20vw; top: 30vh; background: rgba(214, 190, 140, .14); }
+.app-glow::after { width: 55vw; height: 55vw; right: -18vw; top: 70vh; background: rgba(80, 160, 130, .12); }
