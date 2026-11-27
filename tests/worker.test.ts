@@ -4,6 +4,7 @@ import { buildPost, mondayOf, scheduleReminders } from '../worker/src/schedule';
 import { entitiesToHtml } from '../worker/src/wizard';
 import { masterDigest } from '../worker/src/masters';
 import { askReviews, reviewText } from '../worker/src/reviews';
+import { genreOf } from '../worker/src/flavor';
 import { vi } from 'vitest';
 import { localDB } from '../worker/src/local-db';
 import { signInitData, verifyInitData, type TgUser } from '../worker/src/telegram';
@@ -315,7 +316,15 @@ describe('сервер записей', () => {
     expect(out[0]!.text).toMatch(/Игрок0/);
     expect(out[0]!.extra.reply_markup.inline_keyboard[0].map((x: any) => x.url)).toEqual([expect.stringContaining('2gis.ru'), expect.stringContaining('yandex.ru/maps')]);
     expect(await askReviews(env, s2, nextDay + 3600_000)).toBe(0);
-    expect(reviewText('<Лиса>', 'Тьма', 2)).toContain('&lt;Лиса&gt;');
+    expect(reviewText('<Лиса>', 'Тьма', 'fantasy', 2)).toContain('&lt;Лиса&gt;');
+    // текст под жанр игры: детской не пишем про драконов, Ктулху — про рассудок
+    const g0 = { title: 'x', system: '', setting: '', description: '' };
+    expect(genreOf({ ...g0, system: 'D&D 2014' })).toBe('fantasy');
+    expect(genreOf({ ...g0, system: 'Зов Ктулху' })).toBe('horror');
+    expect(genreOf({ ...g0, system: 'Киберпанк RED' })).toBe('cyber');
+    expect(genreOf({ ...g0, system: 'D&D 5e', title: 'Детская игра: Тайна леса' })).toBe('kids');
+    expect(genreOf({ ...g0, system: 'Своя система', title: 'Вечер настолок' })).toBe('neutral');
+    for (let i = 0; i < 4; i++) { expect(reviewText('Аня', 'Тайна леса', 'kids', i)).not.toMatch(/дракон|эль|таверн/i); expect(reviewText('Аня', 'Маска', 'horror', i)).not.toMatch(/дракон/); }
   });
   it('подводка: оформление из Telegram (жирный, курсив, цитата, ссылка) переносится в пост, лишнее экранируется', () => {
     const t = 'Два стола свободны (уже нет)\nПриходите <смело>';
